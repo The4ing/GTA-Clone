@@ -33,6 +33,8 @@ void Menu::update() {
         optionChosen = true;
         sf::sleep(sf::milliseconds(150));
     }
+
+
 }
 
 void Menu::draw() {

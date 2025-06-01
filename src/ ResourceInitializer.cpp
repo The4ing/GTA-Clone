@@ -5,7 +5,23 @@ void ResourceInitializer::loadAll() {
     auto& rm = ResourceManager::getInstance();
 
     // 🅰 פונטים
-    rm.loadFont("main", "C:/Users/User/OneDrive/OOP/GTA/resources/Miskan.ttf");
+    rm.loadFont("main", "resources/Pricedown.otf");
+
+    // 2️⃣ טוען תמונת השחקן (player.png) 
+   //    וודאו שבמיקום הזה אכן קיים הקובץ
+    rm.loadTexture("player", "resources/player.png");
+
+    // 3️⃣ טוען תמונת הולך רגל לדוגמה
+    rm.loadTexture("pedestrian", "resources/NPC.png");
+
+    // 4️⃣ טוען תמונת StaticObject לדוגמה (כתל/בניין)
+    rm.loadTexture("static_building", "resources/building.png");
+
+    // 5️⃣ (אופציונלי) תמונת הולך רגל נוספות, כדור, פיצוץ וכדומה
+    // rm.loadTexture("bullet", "resources/bullet.png");
+    // rm.loadTexture("explosion", "resources/explosion.png");
+
+  //  std::cout << "[ResourceInitializer] Loaded fonts and textures\n";
 
 
 
