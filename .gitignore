@@ -1,0 +1,30 @@
+# Ignore Visual Studio temporary files, build results, and .vs folder
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.opendb
+*.obj
+*.exe
+*.pdb
+*.idb
+*.log
+*.tlog
+*.ipch
+*.aps
+*.ncb
+*.sdf
+*.opensdf
+*.cache
+*.ilk
+*.tmp
+*.bak
+*.db
+*.sbr
+*.class
+
+# Ignore CMake / SFML / build outputs
+build/
+out/
+Debug/
+Release/
