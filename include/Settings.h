@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
+#include "StoryScreen.h"
 
 class Settings {
 public:

@@ -72,11 +72,11 @@ void Settings::update() {
     for (auto& text : options) {
         if (text.getGlobalBounds().contains((float)mousePos.x, (float)mousePos.y)) {
             text.setFillColor(sf::Color::Yellow);
-            text.setCharacterSize(40);  // גדול יותר
+            text.setCharacterSize(40); 
         }
         else {
             text.setFillColor(sf::Color::White);
-            text.setCharacterSize(32);  // גודל רגיל
+            text.setCharacterSize(32);  
         }
     }
 }
@@ -106,13 +106,13 @@ void Settings::decreaseVolume() {
 void Settings::increaseBrightness() {
     brightnessLevel += 0.1f;
     if (brightnessLevel > 1.0f) brightnessLevel = 1.0f;
-   // window.setBrightness(static_cast<int>(brightnessLevel * 255)); // לא נתמך בכל מערכת
+   // window.setBrightness(static_cast<int>(brightnessLevel * 255)); 
 }
 
 void Settings::decreaseBrightness() {
     brightnessLevel -= 0.1f;
     if (brightnessLevel < 0.0f) brightnessLevel = 0.0f;
-    //window.setBrightness(static_cast<int>(brightnessLevel * 255)); // אולי תצטרך לממש לבד
+    //window.setBrightness(static_cast<int>(brightnessLevel * 255)); 
 }
 
 void Settings::showHelp() {
@@ -124,7 +124,6 @@ bool Settings::shouldExit() const {
 }
 
 void Settings::showStory() {
-    std::cout << "In a world overrun by chaos, one hero rises to restore order.\n";
-    std::cout << "Navigate through dangerous levels, overcome obstacles, and uncover secrets.\n";
-    std::cout << "Your journey begins now...\n";
+    StoryScreen story(window);
+    story.run();
 }

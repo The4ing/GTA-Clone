@@ -20,7 +20,7 @@ void Slideshow::run() {
 
 
         // הגנה: ודא שהתמונה נטענה והגודל תקף
-       
+
         sf::Vector2u textureSize = texture.getSize();
         sf::Vector2u windowSize = window.getSize();
 
@@ -76,11 +76,10 @@ void Slideshow::run() {
             window.clear();
             window.draw(sprite);
             window.draw(overlay);
-            
+
 
             window.display();
             sf::sleep(sf::milliseconds(10));
         }
     }
 }
-

@@ -7,6 +7,7 @@
 #include "ChunkManager.h"
 using namespace std;
 
+
 const unsigned int WINDOW_WIDTH = 1920;
 const unsigned int WINDOW_HEIGHT = 1080;
 const unsigned int MAP_WIDTH = 4640;

@@ -17,7 +17,7 @@ GameManager::GameManager()
 
 void GameManager::run() {
 
-    Slideshow slideshow(window, 3.f);
+    Slideshow slideshow(window, 2.5f);
     slideshow.run();
 
     while (window.isOpen()) {
