@@ -7,7 +7,6 @@
 #include "ChunkManager.h"
 using namespace std;
 
-
 const unsigned int WINDOW_WIDTH = 1920;
 const unsigned int WINDOW_HEIGHT = 1080;
 const unsigned int MAP_WIDTH = 4640;
@@ -23,7 +22,7 @@ class GameManager {
 public:
     GameManager();
     void run();
-    std::vector<sf::FloatRect> blockedAreas;
+    std::vector<sf::FloatRect> blockedAreas;  
 
 
 private:
@@ -32,6 +31,8 @@ private:
     void render();
     void startGameFullscreen();
     void loadCollisionRectsFromJSON(const std::string& filename);
+
+    std::vector<std::vector<sf::Vector2f>> blockedPolygons;
 
     sf::RenderWindow            window;
     sf::View                    gameView;
@@ -42,3 +43,4 @@ private:
     sf::Clock                   clock;
 
 };
+
