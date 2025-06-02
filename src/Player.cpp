@@ -29,8 +29,7 @@ Player::Player()
 }
 
 void Player::setPosition(const sf::Vector2f& pos) {
-   
-        sprite.setPosition(pos);
+    sprite.setPosition(pos);
 }
 
 sf::Vector2f Player::getPosition() const {
@@ -56,42 +55,52 @@ void Player::update(float dt, const std::vector<sf::FloatRect>& blockedAreas) {
     bool isMoving = (movement.x != 0.f || movement.y != 0.f);
 
     if (isMoving) {
-        
-            float len = std::sqrt(movement.x * movement.x + movement.y * movement.y);
+        float len = std::sqrt(movement.x * movement.x + movement.y * movement.y);
         if (len != 0.f)
             movement /= len;
 
-    float angle = std::atan2(movement.y, movement.x) * 180.f / 3.14159f + 90.f;
+        float angle = std::atan2(movement.y, movement.x) * 180.f / 3.14159f + 90.f;
         sprite.setRotation(angle);
 
-    sf::FloatRect nextBounds = sprite.getGlobalBounds();
-    nextBounds.left += movement.x * speed * dt;
-    nextBounds.top += movement.y * speed * dt;
+        sf::Vector2f nextPos = sprite.getPosition() + movement * speed * dt;
+        float radius = getCollisionRadius();
 
-    bool collision = false;
-    for (const auto& rect : blockedAreas) {
-        if (nextBounds.intersects(rect)) {
-            collision = true;
-            break;
+  /*      sf::FloatRect nextBounds = sprite.getGlobalBounds();
+        nextBounds.left += movement.x * speed * dt;
+        nextBounds.top += movement.y * speed * dt;*/
+
+        bool collision = false;
+        for (const auto& rect : blockedAreas) {
+            // Simple rectangle-circle intersection
+            float closestX = std::clamp(nextPos.x, rect.left, rect.left + rect.width);
+            float closestY = std::clamp(nextPos.y, rect.top, rect.top + rect.height);
+
+            float dx = nextPos.x - closestX;
+            float dy = nextPos.y - closestY;
+
+            if ((dx * dx + dy * dy) < (radius * radius)) {
+                collision = true;
+                break;
+            }
         }
-    }
 
-    if (!collision) {
-        sprite.move(movement * speed * dt);
-    }
+        if (!collision) {
+            sprite.move(movement * speed * dt);
+        }
 
-    animTimer += dt;
-    if (animTimer >= animDelay) {
-        animTimer -= animDelay;
-        const int walkingFrames = 4;
-        currentFrame = (currentFrame + 1) % walkingFrames;
-    }
 
-    int col = currentFrame;
-    int row = 0;
-    int left = col * frameWidth;
-    int top = row * frameHeight;
-    sprite.setTextureRect(sf::IntRect(left, top, frameWidth, frameHeight));
+        animTimer += dt;
+        if (animTimer >= animDelay) {
+            animTimer -= animDelay;
+            const int walkingFrames = 4;
+            currentFrame = (currentFrame + 1) % walkingFrames;
+        }
+
+        int col = currentFrame;
+        int row = 0;
+        int left = col * frameWidth;
+        int top = row * frameHeight;
+        sprite.setTextureRect(sf::IntRect(left, top, frameWidth, frameHeight));
     }
     else {
         animTimer = 0.f;
@@ -100,9 +109,39 @@ void Player::update(float dt, const std::vector<sf::FloatRect>& blockedAreas) {
         int top = 1 * frameHeight;
         sprite.setTextureRect(sf::IntRect(left, top, frameWidth, frameHeight));
     }
-
 }
 
 void Player::draw(sf::RenderWindow& window) {
+    sf::CircleShape circle(getCollisionRadius());
+    circle.setOrigin(getCollisionRadius(), getCollisionRadius());
+    circle.setPosition(getCenter());
+    circle.setFillColor(sf::Color::Transparent);
+    circle.setOutlineColor(sf::Color::Blue);
+    circle.setOutlineThickness(1.f);
+    window.draw(circle);
+
+
     window.draw(sprite);
+}
+
+sf::FloatRect Player::getCollisionBounds(const sf::Vector2f& offset) const {
+    // Get the center position of the sprite (already scaled)
+    sf::Vector2f pos = sprite.getPosition();
+    sf::Vector2f size(frameWidth * sprite.getScale().x, frameHeight * sprite.getScale().y);
+
+    return {
+        pos.x - size.x / 2.f + offset.x,
+        pos.y - size.y / 2.f + offset.y,
+        size.x,
+        size.y
+    };
+}
+
+sf::Vector2f Player::getCenter() const {
+    return sprite.getPosition(); // Already centered if origin is set correctly
+}
+
+float Player::getCollisionRadius() const {
+    // Set to match visual size — adjust as needed
+    return 12.f; // in pixels
 }
