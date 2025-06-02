@@ -14,10 +14,8 @@ GameManager::GameManager()
 }
 
 void GameManager::run() {
-
     Slideshow slideshow(window, 2.5f);
-    slideshow.run();
-
+    // slideshow.run();
 
     while (window.isOpen()) {
         float deltaTime = clock.restart().asSeconds();
@@ -49,16 +47,14 @@ void GameManager::processEvents() {
         if (event.type == sf::Event::Closed)
             window.close();
 
-
         if (currentState == GameState::Menu) {
             menu->update(event);
         }
     }
 }
 
-
 void GameManager::update(float dt) {
-    player->update(dt, blockedAreas);
+    player->update(dt, blockedPolygons);
     sf::Vector2f playerPos = player->getPosition();
     sf::Vector2f newCenter = playerPos;
 
@@ -84,15 +80,6 @@ void GameManager::render() {
     chunkManager->draw(window, gameView);
     player->draw(window);
 
-    for (const auto& rect : blockedAreas) {
-        sf::RectangleShape box;
-        box.setPosition(rect.left, rect.top);
-        box.setSize({ rect.width, rect.height });
-        box.setFillColor(sf::Color::Transparent);
-        box.setOutlineColor(sf::Color::Red);
-        box.setOutlineThickness(1.f);
-        window.draw(box);
-    }
     for (const auto& poly : blockedPolygons) {
         sf::ConvexShape shape;
         shape.setPointCount(poly.size());
@@ -103,7 +90,6 @@ void GameManager::render() {
         shape.setOutlineThickness(1.f);
         window.draw(shape);
     }
-
 
     window.display();
 }
@@ -143,14 +129,19 @@ void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
                 float x = obj["x"];
                 float y = obj["y"];
 
-                // Rectangles
+                // Rectangles as polygons
                 if (obj.contains("width") && obj.contains("height")) {
                     float w = obj["width"];
                     float h = obj["height"];
-                    blockedAreas.emplace_back(x, y, w, h);
+                    std::vector<sf::Vector2f> polygon;
+                    polygon.emplace_back(x, y);
+                    polygon.emplace_back(x + w, y);
+                    polygon.emplace_back(x + w, y + h);
+                    polygon.emplace_back(x, y + h);
+                    blockedPolygons.push_back(polygon);
                 }
 
-                // Polygons (converted to bounding boxes for now)
+                // Polygons
                 if (obj.contains("polygon")) {
                     std::vector<sf::Vector2f> polygon;
                     for (const auto& point : obj["polygon"]) {
@@ -160,10 +151,9 @@ void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
                     }
                     blockedPolygons.push_back(polygon);
                 }
-
             }
         }
     }
 
-    std::cout << "Loaded " << blockedAreas.size() << " blocked areas\n";
+    std::cout << "Loaded " << blockedPolygons.size() << " polygons\n";
 }

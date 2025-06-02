@@ -8,11 +8,12 @@ public:
 
     void setPosition(const sf::Vector2f& pos);
     sf::Vector2f getPosition() const;
-    void update(float dt, const std::vector<sf::FloatRect>& blockedAreas);
+    void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void draw(sf::RenderWindow& window);
     sf::FloatRect getCollisionBounds(const sf::Vector2f& offset = {}) const;
     sf::Vector2f getCenter() const;
     float getCollisionRadius() const;
+    bool circleIntersectsPolygon(const sf::Vector2f& circleCenter, float radius, const std::vector<sf::Vector2f>& polygon);
 
 
 private:
