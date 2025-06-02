@@ -2,6 +2,7 @@
 #include <SFML/Window/Keyboard.hpp>
 #include "ResourceManager.h"
 #include <cmath>
+#include <algorithm> // for std::clamp
 
 Player::Player()
     : frameWidth(0)
@@ -36,20 +37,41 @@ sf::Vector2f Player::getPosition() const {
     return sprite.getPosition();
 }
 
-void Player::update(float dt, const std::vector<sf::FloatRect>& blockedAreas) {
+bool Player::circleIntersectsPolygon(const sf::Vector2f& circleCenter, float radius, const std::vector<sf::Vector2f>& polygon) {
+    size_t count = polygon.size();
+    for (size_t i = 0; i < count; ++i) {
+        sf::Vector2f p1 = polygon[i];
+        sf::Vector2f p2 = polygon[(i + 1) % count];
+
+        sf::Vector2f seg = p2 - p1;
+        sf::Vector2f toCircle = circleCenter - p1;
+
+        float segLengthSq = seg.x * seg.x + seg.y * seg.y;
+        if (segLengthSq == 0.f)
+            continue;
+
+        float t = std::clamp((seg.x * toCircle.x + seg.y * toCircle.y) / segLengthSq, 0.f, 1.f);
+        sf::Vector2f closest = p1 + t * seg;
+
+        float dx = closest.x - circleCenter.x;
+        float dy = closest.y - circleCenter.y;
+        if ((dx * dx + dy * dy) < radius * radius)
+            return true;
+    }
+
+    return false;
+}
+
+void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     sf::Vector2f movement(0.f, 0.f);
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
         movement.x -= 1.f;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
         movement.x += 1.f;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
         movement.y -= 1.f;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
         movement.y += 1.f;
 
     bool isMoving = (movement.x != 0.f || movement.y != 0.f);
@@ -65,20 +87,9 @@ void Player::update(float dt, const std::vector<sf::FloatRect>& blockedAreas) {
         sf::Vector2f nextPos = sprite.getPosition() + movement * speed * dt;
         float radius = getCollisionRadius();
 
-  /*      sf::FloatRect nextBounds = sprite.getGlobalBounds();
-        nextBounds.left += movement.x * speed * dt;
-        nextBounds.top += movement.y * speed * dt;*/
-
         bool collision = false;
-        for (const auto& rect : blockedAreas) {
-            // Simple rectangle-circle intersection
-            float closestX = std::clamp(nextPos.x, rect.left, rect.left + rect.width);
-            float closestY = std::clamp(nextPos.y, rect.top, rect.top + rect.height);
-
-            float dx = nextPos.x - closestX;
-            float dy = nextPos.y - closestY;
-
-            if ((dx * dx + dy * dy) < (radius * radius)) {
+        for (const auto& poly : blockedPolygons) {
+            if (circleIntersectsPolygon(nextPos, radius, poly)) {
                 collision = true;
                 break;
             }
@@ -87,7 +98,6 @@ void Player::update(float dt, const std::vector<sf::FloatRect>& blockedAreas) {
         if (!collision) {
             sprite.move(movement * speed * dt);
         }
-
 
         animTimer += dt;
         if (animTimer >= animDelay) {
@@ -138,10 +148,11 @@ sf::FloatRect Player::getCollisionBounds(const sf::Vector2f& offset) const {
 }
 
 sf::Vector2f Player::getCenter() const {
-    return sprite.getPosition(); // Already centered if origin is set correctly
+    sf::Vector2f pos = sprite.getPosition();
+    return { pos.x - 2.f, pos.y + 4.f }; // 🔁 שמאלה ולמטה
 }
 
 float Player::getCollisionRadius() const {
     // Set to match visual size — adjust as needed
-    return 12.f; // in pixels
+    return 6.f; // in pixels
 }
