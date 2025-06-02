@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.26)
+﻿cmake_minimum_required (VERSION 3.26)
 
 project (oop2_ex04)
 set (MY_AUTHORS "YOUR-NAME-HERE")
@@ -16,6 +16,9 @@ add_subdirectory (include)
 add_subdirectory (src)
 add_subdirectory (resources)
 
+# 💡 Copy resources folder into build directory
+file(COPY resources DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 include (cmake/Zip.cmake)
 
 set (SFML_LOCATION "C:/SFML/SFML-2.6.1")
@@ -28,4 +31,3 @@ set_target_properties (sfml-main sfml-system sfml-window sfml-graphics sfml-audi
 target_link_libraries (${CMAKE_PROJECT_NAME} sfml-graphics sfml-main)
 
 include (cmake/SFML.cmake)
-

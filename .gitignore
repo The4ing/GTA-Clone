@@ -22,6 +22,7 @@
 *.db
 *.sbr
 *.class
+*.idea
 
 # Ignore CMake / SFML / build outputs
 build/

@@ -1,12 +1,14 @@
 #include "Chunk.h"
-#include <cstdlib>   // ??rand()
-#include <ctime>     // ??time()
-#include <iostream>  // ?????? ?????? Debug (?????????)
+#include "ResourceManager.h"
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+#include <algorithm> 
 
 Chunk::Chunk(int cx, int cy)
     : xIndex(cx), yIndex(cy), loaded(false)
 {
-    // seed ??? ??????, ??? ???
+    
     static bool seeded = false;
     if (!seeded) {
         std::srand(static_cast<unsigned int>(std::time(nullptr)));
@@ -22,62 +24,64 @@ void Chunk::load() {
     if (loaded) return;
     loaded = true;
 
-    // ???? ???????? ????? ?? "?????" ??? ???? ????? ??? ??????
-    // ????? ????? ???? ??'???:
-    float baseX = static_cast<float>(xIndex * CHUNK_SIZE);
-    float baseY = static_cast<float>(yIndex * CHUNK_SIZE);
+    sf::Texture& mapTex = ResourceManager::getInstance().getTexture("map"); 
+        chunkSprite.setTexture(mapTex);
 
-    // 1. ????? StaticObject (???? ???, ?????, ?? ????? ??????)
+    int left = xIndex * CHUNK_SIZE;
+    int top = yIndex * CHUNK_SIZE;
+    int texW = static_cast<int>(mapTex.getSize().x);
+    int texH = static_cast<int>(mapTex.getSize().y);
+
+    int width = std::min(CHUNK_SIZE, texW - left);
+    int height = std::min(CHUNK_SIZE, texH - top);
+
+    chunkSprite.setTextureRect({ left, top, width, height });
+    chunkSprite.setPosition(static_cast<float>(left), static_cast<float>(top));
+
+    
+
     StaticObject* building = new StaticObject();
     {
-        // ????? ???? ????? ??????:
-        float bx = baseX + CHUNK_SIZE / 2.0f - 32.f; // ???? ??? ???? ???? ???????
-        float by = baseY + CHUNK_SIZE / 2.0f - 32.f;
+        float bx = left + CHUNK_SIZE / 2.0f - 32.f;
+        float by = top + CHUNK_SIZE / 2.0f - 32.f;
         building->setPosition({ bx, by });
     }
     staticObjs.push_back(building);
 
-    // 2. ????? ??? ????? ??? ????????? ??????? ???? ??????
-    int numPeds = 3; // ???? ????? ????? ??? ???????
-    for (int i = 0; i < numPeds; ++i) {
-        Pedestrian* ped = new Pedestrian();
-        float px = baseX + static_cast<float>(std::rand() % CHUNK_SIZE);
-        float py = baseY + static_cast<float>(std::rand() % CHUNK_SIZE);
-        ped->setPosition({ px, py });
-        peds.push_back(ped);
-    }
+   
+    int numPeds = 3;
+    
 
-    // ?????????: ????? Debug
-    // std::cout << "[Chunk] Loaded chunk (" << xIndex << ", " << yIndex << ")\n";
+    
 }
 
 void Chunk::unload() {
     if (!loaded) return;
     loaded = false;
 
-    // ????? StaticObjects
+    
     for (auto* obj : staticObjs) {
         delete obj;
     }
     staticObjs.clear();
 
-    // ????? Pedestrians
     for (auto* ped : peds) {
         delete ped;
     }
     peds.clear();
 
-    // ?????????: ????? Debug
-    // std::cout << "[Chunk] Unloaded chunk (" << xIndex << ", " << yIndex << ")\n";
+    
 }
 
 void Chunk::draw(sf::RenderTarget& target) {
     if (!loaded) return;
-    // ???? ?? StaticObject
+
+    target.draw(chunkSprite);
+
     for (auto* obj : staticObjs) {
         obj->draw(target);
     }
-    // ???? ?? Pedestrian
+
     for (auto* ped : peds) {
         ped->draw(target);
     }
@@ -85,14 +89,14 @@ void Chunk::draw(sf::RenderTarget& target) {
 
 void Chunk::update(float dt) {
     if (!loaded) return;
-    // ?? ????? ??? ???? ????:
+   
     for (auto* ped : peds) {
         ped->update(dt);
     }
 }
 
 sf::Vector2f Chunk::getCenterPosition() const {
-    // ????? ?? ?????? ????? ??? (xIndex * CHUNK_SIZE + CHUNK_SIZE/2, ... )
+    
     return {
         static_cast<float>(xIndex * CHUNK_SIZE + CHUNK_SIZE / 2),
         static_cast<float>(yIndex * CHUNK_SIZE + CHUNK_SIZE / 2)
