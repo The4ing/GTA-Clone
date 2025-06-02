@@ -17,5 +17,6 @@ private:
     std::vector<std::string> imageKeys = {
         "SF",
         "SS",
+        "ST",
     };
 };

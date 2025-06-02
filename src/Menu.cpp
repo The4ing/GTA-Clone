@@ -1,5 +1,6 @@
 ﻿#include "Menu.h"
 #include "ResourceManager.h"
+#include "Settings.h"
 
 Menu::Menu(sf::RenderWindow& win) : window(win) {
     font = ResourceManager::getInstance().getFont("main");
@@ -49,7 +50,22 @@ void Menu::update(sf::Event& event) {
                 event.mouseButton.button == sf::Mouse::Left) {
 
                 if (options[i].getString() == "Settings") {
-                    //openSettingsWindow();  // לקרוא למחלקה של Settings כאן
+                   
+                    Settings settings(window);
+                    while (!settings.shouldExit()) {
+                        sf::Event settingsEvent;
+                        while (window.pollEvent(settingsEvent)) {
+                            if (settingsEvent.type == sf::Event::Closed)
+                                window.close();
+
+                            settings.handleEvent(settingsEvent);
+                        }
+
+                        settings.update();
+                        window.clear();
+                        settings.draw();
+                        window.display();
+                    }
                 }
                 else {
                     selectedIndex = static_cast<int>(i);

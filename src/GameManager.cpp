@@ -33,7 +33,7 @@ void GameManager::run() {
                     startGameFullscreen();
                 else if (selected == "Exit")
                     window.close();
-                // Settings יטופל כבר בתוך Menu::update
+               
             }
 
             window.clear();

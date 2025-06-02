@@ -16,6 +16,8 @@ void ResourceInitializer::loadAll() {
     rm.loadTexture("background_menu",  "resources/GtaLogo.png");
     rm.loadTexture("SF", "resources/SF.png");
     rm.loadTexture("SS", "resources/SS.png");
+    rm.loadTexture("ST", "resources/ST.png");
+    rm.loadTexture("background_set", "resources/set_bk.png");
 
 
     // 4️⃣ טוען תמונת StaticObject לדוגמה (כתל/בניין)
