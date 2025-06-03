@@ -8,6 +8,7 @@
 #include "RoadSegment.h"
 #include "Vehicle.h"
 #include <cstdlib>  // rand()
+#include "QuadTree.h"
 
 using namespace std;
 
@@ -30,7 +31,11 @@ public:
     std::vector<RoadSegment> roads;
     std::vector<Vehicle> vehicles;  
 
-
+    QuadTree<RoadSegment> roadTree{ sf::FloatRect(0, 0, 4640, 4672) };  // ?? ?? ???? ??? ?? ???? ???
+    void buildRoadTree();
+    std::vector<RoadSegment> findNearbyRoads(const sf::FloatRect& area);
+    void handleVehicleTurning(Vehicle& car);
+    bool shouldTurnTo(const Vehicle& vehicle, const RoadSegment& candidateRoad);
 private:
     void processEvents();
     void update(float dt);
@@ -38,6 +43,7 @@ private:
     void startGameFullscreen();
     void loadCollisionRectsFromJSON(const std::string& filename);
     void spawnSingleVehicleOnRoad();
+    std::string getActualLaneDirection(const RoadSegment& road, int laneIndex);
 
     std::vector<std::vector<sf::Vector2f>> blockedPolygons;
 

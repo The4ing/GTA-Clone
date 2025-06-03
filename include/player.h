@@ -19,7 +19,7 @@ public:
 private:
 
     sf::Sprite  sprite;
-    float       speed = 50.f;
+    float       speed = 250.f;
     int         frameWidth;
     int         frameHeight;
     int         currentFrame;

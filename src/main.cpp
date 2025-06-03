@@ -3,6 +3,7 @@
 #include <iostream>
 
 int main() {
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
     try {
         ResourceInitializer::loadAll();
         GameManager game;
