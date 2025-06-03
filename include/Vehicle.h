@@ -1,5 +1,6 @@
 #pragma once
 #include "MovingObject.h"
+#include "RoadSegment.h"
 
 class Vehicle : public MovingObject {
 public:
@@ -15,10 +16,16 @@ public:
     void setTexture(const sf::Texture& texture);
     void setDirectionVec(const std::string& dir);
     void setScale(float scaleX, float scaleY);
+    void startTurn(sf::Vector2f from, sf::Vector2f control, sf::Vector2f to);
+   //bool shouldTurnTo(const RoadSegment& nextRoad) const;
+    void setCurrentRoad(const RoadSegment* road);
+    bool isInTurn() const;
 
+    const RoadSegment* getCurrentRoad() const;
+
+    const RoadSegment* currentRoad = nullptr;
 
 private:
-    void startTurn(sf::Vector2f from, sf::Vector2f control, sf::Vector2f to);
 
     sf::Sprite sprite;
     sf::Vector2f position;
@@ -28,6 +35,8 @@ private:
     float bezierT = 0.f;
     float bezierSpeed = 0.0004f;
     sf::Vector2f bezierP0, bezierP1, bezierP2; // from, control, to
+
+
 
 };
 

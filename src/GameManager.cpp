@@ -4,6 +4,8 @@
 #include "Slideshow.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <cstdlib>
+#include <ctime>
 using json = nlohmann::json;
 
 GameManager::GameManager()
@@ -55,6 +57,37 @@ void GameManager::processEvents() {
 
 void GameManager::update(float dt) {
     player->update(dt, blockedPolygons);
+
+    for (auto& vehicle : vehicles) {
+        vehicle.update(dt);
+
+        // אם הרכב לא נמצא כבר בפנייה
+        if (!vehicle.isInTurn()) {
+            sf::Vector2f pos = vehicle.getPosition();
+            float queryRange = 100.f; // טווח בדיקה סביב הרכב
+
+            std::vector<const RoadSegment*> nearbyRoads;
+            sf::FloatRect queryArea(pos.x - queryRange / 2, pos.y - queryRange / 2, queryRange, queryRange);
+            roadTree.query(queryArea, nearbyRoads);
+
+
+            for (const RoadSegment* nextRoad : nearbyRoads) {
+                if (nextRoad->bounds.contains(pos)) continue; // אל תנסה לפנות לאותו קטע כביש
+
+                if (shouldTurnTo(vehicle, *nextRoad)) {
+                    sf::Vector2f from = pos;
+                    sf::Vector2f to = nextRoad->getLaneCenter(0); // אפשר להחליף ל־getClosestLaneTo(vehicle)
+                    sf::Vector2f control = (from + to) / 2.f;
+
+                    vehicle.startTurn(from, control, to);
+                    vehicle.setDirectionVec(getActualLaneDirection(*nextRoad, 0));
+                    break; // רק פנייה אחת
+                }
+            }
+        }
+    }
+
+    // עדכון תצוגה
     sf::Vector2f playerPos = player->getPosition();
     sf::Vector2f newCenter = playerPos;
 
@@ -65,14 +98,15 @@ void GameManager::update(float dt) {
     if (viewSize.x > MAP_WIDTH)  halfW = MAP_WIDTH * 0.5f;
     if (viewSize.y > MAP_HEIGHT) halfH = MAP_HEIGHT * 0.5f;
 
-    if (newCenter.x < halfW)              newCenter.x = halfW;
+    if (newCenter.x < halfW)               newCenter.x = halfW;
     if (newCenter.x > (MAP_WIDTH - halfW)) newCenter.x = MAP_WIDTH - halfW;
-    if (newCenter.y < halfH)              newCenter.y = halfH;
+    if (newCenter.y < halfH)               newCenter.y = halfH;
     if (newCenter.y > (MAP_HEIGHT - halfH))newCenter.y = MAP_HEIGHT - halfH;
 
     gameView.setCenter(newCenter);
     chunkManager->updateChunks(newCenter, gameView);
 }
+
 
 void GameManager::render() {
     window.clear(sf::Color::Black);
@@ -103,6 +137,11 @@ void GameManager::startGameFullscreen() {
     window.setFramerateLimit(60);
 
     loadCollisionRectsFromJSON("resources/try.tmj");
+
+    // בנה את העץ לאחר טעינת הכבישים
+    buildRoadTree();
+
+    // צור רכב לדוגמה
     spawnSingleVehicleOnRoad();
 
     chunkManager = std::make_unique<ChunkManager>();
@@ -116,6 +155,7 @@ void GameManager::startGameFullscreen() {
 
     currentState = GameState::Playing;
 }
+
 
 void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
     std::ifstream file(filename);
@@ -198,19 +238,125 @@ void GameManager::spawnSingleVehicleOnRoad() {
 
     // בחר נתיב אקראי
     int laneIndex = rand() % std::max(1, road.lanes);
+    sf::Vector2f laneCenter = road.getLaneCenter(laneIndex);
 
-    // קבל את מרכז הנתיב
-    sf::Vector2f spawnPos = road.getLaneCenter(laneIndex);
+    // אורך רכב משוער
+    float carLength = 50.f;
+
+    // הוסף מיקום רנדומלי לאורך הנתיב
+    if (road.direction == "up" || road.direction == "down") {
+        float maxOffset = road.bounds.height - carLength;
+        if (maxOffset < 0) maxOffset = 0;
+
+        float offset = static_cast<float>(rand()) / RAND_MAX * maxOffset;
+
+        if (road.direction == "up")
+            laneCenter.y = road.bounds.top + road.bounds.height - offset;
+        else
+            laneCenter.y = road.bounds.top + offset;
+
+        laneCenter.y = std::clamp(laneCenter.y, road.bounds.top, road.bounds.top + road.bounds.height);
+    }
+    else if (road.direction == "left" || road.direction == "right") {
+        float maxOffset = road.bounds.width - carLength;
+        if (maxOffset < 0) maxOffset = 0;
+
+        float offset = static_cast<float>(rand()) / RAND_MAX * maxOffset;
+
+        if (road.direction == "left")
+            laneCenter.x = road.bounds.left + road.bounds.width - offset;
+        else
+            laneCenter.x = road.bounds.left + offset;
+
+        laneCenter.x = std::clamp(laneCenter.x, road.bounds.left, road.bounds.left + road.bounds.width);
+    }
 
     // צור את הרכב
     Vehicle car;
-    car.setTexture(ResourceManager::getInstance().getTexture("car"));  // ודא שיש טקסטורה בשם הזה
-    car.setPosition(spawnPos);
-    car.setDirectionVec(road.direction);
-    car.setScale(0.05f, 0.05f);  // לפי הצורך
+    car.setTexture(ResourceManager::getInstance().getTexture("car"));  // ודא שטקסטורה בשם הזה קיימת
+    car.setPosition(laneCenter);
+    std::string actualDir = getActualLaneDirection(road, laneIndex);
+    car.setDirectionVec(actualDir);
+    car.setScale(0.05f, 0.05f);  // שים סקייל לפי גודל הרכב הרצוי
 
     vehicles.push_back(car);
 
-    std::cout << "Spawned car at (" << spawnPos.x << ", " << spawnPos.y << ") on lane " << laneIndex
-        << " direction: " << road.direction << "\n";
+    std::cout << "Spawned car at (" << laneCenter.x << ", " << laneCenter.y << ") on lane "
+        << laneIndex << " direction: " << road.direction << "\n";
+}
+
+
+
+std::string GameManager::getActualLaneDirection(const RoadSegment& road, int laneIndex) {
+    if (!road.is2D) return road.direction;
+
+    int half = road.lanes / 2;
+    cout << "direction :" << road.direction << " and laneindex: " << laneIndex << " and half:  " << half;
+    if (laneIndex < half) {
+        if (road.direction == "right") return "left";
+        if (road.direction == "left") return "right";
+        if (road.direction == "up") return "down";
+        if (road.direction == "down") return "up";
+    }
+
+    return road.direction;
+}
+
+void GameManager::buildRoadTree() {
+    roadTree = QuadTree<RoadSegment>(sf::FloatRect(0, 0, 4640, 4672));
+    for (const auto& road : roads) {
+        roadTree.insert(road.bounds, road);
+    }
+}
+
+std::vector<RoadSegment> GameManager::findNearbyRoads(const sf::FloatRect& area) {
+    return roadTree.query(area);
+}
+
+void GameManager::handleVehicleTurning(Vehicle& car) {
+    if (!car.currentRoad) return;
+
+    const RoadSegment* road = car.currentRoad;
+    sf::Vector2f pos = car.getPosition();
+
+    // הגדר רדיוס חיפוש סביר סביב הרכב
+    float queryRadius = 30.f;
+    sf::FloatRect searchArea(pos.x - queryRadius, pos.y - queryRadius, queryRadius * 2, queryRadius * 2);
+
+    // חיפוש בצומת
+    std::vector<RoadSegment*> nearby;
+    roadTree.query(searchArea, nearby);
+
+    for (RoadSegment* nextRoad : nearby) {
+        if (nextRoad == road) continue;
+
+        // נבדוק אם הוא ממש נוגע במיקום הרכב (כלומר צומת בפועל)
+        if (nextRoad->bounds.contains(pos)) {
+            // כאן אפשר להוסיף לוגיקת החלטה - ישר / פנייה
+            std::string newDir = getActualLaneDirection(*nextRoad, 0);
+
+            // התחלת תמרון (Bezier)
+            sf::Vector2f from = car.getPosition();
+            sf::Vector2f to = nextRoad->getLaneCenter(0);
+            sf::Vector2f control = (from + to) * 0.5f;  // נקודת אמצע לבקרת העקומה
+
+            car.startTurn(from, control, to);
+            car.setDirectionVec(newDir);
+            car.setCurrentRoad(nextRoad);
+
+            return;
+        }
+    }
+}
+
+bool GameManager::shouldTurnTo(const Vehicle& vehicle, const RoadSegment& candidateRoad) {
+    sf::Vector2f pos = vehicle.getPosition();
+    sf::FloatRect bounds = candidateRoad.bounds;
+
+    // בדיקה אם הרכב קרוב מספיק לגבולות של קטע הכביש החדש
+    const float threshold = 20.f;
+    return std::abs(pos.x - bounds.left) < threshold ||
+        std::abs(pos.x - (bounds.left + bounds.width)) < threshold ||
+        std::abs(pos.y - bounds.top) < threshold ||
+        std::abs(pos.y - (bounds.top + bounds.height)) < threshold;
 }
