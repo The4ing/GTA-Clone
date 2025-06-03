@@ -12,9 +12,22 @@ public:
 
     void move(const sf::Vector2f& direction, float dt) override;
     float getSpeed() const override;
+    void setTexture(const sf::Texture& texture);
+    void setDirectionVec(const std::string& dir);
+    void setScale(float scaleX, float scaleY);
+
 
 private:
+    void startTurn(sf::Vector2f from, sf::Vector2f control, sf::Vector2f to);
+
     sf::Sprite sprite;
     sf::Vector2f position;
     float speed = 250.f;
+    sf::Vector2f directionVec;
+    bool inTurn = false;
+    float bezierT = 0.f;
+    float bezierSpeed = 0.0004f;
+    sf::Vector2f bezierP0, bezierP1, bezierP2; // from, control, to
+
 };
+

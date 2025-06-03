@@ -5,6 +5,10 @@
 #include <iostream>
 #include "player.h"
 #include "ChunkManager.h"
+#include "RoadSegment.h"
+#include "Vehicle.h"
+#include <cstdlib>  // rand()
+
 using namespace std;
 
 const unsigned int WINDOW_WIDTH = 1920;
@@ -23,6 +27,8 @@ public:
     GameManager();
     void run();
     std::vector<sf::FloatRect> blockedAreas;  
+    std::vector<RoadSegment> roads;
+    std::vector<Vehicle> vehicles;  
 
 
 private:
@@ -31,6 +37,7 @@ private:
     void render();
     void startGameFullscreen();
     void loadCollisionRectsFromJSON(const std::string& filename);
+    void spawnSingleVehicleOnRoad();
 
     std::vector<std::vector<sf::Vector2f>> blockedPolygons;
 

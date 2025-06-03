@@ -90,6 +90,9 @@ void GameManager::render() {
         shape.setOutlineThickness(1.f);
         window.draw(shape);
     }
+    // ציור רכבים
+    for (auto& vehicle : vehicles)
+        vehicle.draw(window);
 
     window.display();
 }
@@ -99,7 +102,8 @@ void GameManager::startGameFullscreen() {
     window.create(desktop, "Top-Down GTA Clone", sf::Style::Fullscreen);
     window.setFramerateLimit(60);
 
-    loadCollisionRectsFromJSON("resources/test.tmj");
+    loadCollisionRectsFromJSON("resources/try.tmj");
+    spawnSingleVehicleOnRoad();
 
     chunkManager = std::make_unique<ChunkManager>();
     player = std::make_unique<Player>();
@@ -124,7 +128,7 @@ void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
     file >> data;
 
     for (const auto& layer : data["layers"]) {
-        if (layer["type"] == "objectgroup" && layer["name"] == "collision") {
+        if (layer["type"] == "objectgroup" && (layer["name"] == "collision" || layer["name"] == "roads")) {
             for (const auto& obj : layer["objects"]) {
                 float x = obj["x"];
                 float y = obj["y"];
@@ -138,7 +142,8 @@ void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
                     polygon.emplace_back(x + w, y);
                     polygon.emplace_back(x + w, y + h);
                     polygon.emplace_back(x, y + h);
-                    blockedPolygons.push_back(polygon);
+                    if (layer["name"] != "roads")  // רק אם זה לא כביש, נכניס את זה כחסם
+                        blockedPolygons.push_back(polygon);
                 }
 
                 // Polygons
@@ -151,9 +156,61 @@ void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
                     }
                     blockedPolygons.push_back(polygon);
                 }
+
+                // 🚗 Road segment detection inside collision layer
+                if (obj.contains("properties")) {
+                    RoadSegment road;
+                    road.bounds.left = obj["x"];
+                    road.bounds.top = obj["y"];
+                    road.bounds.width = obj["width"];
+                    road.bounds.height = obj["height"];
+
+                    for (const auto& prop : obj["properties"]) {
+                        std::string name = prop["name"];
+                        if (name == "Direction")
+                            road.direction = prop["value"];
+                        else if (name == "Lanes")
+                            road.lanes = prop["value"];
+                        else if (name == "2D")
+                            road.is2D = prop["value"];
+                    }
+
+                    // We only add if it has a direction
+                    if (!road.direction.empty())
+                        roads.push_back(road);
+                }
             }
         }
     }
 
     std::cout << "Loaded " << blockedPolygons.size() << " polygons\n";
+    std::cout << "Loaded " << roads.size() << " road segments\n";
+}
+
+void GameManager::spawnSingleVehicleOnRoad() {
+    if (roads.empty()) {
+        std::cerr << "No roads loaded to place vehicle.\n";
+        return;
+    }
+
+    // בחר קטע כביש אקראי
+    const RoadSegment& road = roads[rand() % roads.size()];
+
+    // בחר נתיב אקראי
+    int laneIndex = rand() % std::max(1, road.lanes);
+
+    // קבל את מרכז הנתיב
+    sf::Vector2f spawnPos = road.getLaneCenter(laneIndex);
+
+    // צור את הרכב
+    Vehicle car;
+    car.setTexture(ResourceManager::getInstance().getTexture("car"));  // ודא שיש טקסטורה בשם הזה
+    car.setPosition(spawnPos);
+    car.setDirectionVec(road.direction);
+    car.setScale(0.05f, 0.05f);  // לפי הצורך
+
+    vehicles.push_back(car);
+
+    std::cout << "Spawned car at (" << spawnPos.x << ", " << spawnPos.y << ") on lane " << laneIndex
+        << " direction: " << road.direction << "\n";
 }

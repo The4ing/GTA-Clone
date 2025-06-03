@@ -24,7 +24,7 @@ void ResourceInitializer::loadAll() {
     rm.loadTexture("static_building", "resources/building.png");
     rm.loadTexture("map", "resources/map.png"); 
 
-
+    rm.loadTexture("car", "resources/car.png");
     // 5️⃣ (אופציונלי) תמונת הולך רגל נוספות, כדור, פיצוץ וכדומהerrres\n";
 
 
