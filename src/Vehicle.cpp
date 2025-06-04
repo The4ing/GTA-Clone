@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <cmath>
+#include <iostream>
 
 using json = nlohmann::json;
 
@@ -20,7 +21,7 @@ Vehicle::Vehicle() {
 void Vehicle::update(float dt) {
     if (inTurn) {
         // ????? ??? ????? ?????
-        bezierT += dt * 0.5f;  // ?????? ???????? ??????
+        bezierT += dt * 1.f;  // ?????? ???????? ??????
         if (bezierT >= 1.f) {
             bezierT = 1.f;
             inTurn = false;  // ???? ?? ??????
@@ -89,6 +90,8 @@ void Vehicle::startTurn(sf::Vector2f from, sf::Vector2f control, sf::Vector2f to
     inTurn = true;
     position = from;
     sprite.setPosition(position);
+    std::cout << "Turning from " << from.x << "," << from.y << " to " << to.x << "," << to.y << std::endl;
+
 }
 
 
@@ -109,6 +112,8 @@ void Vehicle::setTexture(const sf::Texture& texture) {
 
 
 void Vehicle::setDirectionVec(const std::string& dir) {
+    currentDirectionStr = dir; // ????? ?? ???????
+
     if (dir == "up") {
         directionVec = { 0.f, -1.f };
         sprite.setRotation(0.f);
@@ -129,6 +134,11 @@ void Vehicle::setDirectionVec(const std::string& dir) {
         directionVec = { 0.f, 0.f };
         sprite.setRotation(0.f);  // default
     }
+}
+
+
+std::string Vehicle::getDirection() const {
+    return currentDirectionStr;
 }
 
 

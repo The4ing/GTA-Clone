@@ -45,6 +45,11 @@ private:
     void spawnSingleVehicleOnRoad();
     std::string getActualLaneDirection(const RoadSegment& road, int laneIndex);
 
+    bool isNearEdge(const Vehicle& v, const RoadSegment& road);
+    bool isRightTurn(const std::string& from, const std::string& to);
+    bool isLeftTurn(const std::string& from, const std::string& to);
+    bool isStraight(const std::string& from, const std::string& to);
+
     std::vector<std::vector<sf::Vector2f>> blockedPolygons;
 
     sf::RenderWindow            window;

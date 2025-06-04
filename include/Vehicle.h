@@ -20,13 +20,14 @@ public:
    //bool shouldTurnTo(const RoadSegment& nextRoad) const;
     void setCurrentRoad(const RoadSegment* road);
     bool isInTurn() const;
+    std::string getDirection() const;
 
     const RoadSegment* getCurrentRoad() const;
 
     const RoadSegment* currentRoad = nullptr;
 
 private:
-
+    std::string currentDirectionStr;
     sf::Sprite sprite;
     sf::Vector2f position;
     float speed = 250.f;
