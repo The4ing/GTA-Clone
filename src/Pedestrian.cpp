@@ -11,7 +11,7 @@ Pedestrian::Pedestrian() {
         static_cast<float>(rand() % 600)
     };
     sprite.setPosition(position);
-
+      sprite.setScale(0.5f, 0.5f);
     setRandomDirection();
 }
 
