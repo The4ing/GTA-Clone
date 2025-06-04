@@ -19,4 +19,10 @@ private:
     sf::Vector2f position;
     sf::Vector2f direction;
     float speed = 50.f;
+
+    // תוספת: ניהול זמן לשינוי כיוון
+    float timeSinceLastDirectionChange = 0.f;
+    const float directionChangeInterval = 2.0f; // שניות
+
+    void setRandomDirection();
 };
