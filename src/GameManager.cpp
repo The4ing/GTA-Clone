@@ -164,6 +164,7 @@ void GameManager::update(float dt) {
 
     gameView.setCenter(newCenter);
     chunkManager->updateChunks(newCenter, gameView);
+    chunkManager->updateObjects(dt);
 }
 
 
