@@ -61,31 +61,49 @@ void GameManager::update(float dt) {
     for (auto& vehicle : vehicles) {
         vehicle.update(dt);
 
-        // אם הרכב לא נמצא כבר בפנייה
         if (!vehicle.isInTurn()) {
             sf::Vector2f pos = vehicle.getPosition();
-            float queryRange = 100.f; // טווח בדיקה סביב הרכב
+            float queryRange = 100.f;
 
-            std::vector<const RoadSegment*> nearbyRoads;
             sf::FloatRect queryArea(pos.x - queryRange / 2, pos.y - queryRange / 2, queryRange, queryRange);
-            roadTree.query(queryArea, nearbyRoads);
+            std::vector<RoadSegment> foundRoads = roadTree.query(queryArea); // שלב 1 – וקטור של אובייקטים
+            std::vector<const RoadSegment*> nearbyRoads;                     // שלב 2 – וקטור של פוינטרים
 
+            for (const RoadSegment& road : foundRoads)
+                nearbyRoads.push_back(&road);
+
+            const std::string currentDir = vehicle.getDirection();  // נניח שמימשת getter
+
+            std::vector<const RoadSegment*> possibleTurns;
 
             for (const RoadSegment* nextRoad : nearbyRoads) {
-                if (nextRoad->bounds.contains(pos)) continue; // אל תנסה לפנות לאותו קטע כביש
+                if (!nextRoad->bounds.contains(pos)) {
+                    std::string nextDir = nextRoad->direction;
 
-                if (shouldTurnTo(vehicle, *nextRoad)) {
-                    sf::Vector2f from = pos;
-                    sf::Vector2f to = nextRoad->getLaneCenter(0); // אפשר להחליף ל־getClosestLaneTo(vehicle)
-                    sf::Vector2f control = (from + to) / 2.f;
+                    if (isStraight(currentDir, nextDir) ||
+                        isLeftTurn(currentDir, nextDir) ||
+                        isRightTurn(currentDir, nextDir)) {
 
-                    vehicle.startTurn(from, control, to);
-                    vehicle.setDirectionVec(getActualLaneDirection(*nextRoad, 0));
-                    break; // רק פנייה אחת
+                        possibleTurns.push_back(nextRoad);
+                    }
                 }
+            }
+
+            if (!possibleTurns.empty()) {
+                // תבחר כביש באקראי מתוך האפשרויות
+                const RoadSegment* chosen = possibleTurns[rand() % possibleTurns.size()];
+
+                sf::Vector2f from = pos;
+                sf::Vector2f to = chosen->getLaneCenter(0);
+                sf::Vector2f control = (from + to) / 2.f;
+
+                vehicle.startTurn(from, control, to);
+                vehicle.setDirectionVec(getActualLaneDirection(*chosen, 0));
+                vehicle.setCurrentRoad(chosen);
             }
         }
     }
+
 
     // עדכון תצוגה
     sf::Vector2f playerPos = player->getPosition();
@@ -278,6 +296,8 @@ void GameManager::spawnSingleVehicleOnRoad() {
     std::string actualDir = getActualLaneDirection(road, laneIndex);
     car.setDirectionVec(actualDir);
     car.setScale(0.05f, 0.05f);  // שים סקייל לפי גודל הרכב הרצוי
+    car.setCurrentRoad(&road); // חובה כדי למנוע לולאות פנייה
+
 
     vehicles.push_back(car);
 
@@ -353,10 +373,52 @@ bool GameManager::shouldTurnTo(const Vehicle& vehicle, const RoadSegment& candid
     sf::Vector2f pos = vehicle.getPosition();
     sf::FloatRect bounds = candidateRoad.bounds;
 
-    // בדיקה אם הרכב קרוב מספיק לגבולות של קטע הכביש החדש
-    const float threshold = 20.f;
-    return std::abs(pos.x - bounds.left) < threshold ||
+    const float threshold = 40.f;  // רדיוס סביר לגבול
+    bool closeToEdge =
+        std::abs(pos.x - bounds.left) < threshold ||
         std::abs(pos.x - (bounds.left + bounds.width)) < threshold ||
         std::abs(pos.y - bounds.top) < threshold ||
         std::abs(pos.y - (bounds.top + bounds.height)) < threshold;
+
+    if (!closeToEdge)
+        return false;
+
+    // כיוון נוכחי של הרכב
+    std::string currentDir = vehicle.getDirection();
+    std::string nextDir = candidateRoad.direction;
+
+    // לבדוק אם הפנייה הגיונית (לא סיבוב של 180 מעלות)
+    if (currentDir == "up" && nextDir == "down") return false;
+    if (currentDir == "down" && nextDir == "up")   return false;
+    if (currentDir == "left" && nextDir == "right")return false;
+    if (currentDir == "right" && nextDir == "left") return false;
+
+    return true;
+}
+
+bool GameManager::isNearEdge(const Vehicle& v, const RoadSegment& road) {
+    const float threshold = 30.f;
+    sf::Vector2f pos = v.getPosition();
+    return std::abs(pos.x - road.bounds.left) < threshold ||
+        std::abs(pos.x - (road.bounds.left + road.bounds.width)) < threshold ||
+        std::abs(pos.y - road.bounds.top) < threshold ||
+        std::abs(pos.y - (road.bounds.top + road.bounds.height)) < threshold;
+}
+
+bool GameManager::isRightTurn(const std::string& from, const std::string& to) {
+    return (from == "up" && to == "right") ||
+        (from == "right" && to == "down") ||
+        (from == "down" && to == "left") ||
+        (from == "left" && to == "up");
+}
+
+bool GameManager::isLeftTurn(const std::string& from, const std::string& to) {
+    return (from == "up" && to == "left") ||
+        (from == "left" && to == "down") ||
+        (from == "down" && to == "right") ||
+        (from == "right" && to == "up");
+}
+
+bool GameManager::isStraight(const std::string& from, const std::string& to) {
+    return (from == to);
 }
