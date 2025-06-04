@@ -8,7 +8,7 @@
          "name":"roads",
          "objects":[
                 {
-                 "height":3584.34090909091,
+                 "height":3455.25,
                  "id":1,
                  "name":"",
                  "properties":[
@@ -30,12 +30,12 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":65.2727272727273,
-                 "x":48,
-                 "y":56.75
+                 "width":64.75,
+                 "x":48.25,
+                 "y":118.25
                 }, 
                 {
-                 "height":65.2121212121212,
+                 "height":66.6666666666667,
                  "id":2,
                  "name":"",
                  "properties":[
@@ -47,7 +47,7 @@
                         {
                          "name":"Direction",
                          "type":"string",
-                         "value":"Right"
+                         "value":"right"
                         }, 
                         {
                          "name":"Lanes",
@@ -57,9 +57,9 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":2509.18181818182,
-                 "x":113.818181818182,
-                 "y":56.4545454545455
+                 "width":217.848484848485,
+                 "x":111.818181818182,
+                 "y":56
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -68,7 +68,7 @@
          "y":0
         }],
  "nextlayerid":4,
- "nextobjectid":4,
+ "nextobjectid":3,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

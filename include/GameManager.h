@@ -27,15 +27,14 @@ class GameManager {
 public:
     GameManager();
     void run();
-    std::vector<sf::FloatRect> blockedAreas;  
+   // std::vector<sf::FloatRect> blockedAreas;  
     std::vector<RoadSegment> roads;
     std::vector<Vehicle> vehicles;  
 
-    QuadTree<RoadSegment> roadTree{ sf::FloatRect(0, 0, 4640, 4672) };  // ?? ?? ???? ??? ?? ???? ???
+    QuadTree<RoadSegment> roadTree{ sf::FloatRect(0, 0, 4640, 4672) };  
     void buildRoadTree();
     std::vector<RoadSegment> findNearbyRoads(const sf::FloatRect& area);
-    void handleVehicleTurning(Vehicle& car);
-    bool shouldTurnTo(const Vehicle& vehicle, const RoadSegment& candidateRoad);
+
 private:
     void processEvents();
     void update(float dt);
@@ -45,10 +44,14 @@ private:
     void spawnSingleVehicleOnRoad();
     std::string getActualLaneDirection(const RoadSegment& road, int laneIndex);
 
-    bool isNearEdge(const Vehicle& v, const RoadSegment& road);
+
     bool isRightTurn(const std::string& from, const std::string& to);
     bool isLeftTurn(const std::string& from, const std::string& to);
     bool isStraight(const std::string& from, const std::string& to);
+    bool isDriveable(const RoadSegment& road, sf::Vector2f from, const std::string& direction, float length);
+    sf::Vector2f getEdgePointOfRoad(const RoadSegment& road, const std::string& direction, int laneIndex, bool entry);
+    float length(const sf::Vector2f& a, const sf::Vector2f& b);
+
 
     std::vector<std::vector<sf::Vector2f>> blockedPolygons;
 

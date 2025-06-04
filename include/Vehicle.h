@@ -22,9 +22,17 @@ public:
     bool isInTurn() const;
     std::string getDirection() const;
 
+    static sf::Vector2f bezier(float t, const sf::Vector2f& P0, const sf::Vector2f& P1, const sf::Vector2f& P2);
+
+
     const RoadSegment* getCurrentRoad() const;
 
     const RoadSegment* currentRoad = nullptr;
+    int getCurrentLaneIndex() const { return currentLaneIndex; }
+    void setCurrentLaneIndex(int idx) { currentLaneIndex = idx; }
+    sf::Vector2f bezierP0, bezierP1, bezierP2; // from, control, to
+
+
 
 private:
     std::string currentDirectionStr;
@@ -35,7 +43,8 @@ private:
     bool inTurn = false;
     float bezierT = 0.f;
     float bezierSpeed = 0.0004f;
-    sf::Vector2f bezierP0, bezierP1, bezierP2; // from, control, to
+
+    int currentLaneIndex = 0;
 
 
 
