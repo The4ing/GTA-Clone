@@ -34,6 +34,9 @@ public:
 
 
 
+    void setPreviousRoad(const RoadSegment* road) { previousRoad = road; }
+    const RoadSegment* getPreviousRoad() const { return previousRoad; }
+
 private:
     std::string currentDirectionStr;
     sf::Sprite sprite;
@@ -43,7 +46,7 @@ private:
     bool inTurn = false;
     float bezierT = 0.f;
     float bezierSpeed = 0.0004f;
-
+    const RoadSegment* previousRoad = nullptr;
     int currentLaneIndex = 0;
 
 

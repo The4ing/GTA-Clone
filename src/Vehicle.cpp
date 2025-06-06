@@ -20,24 +20,17 @@ Vehicle::Vehicle() {
 
 void Vehicle::update(float dt) {
     if (inTurn) {
-        bezierT += dt * 1.f;  // ????? ??????? ??????
+        bezierT += dt * 0.7f;  // ????? ?????? ????? ???
         if (bezierT >= 1.f) {
             bezierT = 1.f;
             inTurn = false;
-            std::cout << "[TURN END] pos: " << position.x << ", " << position.y << std::endl;
+            setDirectionVec(currentDirectionStr);
 
-            // ????? ???? ????? ?????? ????? ????
             if (currentRoad) {
-                int lane = currentLaneIndex;
-                // ??? ?????? ?-getLaneEdge ??? ???? (true = ?????)
-                sf::Vector2f entry = currentRoad->getLaneEdge(lane, true);
-                position = entry;
-                sprite.setPosition(entry);
-                // ???? ?? ????? ?????? ??? ?????? ?? ????? ????
-                setDirectionVec(currentDirectionStr);
+                setPosition(currentRoad->getLaneEdge(currentLaneIndex, true));
+                sprite.setPosition(position);
             }
         }
-
 
         float t = bezierT;
         float oneMinusT = 1.f - t;
@@ -46,29 +39,18 @@ void Vehicle::update(float dt) {
             2.f * oneMinusT * t * bezierP1 +
             t * t * bezierP2;
 
-        directionVec = bezierP2 - bezierP0;
-        float len = std::sqrt(directionVec.x * directionVec.x + directionVec.y * directionVec.y);
-        if (len > 0) directionVec /= len;
+        sf::Vector2f tangent =
+            2.f * (1.f - t) * (bezierP1 - bezierP0) +
+            2.f * t * (bezierP2 - bezierP1);
+
+        float angle = std::atan2(tangent.y, tangent.x) * 180.f / 3.14159f + 90.f;
+        sprite.setRotation(angle);
 
         position = pos;
         sprite.setPosition(pos);
-
-        float angle = std::atan2(directionVec.y, directionVec.x) * 180.f / 3.14159f + 90.f;
-        sprite.setRotation(angle);
-
-
-        std::cout << "current dir: " << currentDirectionStr << std::endl;
-        // **????? ?????**
-        std::cout << "[TURN] t: " << bezierT
-            << " pos: " << pos.x << "," << pos.y
-            << " p0: " << bezierP0.x << "," << bezierP0.y
-            << " p1: " << bezierP1.x << "," << bezierP1.y
-            << " p2: " << bezierP2.x << "," << bezierP2.y
-            << std::endl;
     }
-
     else {
-        // ????? ????? ??? ???
+        // ????? ????
         sf::Vector2f dir = directionVec;
         float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
         if (len > 0) dir /= len;
@@ -81,12 +63,11 @@ void Vehicle::update(float dt) {
     }
 }
 
+
 void Vehicle::draw(sf::RenderTarget& target) {
     target.draw(sprite);
 
-    // ???? ?? ?????? ?????? ?? ???? ?????? ?????
     if (inTurn) {
-        // ???? ???????: ???? = ?????, ???? = ????? ?????, ???? = ???
         sf::CircleShape startPoint(5.f);
         startPoint.setFillColor(sf::Color::Green);
         startPoint.setOrigin(5.f, 5.f);
@@ -106,7 +87,6 @@ void Vehicle::draw(sf::RenderTarget& target) {
         target.draw(controlPoint);
         target.draw(endPoint);
 
-        // ????? ?????? (???)
         sf::Vertex line1[] = {
             sf::Vertex(bezierP0, sf::Color::White),
             sf::Vertex(bezierP1, sf::Color::White)
@@ -118,7 +98,6 @@ void Vehicle::draw(sf::RenderTarget& target) {
         target.draw(line1, 2, sf::Lines);
         target.draw(line2, 2, sf::Lines);
 
-        // ????? ????? (????, ?????????)
         for (float t = 0.f; t < 1.f; t += 0.02f) {
             sf::Vector2f pointA = bezier(t, bezierP0, bezierP1, bezierP2);
             sf::Vector2f pointB = bezier(t + 0.02f, bezierP0, bezierP1, bezierP2);
@@ -127,6 +106,7 @@ void Vehicle::draw(sf::RenderTarget& target) {
         }
     }
 }
+
 
 
 
@@ -176,10 +156,8 @@ void Vehicle::setTexture(const sf::Texture& texture) {
     sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
 }
 
-
 void Vehicle::setDirectionVec(const std::string& dir) {
-    currentDirectionStr = dir; // ????? ?? ???????
-
+    currentDirectionStr = dir;
     if (dir == "up") {
         directionVec = { 0.f, -1.f };
         sprite.setRotation(0.f);
@@ -198,9 +176,10 @@ void Vehicle::setDirectionVec(const std::string& dir) {
     }
     else {
         directionVec = { 0.f, 0.f };
-        sprite.setRotation(0.f);  // default
+        sprite.setRotation(0.f);  // ????? ????
     }
 }
+
 
 
 std::string Vehicle::getDirection() const {
