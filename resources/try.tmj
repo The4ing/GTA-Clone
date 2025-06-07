@@ -1,174 +1,182 @@
-{ "compressionlevel":-1,
- "height":146,
- "infinite":false,
- "layers":[
+{
+  "compressionlevel": -1,
+  "height": 146,
+  "infinite": false,
+  "layers": [
+    {
+      "id": 4,
+      "image": "..\/..\/..\/..\/OneDrive\/Desktop\/GTA - Project\/map.png",
+      "imageheight": 4672,
+      "imagewidth": 4640,
+      "name": "Image Layer 1",
+      "opacity": 1,
+      "type": "imagelayer",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 2,
+      "name": "roads",
+      "objects": [
         {
-         "id":4,
-         "image":"..\/..\/..\/..\/OneDrive\/Desktop\/GTA - Project\/map.png",
-         "imageheight":4672,
-         "imagewidth":4640,
-         "name":"Image Layer 1",
-         "opacity":1,
-         "type":"imagelayer",
-         "visible":true,
-         "x":0,
-         "y":0
-        }, 
+          "height": 383.818,
+          "id": 1,
+          "name": "",
+          "properties": [
+            {
+              "name": "2D",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "Direction",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "Lanes",
+              "type": "int",
+              "value": 4
+            }
+          ],
+          "rotation": 0,
+          "type": "",
+          "visible": true,
+          "width": 69.0909,
+          "x": 46.9091,
+          "y": 120.182
+        },
         {
-         "draworder":"topdown",
-         "id":2,
-         "name":"roads",
-         "objects":[
-                {
-                 "height":383.818,
-                 "id":1,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"2D",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"Direction",
-                         "type":"string",
-                         "value":"up"
-                        }, 
-                        {
-                         "name":"Lanes",
-                         "type":"int",
-                         "value":4
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":69.0909,
-                 "x":46.9091,
-                 "y":120.182
-                }, 
-                {
-                 "height":67.7727,
-                 "id":4,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"2D",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"Direction",
-                         "type":"string",
-                         "value":"right"
-                        }, 
-                        {
-                         "name":"Lanes",
-                         "type":"int",
-                         "value":4
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":226.818,
-                 "x":107.864,
-                 "y":56.9091
-                }, 
-                {
-                 "height":381.167,
-                 "id":5,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"2D",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"Direction",
-                         "type":"string",
-                         "value":"up"
-                        }, 
-                        {
-                         "name":"Lanes",
-                         "type":"int",
-                         "value":4
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":99.3333,
-                 "x":332,
-                 "y":118.5
-                }, 
-                {
-                 "height":66.375,
-                 "id":8,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"2D",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"Direction",
-                         "type":"string",
-                         "value":"right"
-                        }, 
-                        {
-                         "name":"Lanes",
-                         "type":"int",
-                         "value":4
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":206.541666666667,
-                 "x":429.708333333333,
-                 "y":56.625
-                }, 
-                {
-                 "height":39,
-                 "id":15,
-                 "name":"",
-                 "properties":[
-                        {
-                         "name":"2D",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"Direction",
-                         "type":"string",
-                         "value":"right"
-                        }, 
-                        {
-                         "name":"Lanes",
-                         "type":"int",
-                         "value":2
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":222.5,
-                 "x":114,
-                 "y":496
-                }],
-         "opacity":1,
-         "type":"objectgroup",
-         "visible":true,
-         "x":0,
-         "y":0
-        }],
- "nextlayerid":5,
- "nextobjectid":16,
- "orientation":"orthogonal",
- "renderorder":"right-down",
- "tiledversion":"1.11.2",
- "tileheight":32,
- "tilesets":[],
- "tilewidth":29,
- "type":"map",
- "version":"1.10",
- "width":160
+          "height": 67.7727,
+          "id": 4,
+          "name": "",
+          "properties": [
+            {
+              "name": "2D",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "Direction",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "Lanes",
+              "type": "int",
+              "value": 4
+            }
+          ],
+          "rotation": 0,
+          "type": "",
+          "visible": true,
+          "width": 226.818,
+          "x": 107.864,
+          "y": 56.9091
+        },
+        {
+          "height": 381.167,
+          "id": 5,
+          "name": "",
+          "properties": [
+            {
+              "name": "2D",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "Direction",
+              "type": "string",
+              "value": "up"
+            },
+            {
+              "name": "Lanes",
+              "type": "int",
+              "value": 4
+            }
+          ],
+          "rotation": 0,
+          "type": "",
+          "visible": true,
+          "width": 99.3333,
+          "x": 332,
+          "y": 118.5
+        },
+        {
+          "height": 66.375,
+          "id": 8,
+          "name": "",
+          "properties": [
+            {
+              "name": "2D",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "Direction",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "Lanes",
+              "type": "int",
+              "value": 4
+            }
+          ],
+          "rotation": 0,
+          "type": "",
+          "visible": true,
+          "width": 206.541666666667,
+          "x": 429.708333333333,
+          "y": 56.625
+        },
+        {
+          "height": 39,
+          "id": 15,
+          "name": "",
+          "properties": [
+            {
+              "name": "2D",
+              "type": "bool",
+              "value": true
+            },
+            {
+              "name": "Direction",
+              "type": "string",
+              "value": "right"
+            },
+            {
+              "name": "Lanes",
+              "type": "int",
+              "value": 2
+            }
+          ],
+          "rotation": 0,
+          "type": "",
+          "visible": true,
+          "width": 222.5,
+          "x": 114,
+          "y": 496
+        }
+      ],
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "nextlayerid": 5,
+  "nextobjectid": 16,
+  "orientation": "orthogonal",
+  "renderorder": "right-down",
+  "tiledversion": "1.11.2",
+  "tileheight": 32,
+  "tilesets": [],
+  "tilewidth": 29,
+  "type": "map",
+  "version": "1.10",
+  "width": 160
 }

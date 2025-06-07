@@ -5,7 +5,7 @@
 class Pedestrian : public MovingObject {
 public:
     Pedestrian();
-    void update(float dt) override;
+    void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) override;
     void draw(sf::RenderTarget& target) override;
 
     sf::Vector2f getPosition() const override;
@@ -13,6 +13,7 @@ public:
 
     void move(const sf::Vector2f& direction, float dt) override;
     float getSpeed() const override;
+    float getCollisionRadius() const;
 
 private:
     sf::Sprite sprite;
@@ -39,6 +40,7 @@ private:
     bool isDead = false;
     void die();
 
+   
     void setRandomDirection();
     void updateSpriteDirection();
    

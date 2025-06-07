@@ -11,7 +11,7 @@ public:
     CarManager();
 
     // ????? ?????
-    void update(float dt);
+    void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void draw(sf::RenderWindow& window);
 
     std::vector<Vehicle>& getVehicles();

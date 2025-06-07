@@ -18,7 +18,7 @@ Vehicle::Vehicle() {
     sprite.setPosition(position);
 }
 
-void Vehicle::update(float dt) {
+void Vehicle::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     if (inTurn) {
         bezierT += dt * 0.7f;  // ????? ?????? ????? ???
         if (bezierT >= 1.f) {

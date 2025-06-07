@@ -1,10 +1,9 @@
 #include "Character.h"
 
-Character::Character() : position(0.f, 0.f) {
-    sprite.setPosition(position);
-}
+Character::Character() {}
+   
 
-void Character::update(float dt) {
+void Character::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     sprite.setPosition(position);
 }
 
@@ -17,12 +16,12 @@ sf::Vector2f Character::getPosition() const {
 }
 
 void Character::setPosition(const sf::Vector2f& pos) {
-    position = pos;
-    sprite.setPosition(position);
+   
+    sprite.move(pos);
 }
 
 void Character::move(const sf::Vector2f& direction, float dt) {
-    position += direction * speed * dt;
+    //position+ = direction * speed * dt;
     sprite.setPosition(position);
 }
 
@@ -38,3 +37,4 @@ void Character::takeDamage(int amount) {
 bool Character::isDead() const {
     return health <= 0;
 }
+

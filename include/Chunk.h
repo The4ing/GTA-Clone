@@ -5,6 +5,7 @@
 #include "StaticObject.h"
 #include "Pedestrian.h"
 
+
 constexpr int CHUNK_SIZE = 360;
 
 class Chunk {
@@ -15,7 +16,7 @@ public:
     void load();
     void unload();
     void draw(sf::RenderTarget& target);
-    void update(float dt);
+    void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     sf::Vector2f getCenterPosition() const;
     bool isLoaded() const;
     int getXIndex() const;
@@ -28,4 +29,6 @@ private:
     sf::Sprite chunkSprite;
     std::vector<StaticObject*> staticObjs;
     std::vector<Pedestrian*> peds;
+   
+
 };

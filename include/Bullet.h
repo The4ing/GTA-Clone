@@ -5,7 +5,7 @@ class Bullet : public MovingObject {
 public:
     Bullet(const sf::Vector2f& start, const sf::Vector2f& dir);
 
-    void update(float dt) override;
+    void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) override;
     void draw(sf::RenderTarget& target) override;
 
     sf::Vector2f getPosition() const override;

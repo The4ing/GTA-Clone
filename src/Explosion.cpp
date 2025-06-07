@@ -7,7 +7,7 @@ Explosion::Explosion(const sf::Vector2f& pos)
     sprite.setPosition(position);
 }
 
-void Explosion::update(float dt) {
+void Explosion::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     timer += dt;
     
 }

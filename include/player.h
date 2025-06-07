@@ -13,7 +13,10 @@ public:
     sf::FloatRect getCollisionBounds(const sf::Vector2f& offset = {}) const;
     sf::Vector2f getCenter() const;
     float getCollisionRadius() const;
-    bool circleIntersectsPolygon(const sf::Vector2f& circleCenter, float radius, const std::vector<sf::Vector2f>& polygon);
+    void takeDamage(int amount) ;
+    
+    
+
 
 
 private:
@@ -27,4 +30,5 @@ private:
     int         sheetRows;
     float       animTimer;
     float       animDelay;
+    sf::Vector2f position;
 };

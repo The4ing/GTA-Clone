@@ -25,9 +25,9 @@ QuadTree<RoadSegment>& CarManager::getRoadTree() {
     return roadTree;
 }
 
-void CarManager::update(float dt) {
+void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     for (auto& vehicle : vehicles) {
-        vehicle.update(dt);
+        vehicle.update(dt, blockedPolygons);
 
         if (vehicle.isInTurn())
             continue;

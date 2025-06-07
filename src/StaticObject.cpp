@@ -4,7 +4,7 @@ StaticObject::StaticObject() : position(0.f, 0.f) {
     sprite.setPosition(position);
 }
 
-void StaticObject::update(float) {
+void StaticObject::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     //nothing
 }
 

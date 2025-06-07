@@ -79,12 +79,12 @@ void ChunkManager::draw(sf::RenderTarget& target, const sf::View& view) {
     }
 }
 
-void ChunkManager::updateObjects(float dt) {
+void ChunkManager::updateObjects(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
 
     for (auto& kv : chunks) {
         Chunk* chunk = kv.second;
         if (chunk->isLoaded()) {
-            chunk->update(dt);
+            chunk->update(dt, blockedPolygons);
         }
     }
 }
