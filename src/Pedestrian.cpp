@@ -6,25 +6,27 @@
 Pedestrian::Pedestrian() {
     sprite.setTexture(ResourceManager::getInstance().getTexture("pedestrian"));
 
+    spriteRect = { 0, 0, frameWidth, frameHeight };
+    sprite.setTextureRect(spriteRect);
+    sprite.setScale(0.8f, 0.8f); // scaled down to match game size
+
     position = {
         static_cast<float>(rand() % 800),
         static_cast<float>(rand() % 600)
     };
     sprite.setPosition(position);
-      sprite.setScale(0.1f, 0.1f);
+
     setRandomDirection();
 }
 
 void Pedestrian::update(float dt) {
     timeSinceLastDirectionChange += dt;
 
-    // החלפת כיוון כל 2 שניות
     if (timeSinceLastDirectionChange >= directionChangeInterval) {
         timeSinceLastDirectionChange = 0.f;
         setRandomDirection();
     }
 
-    // בדיקה אם יוצא מהמסך, ואז שינוי כיוון
     sf::FloatRect bounds = sprite.getGlobalBounds();
 
     if (position.x < 0 || position.x + bounds.width > 800)
@@ -34,7 +36,20 @@ void Pedestrian::update(float dt) {
 
     move(direction, dt);
     sprite.setPosition(position);
+
+    // אנימציית הליכה
+    animationTimer += dt;
+    if (animationTimer >= animationSpeed) {
+        animationTimer = 0.f;
+        currentFrame = (currentFrame + 1) % maxWalkFrames;
+
+        spriteRect.left = currentFrame * frameWidth;
+        spriteRect.top = currentRow * frameHeight;
+        sprite.setTextureRect(spriteRect);
+    }
 }
+
+
 
 void Pedestrian::draw(sf::RenderTarget& target) {
     target.draw(sprite);
@@ -57,7 +72,6 @@ float Pedestrian::getSpeed() const {
     return speed;
 }
 
-// פונקציית עזר לקביעת כיוון אקראי ונורמלי
 void Pedestrian::setRandomDirection() {
     do {
         direction = {
@@ -66,8 +80,28 @@ void Pedestrian::setRandomDirection() {
         };
     } while (direction == sf::Vector2f{ 0.f, 0.f });
 
-    // נורמליזציה – מהירות אחידה לכל כיוון
     float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
     if (length != 0)
         direction /= length;
+
+    updateSpriteDirection();
 }
+
+void Pedestrian::updateSpriteDirection() {
+   
+
+    spriteRect.left = currentFrame * frameWidth;
+    spriteRect.top = currentRow * frameHeight;
+    sprite.setTextureRect(spriteRect);
+}
+
+
+
+
+void Pedestrian::die() {
+    isDead = true;
+    currentFrame = 0;
+    currentRow = 3; // שורה שלישית במידת הצורך
+    animationTimer = 0.f;
+}
+
