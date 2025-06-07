@@ -9,7 +9,7 @@ Police::Police(sf::Vector2f target) :targetPos(target){
     frameHeight = sprite.getTexture()->getSize().y / 2;
     sprite.setTextureRect({ 0, 0, frameWidth, frameHeight });
     sprite.setOrigin(frameWidth / 2.f, frameHeight / 2.f);
-    sprite.setScale(0.25f, 0.25f);
+    sprite.setScale(0.08f, 0.08f);
     speed = 40.f;
 }
 
@@ -17,10 +17,16 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
     float dist = std::hypot(targetPos.x - getPosition().x, targetPos.y - getPosition().y);
 
     if (dist <= detectionRadius) {
-        state = PoliceState::Chasing;
+        if (state != PoliceState::Chasing) {
+            state = PoliceState::Chasing;
+            animationRow = 1; // נניח שהשורה השנייה היא מצב הליכה
+            currentFrame = 0;
+        }
     }
     else if (state == PoliceState::Chasing && dist > detectionRadius + 30.f) {
-        state = PoliceState::Idle; // יצא מטווח, חוזר לשיטוט
+        state = PoliceState::Idle;
+        animationRow = 0; // נניח שהשורה הראשונה היא מצב Idle
+        currentFrame = 0;
     }
 
     if (state == PoliceState::Chasing) {
@@ -29,14 +35,27 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
     else if (state == PoliceState::Idle) {
         wanderTimer -= dt;
         if (wanderTimer <= 0.f) {
-            
             targetPos = getPosition() + sf::Vector2f(rand() % 100 - 50, rand() % 100 - 50);
-            wanderTimer = 2.f + static_cast<float>(rand() % 300) / 100.f; // בין 2 ל-5 שניות
+            wanderTimer = 2.f + static_cast<float>(rand() % 300) / 100.f; // בין 2 ל־5 שניות
         }
-
         moveToward(targetPos, dt, blockedPolygons);
     }
+
+    // 🎞️ עדכון פריים באנימציה
+    animationTimer += dt;
+    if (animationTimer >= animationSpeed) {
+        animationTimer = 0.f;
+        currentFrame = (currentFrame + 1) % 4; // 4 פריימים בשורה
+
+        sprite.setTextureRect({
+            currentFrame * frameWidth,
+            animationRow * frameHeight,
+            frameWidth,
+            frameHeight
+            });
+    }
 }
+
 
 
 void Police::moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {

@@ -1,4 +1,5 @@
 #include "ChunkManager.h"
+#include "Constants.h"
 #include <iostream>
 
 ChunkManager::ChunkManager() {}
@@ -43,6 +44,7 @@ void ChunkManager::updateChunks(const sf::Vector2f& playerPos, const sf::View& v
                 Chunk* existing = it->second;
                 if (!existing->isLoaded()) {
                     existing->load();
+
                 }
             }
         }
@@ -87,4 +89,14 @@ void ChunkManager::updateObjects(float dt, const std::vector<std::vector<sf::Vec
             chunk->update(dt, blockedPolygons);
         }
     }
+}
+
+std::vector<sf::Vector2i> ChunkManager::getActiveChunkCoords() const {
+    std::vector<sf::Vector2i> active;
+    for (const auto& kv : chunks) {
+        if (kv.second->isLoaded()) {
+            active.push_back({ kv.first.first, kv.first.second });
+        }
+    }
+    return active;
 }

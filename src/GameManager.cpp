@@ -82,8 +82,13 @@ void GameManager::update(float dt) {
     gameView.setCenter(newCenter);
     chunkManager->updateChunks(newCenter, gameView);
     chunkManager->updateObjects(dt, blockedPolygons);
-    if (policeManager)
+
+    if (policeManager) {
+        auto activeChunks = chunkManager->getActiveChunkCoords();
+        policeManager->trySpawnRandomPoliceNear(activeChunks, player->getPosition());
         policeManager->update(dt, player->getPosition(), blockedPolygons);
+    }
+
 
 }
 

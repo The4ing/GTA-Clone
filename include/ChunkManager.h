@@ -22,11 +22,15 @@ public:
     void updateChunks(const sf::Vector2f& playerPos, const sf::View& view);
     void draw(sf::RenderTarget& target, const sf::View& view);
     void updateObjects(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
-
+    //for police 
+    std::vector<sf::Vector2i> getActiveChunkCoords() const;
 private:
     Chunk* createChunk(int cx, int cy);
     int maxChunksX;
     int maxChunksY;
     std::unordered_map<std::pair<int, int>, Chunk*, IntPairHash> chunks;
     static constexpr int LOAD_RADIUS = 1;
+
+   
+
 };

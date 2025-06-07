@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "Character.h"
 
@@ -23,13 +23,19 @@ public:
 
 private:
     sf::Vector2f targetPos;
-    int         frameWidth;
-    int         frameHeight;
+    int     frameWidth;
+    int     frameHeight;
     sf::Sprite sprite;
     float speed = 100.f;
     float detectionRadius = 100.f;
     int health = 100;
     PoliceState state = PoliceState::Idle;
     float wanderTimer = 0.f;
+
+    int currentFrame = 0;
+    float animationTimer = 0.f;
+    float animationSpeed = 0.15f; // כמה שניות בין פריימים
+    int animationRow = 1; // 0 = Idle, 1 = Walking (בהתאם לספרייט שלך)
+
 
 };

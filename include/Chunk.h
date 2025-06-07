@@ -6,7 +6,6 @@
 #include "Pedestrian.h"
 
 
-constexpr int CHUNK_SIZE = 360;
 
 class Chunk {
 public:
