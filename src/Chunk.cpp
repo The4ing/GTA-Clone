@@ -1,9 +1,11 @@
 #include "Chunk.h"
-#include "ResourceManager.h"
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <algorithm> 
+#include "Constants.h"
+#include "ResourceManager.h"
+
 
 Chunk::Chunk(int cx, int cy)
     : xIndex(cx), yIndex(cy), loaded(false)
