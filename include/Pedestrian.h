@@ -20,9 +20,26 @@ private:
     sf::Vector2f direction;
     float speed = 50.f;
 
-    // תוספת: ניהול זמן לשינוי כיוון
     float timeSinceLastDirectionChange = 0.f;
     const float directionChangeInterval = 2.0f; // שניות
 
+    // Sprite sheet details
+    sf::IntRect spriteRect;
+    const int frameWidth = 341;
+    const int frameHeight = 512;
+    const int maxWalkFrames = 3;
+
+
+    int currentFrame = 0;
+    float animationTimer = 0.f;
+    const float animationSpeed = 0.12f; // כל 0.1 שניות מחליפים פריים
+    int currentRow = 0; // 0 = קדימה, 1 = צד, 2 = אחורה
+
+    //when he will be dead
+    bool isDead = false;
+    void die();
+
     void setRandomDirection();
+    void updateSpriteDirection();
+   
 };
