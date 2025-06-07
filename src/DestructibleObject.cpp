@@ -7,7 +7,7 @@ DestructibleObject::DestructibleObject() {
     sprite.setPosition(position);
 }
 
-void DestructibleObject::update(float) {
+void DestructibleObject::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     //nothing
 }
 

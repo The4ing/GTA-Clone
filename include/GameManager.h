@@ -6,6 +6,7 @@
 #include "player.h"
 #include "ChunkManager.h"
 #include "CarManager.h"
+#include "PoliceManager.h"
 
 const unsigned int WINDOW_WIDTH = 1920;
 const unsigned int WINDOW_HEIGHT = 1080;
@@ -37,6 +38,7 @@ private:
     std::unique_ptr<ChunkManager> chunkManager;
     std::unique_ptr<Player>     player;
     std::unique_ptr<CarManager> carManager;
+    std::unique_ptr<PoliceManager> policeManager;
     GameState                   currentState;
     sf::Clock                   clock;
 };

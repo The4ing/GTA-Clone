@@ -97,11 +97,11 @@ void Chunk::draw(sf::RenderTarget& target) {
     }
 }
 
-void Chunk::update(float dt) {
+void Chunk::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     if (!loaded) return;
    
     for (auto* ped : peds) {
-        ped->update(dt);
+        ped->update(dt, blockedPolygons);
     }
 }
 

@@ -61,7 +61,7 @@ void GameManager::update(float dt) {
     player->update(dt, blockedPolygons);
 
     if (carManager)
-        carManager->update(dt);
+        carManager->update(dt, blockedPolygons);
 
     // עדכון תצוגה
     sf::Vector2f playerPos = player->getPosition();
@@ -81,7 +81,10 @@ void GameManager::update(float dt) {
 
     gameView.setCenter(newCenter);
     chunkManager->updateChunks(newCenter, gameView);
-    chunkManager->updateObjects(dt);
+    chunkManager->updateObjects(dt, blockedPolygons);
+    if (policeManager)
+        policeManager->update(dt, player->getPosition(), blockedPolygons);
+
 }
 
 void GameManager::render() {
@@ -103,6 +106,8 @@ void GameManager::render() {
 
     if (carManager)
         carManager->draw(window);
+    if (policeManager)
+        policeManager->draw(window);
 
     window.display();
 }
@@ -111,6 +116,10 @@ void GameManager::startGameFullscreen() {
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     window.create(desktop, "Top-Down GTA Clone", sf::Style::Fullscreen);
     window.setFramerateLimit(60);
+
+    //for checking
+    policeManager = std::make_unique<PoliceManager>();
+    policeManager->spawnPolice({ 100.f, 100.f }); 
 
     carManager = std::make_unique<CarManager>();
     carManager->loadRoadsFromJSON("resources/try.tmj");

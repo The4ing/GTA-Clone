@@ -5,7 +5,7 @@
 class Vehicle : public MovingObject {
 public:
     Vehicle();
-    void update(float dt) override;
+    void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) override;
     void draw(sf::RenderTarget& target) override;
 
     sf::Vector2f getPosition() const override;

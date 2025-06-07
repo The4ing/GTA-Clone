@@ -8,7 +8,7 @@ Pedestrian::Pedestrian() {
 
     spriteRect = { 0, 0, frameWidth, frameHeight };
     sprite.setTextureRect(spriteRect);
-    sprite.setScale(0.8f, 0.8f); // scaled down to match game size
+    sprite.setScale(0.07f, 0.07f); // scaled down to match game size
 
     position = {
         static_cast<float>(rand() % 800),
@@ -19,7 +19,7 @@ Pedestrian::Pedestrian() {
     setRandomDirection();
 }
 
-void Pedestrian::update(float dt) {
+void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     timeSinceLastDirectionChange += dt;
 
     if (timeSinceLastDirectionChange >= directionChangeInterval) {
@@ -27,15 +27,24 @@ void Pedestrian::update(float dt) {
         setRandomDirection();
     }
 
-    sf::FloatRect bounds = sprite.getGlobalBounds();
+    sf::Vector2f nextPos = position + direction * speed * dt;
+    float radius = getCollisionRadius(); // ניצור פונקציה דומה לזו של Player
 
-    if (position.x < 0 || position.x + bounds.width > 800)
-        direction.x = -direction.x;
-    if (position.y < 0 || position.y + bounds.height > 600)
-        direction.y = -direction.y;
+    bool collision = false;
+    for (const auto& poly : blockedPolygons) {
+        if (circleIntersectsPolygon(nextPos, radius, poly)) {
+            collision = true;
+            break;
+        }
+    }
 
-    move(direction, dt);
-    sprite.setPosition(position);
+    if (!collision) {
+        position = nextPos;
+        sprite.setPosition(position);
+    }
+    else {
+        setRandomDirection(); // החלף כיוון אם נתקע
+    }
 
     // אנימציית הליכה
     animationTimer += dt;
@@ -48,6 +57,7 @@ void Pedestrian::update(float dt) {
         sprite.setTextureRect(spriteRect);
     }
 }
+
 
 
 
@@ -71,6 +81,11 @@ void Pedestrian::move(const sf::Vector2f& dir, float dt) {
 float Pedestrian::getSpeed() const {
     return speed;
 }
+
+float Pedestrian::getCollisionRadius() const {
+    return 6.f; // כמו ב-Player או בהתאם לגודל הדמות
+}
+
 
 void Pedestrian::setRandomDirection() {
     do {
@@ -104,4 +119,6 @@ void Pedestrian::die() {
     currentRow = 3; // שורה שלישית במידת הצורך
     animationTimer = 0.f;
 }
+
+
 

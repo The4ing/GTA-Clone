@@ -7,7 +7,7 @@ Bullet::Bullet(const sf::Vector2f& start, const sf::Vector2f& dir)
     sprite.setPosition(position);
 }
 
-void Bullet::update(float dt) {
+void Bullet::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     move(direction, dt);
     sprite.setPosition(position);
 }
