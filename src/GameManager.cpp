@@ -88,8 +88,6 @@ void GameManager::update(float dt) {
         policeManager->trySpawnRandomPoliceNear(activeChunks, player->getPosition());
         policeManager->update(dt, player->getPosition(), blockedPolygons);
     }
-
-
 }
 
 void GameManager::render() {
@@ -117,17 +115,88 @@ void GameManager::render() {
     window.display();
 }
 
+void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Cannot open " << filename << std::endl;
+        return;
+    }
+
+    json data;
+    file >> data;
+
+    for (const auto& layer : data["layers"]) {
+        if (layer["type"] == "objectgroup" && (layer["name"] == "collision" || layer["name"] == "roads")) {
+            for (const auto& obj : layer["objects"]) {
+                float x = obj["x"];
+                float y = obj["y"];
+
+                // Rectangles as polygons
+                if (obj.contains("width") && obj.contains("height")) {
+                    float w = obj["width"];
+                    float h = obj["height"];
+                    std::vector<sf::Vector2f> polygon;
+                    polygon.emplace_back(x, y);
+                    polygon.emplace_back(x + w, y);
+                    polygon.emplace_back(x + w, y + h);
+                    polygon.emplace_back(x, y + h);
+                    if (layer["name"] != "roads")
+                        blockedPolygons.push_back(polygon);
+                }
+
+                // Polygons
+                if (obj.contains("polygon")) {
+                    std::vector<sf::Vector2f> polygon;
+                    for (const auto& point : obj["polygon"]) {
+                        float px = x + point["x"].get<float>();
+                        float py = y + point["y"].get<float>();
+                        polygon.emplace_back(px, py);
+                    }
+                    blockedPolygons.push_back(polygon);
+                }
+
+                // Road segment detection inside collision layer
+                if (obj.contains("properties")) {
+                    RoadSegment road;
+                    road.bounds.left = obj["x"];
+                    road.bounds.top = obj["y"];
+                    road.bounds.width = obj["width"];
+                    road.bounds.height = obj["height"];
+
+                    for (const auto& prop : obj["properties"]) {
+                        std::string name = prop["name"];
+                        if (name == "Direction")
+                            road.direction = prop["value"];
+                        else if (name == "Lanes")
+                            road.lanes = prop["value"];
+                        else if (name == "2D")
+                            road.is2D = prop["value"];
+                    }
+
+                    if (!road.direction.empty())
+                        roads.push_back(road);
+                }
+            }
+        }
+    }
+
+    std::cout << "Loaded " << blockedPolygons.size() << " polygons\n";
+    std::cout << "Loaded " << roads.size() << " road segments\n";
+}
+
 void GameManager::startGameFullscreen() {
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     window.create(desktop, "Top-Down GTA Clone", sf::Style::Fullscreen);
     window.setFramerateLimit(60);
 
-    //for checking
     policeManager = std::make_unique<PoliceManager>();
-    policeManager->spawnPolice({ 100.f, 100.f }); 
+    policeManager->spawnPolice({ 100.f, 100.f });
 
     carManager = std::make_unique<CarManager>();
-    carManager->loadRoadsFromJSON("resources/try.tmj");
+
+    loadCollisionRectsFromJSON("resources/map.tmj");
+
+    carManager->setRoads(roads);
     carManager->buildRoadTree();
     carManager->spawnSingleVehicleOnRoad();
     carManager->spawnSingleVehicleOnRoad();
