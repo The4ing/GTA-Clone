@@ -29,8 +29,10 @@ private:
     void update(float dt);
     void render();
     void startGameFullscreen();
+    void loadCollisionRectsFromJSON(const std::string& filename);
 
     std::vector<std::vector<sf::Vector2f>> blockedPolygons;
+    std::vector<RoadSegment> roads;
 
     sf::RenderWindow            window;
     sf::View                    gameView;

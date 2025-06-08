@@ -9,6 +9,10 @@ using json = nlohmann::json;
 
 CarManager::CarManager() {}
 
+void CarManager::setRoads(const std::vector<RoadSegment>& newRoads) {
+    roads = newRoads;
+}
+
 void CarManager::addVehicle(const Vehicle& vehicle) {
     vehicles.push_back(vehicle);
 }
@@ -91,46 +95,7 @@ void CarManager::draw(sf::RenderWindow& window) {
         vehicle.draw(window);
 }
 
-void CarManager::loadRoadsFromJSON(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Cannot open " << filename << std::endl;
-        return;
-    }
-
-    json data;
-    file >> data;
-
-    roads.clear();
-
-    for (const auto& layer : data["layers"]) {
-        if (layer["type"] == "objectgroup" && (layer["name"] == "roads")) {
-            for (const auto& obj : layer["objects"]) {
-                if (obj.contains("properties")) {
-                    RoadSegment road;
-                    road.bounds.left = obj["x"];
-                    road.bounds.top = obj["y"];
-                    road.bounds.width = obj["width"];
-                    road.bounds.height = obj["height"];
-
-                    for (const auto& prop : obj["properties"]) {
-                        std::string name = prop["name"];
-                        if (name == "Direction")
-                            road.direction = prop["value"];
-                        else if (name == "Lanes")
-                            road.lanes = prop["value"];
-                        else if (name == "2D")
-                            road.is2D = prop["value"];
-                    }
-
-                    if (!road.direction.empty())
-                        roads.push_back(road);
-                }
-            }
-        }
-    }
-    std::cout << "Loaded " << roads.size() << " road segments\n";
-}
+// NOTE: loadRoadsFromJSON function removed from use! Now using setRoads() instead.
 
 void CarManager::buildRoadTree() {
     roadTree = QuadTree<RoadSegment>(sf::FloatRect(0, 0, 4640, 4672));
@@ -148,14 +113,10 @@ void CarManager::spawnSingleVehicleOnRoad() {
         std::cerr << "No roads loaded to place vehicle.\n";
         return;
     }
-    // ??? ??? ???? ?????
     int roadIdx = rand() % roads.size();
     const RoadSegment& road = roads[roadIdx];
 
-    // ??? ???? ?????
     int laneIndex = rand() % std::max(1, road.lanes);
-
-    // ??? ????? ?????? ?? ????? (????? ?????, ?? ??? ????? ?????)
     sf::Vector2f laneCenter = road.getLaneCenter(laneIndex);
 
     float carLength = 50.f;
@@ -200,8 +161,6 @@ void CarManager::spawnSingleVehicleOnRoad() {
         << laneIndex << " direction: " << actualDir << " (road#" << roadIdx << ")\n";
 }
 
-
-// ---- ???????? ??? ----
 bool CarManager::isRightTurn(const std::string& from, const std::string& to) {
     return (from == "up" && to == "right") ||
         (from == "right" && to == "down") ||

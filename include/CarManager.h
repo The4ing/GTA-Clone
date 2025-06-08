@@ -10,20 +10,17 @@ class CarManager {
 public:
     CarManager();
 
-    // ????? ?????
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void draw(sf::RenderWindow& window);
 
     std::vector<Vehicle>& getVehicles();
     void addVehicle(const Vehicle& vehicle);
 
-    // ????? ??????
-    void loadRoadsFromJSON(const std::string& filename);
+    void setRoads(const std::vector<RoadSegment>& newRoads); // New setter
     void buildRoadTree();
     std::vector<RoadSegment> findNearbyRoads(const sf::FloatRect& area);
     void spawnSingleVehicleOnRoad();
 
-    // ?????? ?? ????
     std::vector<RoadSegment>& getRoads();
     QuadTree<RoadSegment>& getRoadTree();
 
