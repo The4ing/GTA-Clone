@@ -10,7 +10,6 @@ public:
 
     sf::Vector2f getPosition() const override;
     void setPosition(const sf::Vector2f& pos) override;
-
     void move(const sf::Vector2f& direction, float dt) override;
     float getSpeed() const override;
     float getCollisionRadius() const;
@@ -21,27 +20,20 @@ private:
     sf::Vector2f direction;
     float speed = 50.f;
 
-    float timeSinceLastDirectionChange = 0.f;
-    const float directionChangeInterval = 2.0f; // שניות
-
-    // Sprite sheet details
-    sf::IntRect spriteRect;
-    const int frameWidth = 341;
-    const int frameHeight = 512;
-    const int maxWalkFrames = 3;
-
-
-    int currentFrame = 0;
+    int characterRow = 0; 
+    int currentFrame = 0; 
     float animationTimer = 0.f;
-    const float animationSpeed = 0.12f; // כל 0.1 שניות מחליפים פריים
-    int currentRow = 0; // 0 = קדימה, 1 = צד, 2 = אחורה
+    const float animationSpeed = 0.12f;
+    float timeSinceLastDirectionChange = 0.f;
+    const float directionChangeInterval = 2.0f;
 
-    //when he will be dead
-    bool isDead = false;
-    void die();
+    static constexpr int frameWidth = 64;  
+    static constexpr int frameHeight = 64; 
+    static constexpr int framesPerRow = 3;
+    static constexpr int numCharacters = 7;
 
-   
+    bool facingLeft = false;
+
     void setRandomDirection();
-    void updateSpriteDirection();
-   
+    void updateSprite();
 };

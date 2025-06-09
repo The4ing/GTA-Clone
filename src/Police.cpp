@@ -2,15 +2,22 @@
 #include "ResourceManager.h"
 #include <cmath>
 #include <algorithm>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
-Police::Police(sf::Vector2f target) :targetPos(target){
+Police::Police(sf::Vector2f target) :targetPos(target) {
     sprite.setTexture(ResourceManager::getInstance().getTexture("police"));
-    frameWidth = sprite.getTexture()->getSize().x / 4;
-    frameHeight = sprite.getTexture()->getSize().y / 2;
+    framesPerRow = 6;
+    frameWidth = sprite.getTexture()->getSize().x / framesPerRow;
+    frameHeight = sprite.getTexture()->getSize().y;
     sprite.setTextureRect({ 0, 0, frameWidth, frameHeight });
     sprite.setOrigin(frameWidth / 2.f, frameHeight / 2.f);
-    sprite.setScale(0.08f, 0.08f);
+    //sprite.setPosition(target);
+    sprite.setPosition(100, 100);
+    sprite.setScale(0.07f, 0.07f); 
     speed = 40.f;
+    currentFrame = 0;
 }
 
 void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
@@ -19,13 +26,11 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
     if (dist <= detectionRadius) {
         if (state != PoliceState::Chasing) {
             state = PoliceState::Chasing;
-            animationRow = 1; // נניח שהשורה השנייה היא מצב הליכה
             currentFrame = 0;
         }
     }
     else if (state == PoliceState::Chasing && dist > detectionRadius + 30.f) {
         state = PoliceState::Idle;
-        animationRow = 0; // נניח שהשורה הראשונה היא מצב Idle
         currentFrame = 0;
     }
 
@@ -36,36 +41,40 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         wanderTimer -= dt;
         if (wanderTimer <= 0.f) {
             targetPos = getPosition() + sf::Vector2f(rand() % 100 - 50, rand() % 100 - 50);
-            wanderTimer = 2.f + static_cast<float>(rand() % 300) / 100.f; // בין 2 ל־5 שניות
+            wanderTimer = 2.f + static_cast<float>(rand() % 300) / 100.f; 
         }
         moveToward(targetPos, dt, blockedPolygons);
     }
 
-    // 🎞️ עדכון פריים באנימציה
     animationTimer += dt;
     if (animationTimer >= animationSpeed) {
         animationTimer = 0.f;
-        currentFrame = (currentFrame + 1) % 4; // 4 פריימים בשורה
-
-        sprite.setTextureRect({
-            currentFrame * frameWidth,
-            animationRow * frameHeight,
-            frameWidth,
-            frameHeight
-            });
+        if (std::abs(sprite.getRotation()) > 0.1f && (std::abs(targetPos.x - getPosition().x) > 1.f || std::abs(targetPos.y - getPosition().y) > 1.f)) {
+            currentFrame = (currentFrame + 1) % framesPerRow;
+        }
+        else {
+            currentFrame = 0;
+        }
     }
+    sprite.setTextureRect({
+        currentFrame * frameWidth,
+        0,
+        frameWidth,
+        frameHeight
+        });
 }
-
-
 
 void Police::moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     sf::Vector2f dir = target - getPosition();
     float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
     if (len > 0.f)
         dir /= len;
+    else
+        dir = sf::Vector2f(0.f, 1.f); 
 
-    float angle = std::atan2(dir.y, dir.x) * 180.f / 3.14159f + 90.f;
-    sprite.setRotation(angle);
+    
+    float angle = std::atan2(dir.y, dir.x) * 180.f / M_PI;
+    sprite.setRotation(angle - 270.f);
 
     sf::Vector2f nextPos = sprite.getPosition() + dir * speed * dt;
     bool collision = false;
@@ -95,7 +104,7 @@ bool Police::isDead() const {
 }
 
 float Police::getCollisionRadius() const {
-    return 6.f; // כמו ב-Player או בהתאם לגודל הדמות
+    return 12.f; 
 }
 
 void Police::setTargetPosition(const sf::Vector2f& pos) {
