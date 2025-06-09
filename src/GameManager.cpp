@@ -190,7 +190,7 @@ void GameManager::startGameFullscreen() {
     window.setFramerateLimit(60);
 
     policeManager = std::make_unique<PoliceManager>();
-    policeManager->spawnPolice({ 100.f, 100.f });
+    policeManager->spawnPolice({ 300.f, 300.f });
 
     carManager = std::make_unique<CarManager>();
 

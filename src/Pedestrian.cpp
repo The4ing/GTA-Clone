@@ -2,13 +2,16 @@
 #include "ResourceManager.h"
 #include <cstdlib>
 #include <cmath>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 
 Pedestrian::Pedestrian() {
     sprite.setTexture(ResourceManager::getInstance().getTexture("pedestrian"));
-
-    spriteRect = { 0, 0, frameWidth, frameHeight };
-    sprite.setTextureRect(spriteRect);
-    sprite.setScale(0.07f, 0.07f); // scaled down to match game size
+    characterRow = rand() % numCharacters;
+    currentFrame = 0;
+    sprite.setScale(0.5f, 0.5f);
 
     position = {
         static_cast<float>(rand() % 800),
@@ -17,19 +20,18 @@ Pedestrian::Pedestrian() {
     sprite.setPosition(position);
 
     setRandomDirection();
+    updateSprite();
 }
 
 void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     timeSinceLastDirectionChange += dt;
-
     if (timeSinceLastDirectionChange >= directionChangeInterval) {
         timeSinceLastDirectionChange = 0.f;
         setRandomDirection();
     }
 
     sf::Vector2f nextPos = position + direction * speed * dt;
-    float radius = getCollisionRadius(); // ניצור פונקציה דומה לזו של Player
-
+    float radius = getCollisionRadius();
     bool collision = false;
     for (const auto& poly : blockedPolygons) {
         if (circleIntersectsPolygon(nextPos, radius, poly)) {
@@ -43,23 +45,30 @@ void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
         sprite.setPosition(position);
     }
     else {
-        setRandomDirection(); // החלף כיוון אם נתקע
+        setRandomDirection();
     }
 
-    // אנימציית הליכה
+    // Animation
     animationTimer += dt;
     if (animationTimer >= animationSpeed) {
         animationTimer = 0.f;
-        currentFrame = (currentFrame + 1) % maxWalkFrames;
+        if (std::abs(direction.x) > 0.01f || std::abs(direction.y) > 0.01f) {
+            currentFrame = (currentFrame == 1) ? 2 : 1; 
+        }
+        else {
+            currentFrame = 0; // Stand
+        }
+        updateSprite();
+    }
 
-        spriteRect.left = currentFrame * frameWidth;
-        spriteRect.top = currentRow * frameHeight;
-        sprite.setTextureRect(spriteRect);
+    if (std::abs(direction.x) > 0.01f || std::abs(direction.y) > 0.01f) {
+        float angle = std::atan2(direction.y, direction.x) * 180.f / M_PI;
+        sprite.setRotation(angle + 270.f); 
+    }
+    else {
+        sprite.setRotation(90.f); 
     }
 }
-
-
-
 
 void Pedestrian::draw(sf::RenderTarget& target) {
     target.draw(sprite);
@@ -68,24 +77,15 @@ void Pedestrian::draw(sf::RenderTarget& target) {
 sf::Vector2f Pedestrian::getPosition() const {
     return position;
 }
-
 void Pedestrian::setPosition(const sf::Vector2f& pos) {
     position = pos;
     sprite.setPosition(pos);
 }
-
 void Pedestrian::move(const sf::Vector2f& dir, float dt) {
     position += dir * speed * dt;
 }
-
-float Pedestrian::getSpeed() const {
-    return speed;
-}
-
-float Pedestrian::getCollisionRadius() const {
-    return 6.f; // כמו ב-Player או בהתאם לגודל הדמות
-}
-
+float Pedestrian::getSpeed() const { return speed; }
+float Pedestrian::getCollisionRadius() const { return 10.f; }
 
 void Pedestrian::setRandomDirection() {
     do {
@@ -95,30 +95,13 @@ void Pedestrian::setRandomDirection() {
         };
     } while (direction == sf::Vector2f{ 0.f, 0.f });
 
-    float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
-    if (length != 0)
-        direction /= length;
-
-    updateSpriteDirection();
+    updateSprite();
 }
 
-void Pedestrian::updateSpriteDirection() {
-   
-
-    spriteRect.left = currentFrame * frameWidth;
-    spriteRect.top = currentRow * frameHeight;
-    sprite.setTextureRect(spriteRect);
+void Pedestrian::updateSprite() {
+    int left = currentFrame * frameWidth;
+    int top = characterRow * frameHeight;
+    sprite.setTextureRect(sf::IntRect(left, top, frameWidth, frameHeight));
+    sprite.setOrigin(frameWidth / 2.f, frameHeight / 2.f);
+    sprite.setPosition(position);
 }
-
-
-
-
-void Pedestrian::die() {
-    isDead = true;
-    currentFrame = 0;
-    currentRow = 3; // שורה שלישית במידת הצורך
-    animationTimer = 0.f;
-}
-
-
-
