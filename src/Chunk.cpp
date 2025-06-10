@@ -51,11 +51,11 @@ void Chunk::load() {
     staticObjs.push_back(building);
 
    
-    // נניח שאתה רוצה ליצור 3 הולכי רגל לכל צ'אנק
+    ////////////////
     for (int i = 0; i < 3; ++i) {
         Pedestrian* ped = new Pedestrian();
 
-        // מקם את ההולך רגל בתוך תחום הצ'אנק
+        //
         float x = static_cast<float>(xIndex * CHUNK_SIZE + rand() % CHUNK_SIZE);
          float y = static_cast<float>(yIndex * CHUNK_SIZE + rand() % CHUNK_SIZE);
          ped->setPosition({ x, y });

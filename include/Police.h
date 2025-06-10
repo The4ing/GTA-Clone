@@ -10,7 +10,7 @@ enum class PoliceState {
 
 class Police : public Character {
 public:
-    Police(sf::Vector2f target);
+    Police(sf::Vector2f pos);
 
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
