@@ -6,7 +6,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-Police::Police(sf::Vector2f target) :targetPos(target) {
+Police::Police(sf::Vector2f pos) :targetPos(pos) {
     sprite.setTexture(ResourceManager::getInstance().getTexture("police"));
     framesPerRow = 6;
     frameWidth = sprite.getTexture()->getSize().x / framesPerRow;
@@ -14,7 +14,7 @@ Police::Police(sf::Vector2f target) :targetPos(target) {
     sprite.setTextureRect({ 0, 0, frameWidth, frameHeight });
     sprite.setOrigin(frameWidth / 2.f, frameHeight / 2.f);
     //sprite.setPosition(target);
-    sprite.setPosition(100, 100);
+    sprite.setPosition(pos);
     sprite.setScale(0.07f, 0.07f); 
     speed = 40.f;
     currentFrame = 0;

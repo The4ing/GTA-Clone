@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+#include "GameFactory.h"
+
 using json = nlohmann::json;
 
 GameManager::GameManager()
@@ -85,7 +87,7 @@ void GameManager::update(float dt) {
 
     if (policeManager) {
         auto activeChunks = chunkManager->getActiveChunkCoords();
-        policeManager->trySpawnRandomPoliceNear(activeChunks, player->getPosition());
+      //  policeManager->trySpawnRandomPoliceNear(activeChunks, player->getPosition());
         policeManager->update(dt, player->getPosition(), blockedPolygons);
     }
 }
@@ -184,27 +186,24 @@ void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
     std::cout << "Loaded " << roads.size() << " road segments\n";
 }
 
+
+
 void GameManager::startGameFullscreen() {
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     window.create(desktop, "Top-Down GTA Clone", sf::Style::Fullscreen);
     window.setFramerateLimit(60);
 
-    policeManager = std::make_unique<PoliceManager>();
-    policeManager->spawnPolice({ 300.f, 300.f });
-
-    carManager = std::make_unique<CarManager>();
-
     loadCollisionRectsFromJSON("resources/map.tmj");
 
-    carManager->setRoads(roads);
-    carManager->buildRoadTree();
+    policeManager = GameFactory::createPoliceManager();
+    carManager = GameFactory::createCarManager(roads);
+
     carManager->spawnSingleVehicleOnRoad();
     carManager->spawnSingleVehicleOnRoad();
     carManager->spawnSingleVehicleOnRoad();
 
-    chunkManager = std::make_unique<ChunkManager>();
-    player = std::make_unique<Player>();
-    player->setPosition({ 100.f, 100.f });
+    chunkManager = GameFactory::createChunkManager();
+    player = GameFactory::createPlayer({ 100.f, 100.f });
 
     float winW = static_cast<float>(window.getSize().x);
     float winH = static_cast<float>(window.getSize().y);
@@ -213,3 +212,4 @@ void GameManager::startGameFullscreen() {
 
     currentState = GameState::Playing;
 }
+

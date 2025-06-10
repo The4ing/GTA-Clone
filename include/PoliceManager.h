@@ -5,9 +5,8 @@
 #include <memory>
 #include <unordered_map>
 #include <SFML/System/Vector2.hpp>
+#include "Constants.h"
 
-
-constexpr int CHUNK_SIZE = 360;
 
 
 class PoliceManager {
@@ -23,7 +22,7 @@ public:
 
 
     void trySpawnRandomPoliceNear(const std::vector<sf::Vector2i>& activeChunks, const sf::Vector2f& playerPos);
-    void addActiveChunk(const sf::Vector2i& chunkCoord);
+    //void addActiveChunk(const sf::Vector2i& chunkCoord);
     //new
 
 private:

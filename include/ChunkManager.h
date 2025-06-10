@@ -5,6 +5,7 @@
 #include <utility>
 #include <SFML/Graphics.hpp>
 #include "Chunk.h"
+#include "Constants.h"
 
 struct IntPairHash {
     std::size_t operator()(const std::pair<int, int>& p) const noexcept {
