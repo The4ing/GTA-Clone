@@ -7,16 +7,13 @@
 #endif
 
 
-Pedestrian::Pedestrian() {
+Pedestrian::Pedestrian(sf::Vector2f pos) : position(pos) {
     sprite.setTexture(ResourceManager::getInstance().getTexture("pedestrian"));
     characterRow = rand() % numCharacters;
     currentFrame = 0;
     sprite.setScale(0.5f, 0.5f);
 
-    position = {
-        static_cast<float>(rand() % 800),
-        static_cast<float>(rand() % 600)
-    };
+   
     sprite.setPosition(position);
 
     setRandomDirection();

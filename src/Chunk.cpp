@@ -51,17 +51,7 @@ void Chunk::load() {
     staticObjs.push_back(building);
 
    
-    ////////////////
-    for (int i = 0; i < 3; ++i) {
-        Pedestrian* ped = new Pedestrian();
-
-        //
-        float x = static_cast<float>(xIndex * CHUNK_SIZE + rand() % CHUNK_SIZE);
-         float y = static_cast<float>(yIndex * CHUNK_SIZE + rand() % CHUNK_SIZE);
-         ped->setPosition({ x, y });
-
-         peds.push_back(ped);
-     }
+    
     
 
     
@@ -77,10 +67,7 @@ void Chunk::unload() {
     }
     staticObjs.clear();
 
-    for (auto* ped : peds) {
-        delete ped;
-    }
-    peds.clear();
+    ;
 
     
 }
@@ -94,17 +81,13 @@ void Chunk::draw(sf::RenderTarget& target) {
         obj->draw(target);
     }
 
-    for (auto* ped : peds) {
-        ped->draw(target);
-    }
+   
 }
 
 void Chunk::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     if (!loaded) return;
    
-    for (auto* ped : peds) {
-        ped->update(dt, blockedPolygons);
-    }
+   
 }
 
 sf::Vector2f Chunk::getCenterPosition() const {
