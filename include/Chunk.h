@@ -27,7 +27,7 @@ private:
     bool loaded;
     sf::Sprite chunkSprite;
     std::vector<StaticObject*> staticObjs;
-    std::vector<Pedestrian*> peds;
+   
    
 
 };

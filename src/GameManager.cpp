@@ -65,7 +65,7 @@ void GameManager::update(float dt) {
     if (carManager)
         carManager->update(dt, blockedPolygons);
 
-    // עדכון תצוגה
+    
     sf::Vector2f playerPos = player->getPosition();
     sf::Vector2f newCenter = playerPos;
 
@@ -85,11 +85,11 @@ void GameManager::update(float dt) {
     chunkManager->updateChunks(newCenter, gameView);
     chunkManager->updateObjects(dt, blockedPolygons);
 
-    if (policeManager) {
-        auto activeChunks = chunkManager->getActiveChunkCoords();
-      //  policeManager->trySpawnRandomPoliceNear(activeChunks, player->getPosition());
+    if (policeManager) 
         policeManager->update(dt, player->getPosition(), blockedPolygons);
-    }
+    
+    if (pedestrianManager)
+        pedestrianManager->update(dt, blockedPolygons);
 }
 
 void GameManager::render() {
@@ -113,6 +113,8 @@ void GameManager::render() {
         carManager->draw(window);
     if (policeManager)
         policeManager->draw(window);
+    if (pedestrianManager)
+        pedestrianManager->draw(window);
 
     window.display();
 }
@@ -195,6 +197,7 @@ void GameManager::startGameFullscreen() {
 
     loadCollisionRectsFromJSON("resources/map.tmj");
 
+    pedestrianManager = GameFactory::createPedestrianManager();
     policeManager = GameFactory::createPoliceManager();
     carManager = GameFactory::createCarManager(roads);
 

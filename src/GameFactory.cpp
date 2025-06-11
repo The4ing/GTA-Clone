@@ -18,11 +18,10 @@ std::unique_ptr<CarManager> GameFactory::createCarManager(const std::vector<Road
 std::unique_ptr<PoliceManager> GameFactory::createPoliceManager() {
     auto policeManager = std::make_unique<PoliceManager>();
 
-    // מספר שוטרים התחלתיים – תוכל לשנות
+   
     const int numInitialPolice = 10;
 
     for (int i = 0; i < numInitialPolice; ++i) {
-        // יצירת מיקום אקראי על פני שטח המפה (לדוגמה: מפה של 3000x3000)
         float x = static_cast<float>(rand() % MAP_WIDTH);
         float y = static_cast<float>(rand() % MAP_HEIGHT);
 
@@ -30,6 +29,25 @@ std::unique_ptr<PoliceManager> GameFactory::createPoliceManager() {
     }
 
     return policeManager;
+}
+
+std::unique_ptr<PedestrianManager> GameFactory::createPedestrianManager() {
+    auto pedestrianManager = std::make_unique<PedestrianManager>();
+
+   
+    const int numInitialPolice = 100;
+
+    for (int i = 0; i < numInitialPolice; ++i) {
+       
+        float x = static_cast<float>(rand() % MAP_WIDTH);
+        float y = static_cast<float>(rand() % MAP_HEIGHT);
+
+        pedestrianManager->spawnPedestrian({ x, y });
+    }
+
+    return pedestrianManager;
+
+
 }
 
 

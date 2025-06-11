@@ -7,6 +7,7 @@
 #include "ChunkManager.h"
 #include "CarManager.h"
 #include "PoliceManager.h"
+#include "PedestrianManager.h"
 
 
 
@@ -38,6 +39,7 @@ private:
     std::unique_ptr<Player>     player;
     std::unique_ptr<CarManager> carManager;
     std::unique_ptr<PoliceManager> policeManager;
+    std::unique_ptr<PedestrianManager> pedestrianManager;
     GameState                   currentState;
     sf::Clock                   clock;
 };

@@ -15,7 +15,7 @@ Police::Police(sf::Vector2f pos) :targetPos(pos) {
     sprite.setOrigin(frameWidth / 2.f, frameHeight / 2.f);
     //sprite.setPosition(target);
     sprite.setPosition(pos);
-    sprite.setScale(0.07f, 0.07f); 
+    sprite.setScale(0.04f, 0.04f); 
     speed = 40.f;
     currentFrame = 0;
 }
