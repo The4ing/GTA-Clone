@@ -10,7 +10,7 @@ enum class PoliceState {
 
 class Police : public Character {
 public:
-    Police(sf::Vector2f pos);
+    Police(sf::Vector2f target);
 
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
@@ -30,6 +30,9 @@ public:
     }
 
 private:
+    void setRandomWanderDestination(const sf::FloatRect& mapBounds);
+    float debugPrintTimer = 0.f;
+
     sf::Vector2f targetPos;
     int frameWidth;
     int frameHeight;
@@ -40,8 +43,9 @@ private:
     int health = 100;
     PoliceState state = PoliceState::Idle;
     float wanderTimer = 0.f;
+    sf::Vector2f wanderDestination;
 
     int currentFrame = 0;
     float animationTimer = 0.f;
-    float animationSpeed = 0.13f; 
+    float animationSpeed = 0.13f;
 };

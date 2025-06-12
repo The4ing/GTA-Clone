@@ -51,6 +51,6 @@ std::unique_ptr<PedestrianManager> GameFactory::createPedestrianManager() {
 }
 
 
-std::unique_ptr<ChunkManager> GameFactory::createChunkManager() {
-    return std::make_unique<ChunkManager>();
-}
+//std::unique_ptr<ChunkManager> GameFactory::createChunkManager() {
+//    return std::make_unique<ChunkManager>();
+//}

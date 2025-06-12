@@ -2,11 +2,13 @@
 #include "ResourceManager.h"
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+const sf::FloatRect MAP_BOUNDS(0.f, 0.f, 4640.f, 4670.f);
 
-Police::Police(sf::Vector2f pos) :targetPos(pos) {
+Police::Police(sf::Vector2f target) :targetPos(target) {
     sprite.setTexture(ResourceManager::getInstance().getTexture("police"));
     framesPerRow = 6;
     frameWidth = sprite.getTexture()->getSize().x / framesPerRow;
@@ -14,14 +16,23 @@ Police::Police(sf::Vector2f pos) :targetPos(pos) {
     sprite.setTextureRect({ 0, 0, frameWidth, frameHeight });
     sprite.setOrigin(frameWidth / 2.f, frameHeight / 2.f);
     //sprite.setPosition(target);
-    sprite.setPosition(pos);
-    sprite.setScale(0.04f, 0.04f); 
+    sprite.setPosition(100, 100);
+    setRandomWanderDestination(MAP_BOUNDS);
+
+     sprite.setScale(0.07f, 0.07f); 
     speed = 40.f;
     currentFrame = 0;
 }
 
 void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     float dist = std::hypot(targetPos.x - getPosition().x, targetPos.y - getPosition().y);
+
+    debugPrintTimer += dt;
+    if (debugPrintTimer >= 2.f) { // הדפסה כל 2 שניות
+        float dist = std::hypot(wanderDestination.x - getPosition().x, wanderDestination.y - getPosition().y);
+        debugPrintTimer = 0.f;
+    }
+
 
     if (dist <= detectionRadius) {
         if (state != PoliceState::Chasing) {
@@ -38,13 +49,21 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         moveToward(targetPos, dt, blockedPolygons);
     }
     else if (state == PoliceState::Idle) {
-        wanderTimer -= dt;
-        if (wanderTimer <= 0.f) {
-            targetPos = getPosition() + sf::Vector2f(rand() % 100 - 50, rand() % 100 - 50);
-            wanderTimer = 2.f + static_cast<float>(rand() % 300) / 100.f; 
+        float distToDest = std::hypot(wanderDestination.x - getPosition().x, wanderDestination.y - getPosition().y);
+        if (distToDest < 10.f) { // Arrived
+            setRandomWanderDestination(MAP_BOUNDS);
         }
-        moveToward(targetPos, dt, blockedPolygons);
+        moveToward(wanderDestination, dt, blockedPolygons);
     }
+
+    //else if (state == PoliceState::Idle) {
+    //    wanderTimer -= dt;
+    //    if (wanderTimer <= 0.f) {
+    //        targetPos = getPosition() + sf::Vector2f(rand() % 100 - 50, rand() % 100 - 50);
+    //        wanderTimer = 2.f + static_cast<float>(rand() % 300) / 100.f; 
+    //    }
+    //    moveToward(targetPos, dt, blockedPolygons);
+    //}
 
     animationTimer += dt;
     if (animationTimer >= animationSpeed) {
@@ -70,9 +89,9 @@ void Police::moveToward(const sf::Vector2f& target, float dt, const std::vector<
     if (len > 0.f)
         dir /= len;
     else
-        dir = sf::Vector2f(0.f, 1.f); 
+        dir = sf::Vector2f(0.f, 1.f);
 
-    
+
     float angle = std::atan2(dir.y, dir.x) * 180.f / M_PI;
     sprite.setRotation(angle - 270.f);
 
@@ -104,9 +123,26 @@ bool Police::isDead() const {
 }
 
 float Police::getCollisionRadius() const {
-    return 12.f; 
+    return 12.f;
 }
 
 void Police::setTargetPosition(const sf::Vector2f& pos) {
     targetPos = pos;
+}
+
+void Police::setRandomWanderDestination(const sf::FloatRect& mapBounds) {
+    sf::Vector2f candidate;
+    int tries = 0;
+    bool found = false;
+
+    do {
+        float angle = static_cast<float>(rand()) / RAND_MAX * 2 * M_PI;
+        float radius = static_cast<float>(rand()) / RAND_MAX * 500.f;
+        candidate = getPosition() + sf::Vector2f(std::cos(angle), std::sin(angle)) * radius;
+        if (mapBounds.contains(candidate))
+            found = true;
+        ++tries;
+    } while (!found && tries < 20);
+
+    wanderDestination = candidate;
 }

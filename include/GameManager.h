@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "player.h"
-#include "ChunkManager.h"
+//#include "ChunkManager.h"
 #include "CarManager.h"
 #include "PoliceManager.h"
 #include "PedestrianManager.h"
@@ -35,7 +35,9 @@ private:
     sf::RenderWindow            window;
     sf::View                    gameView;
     std::unique_ptr<Menu>       menu;
-    std::unique_ptr<ChunkManager> chunkManager;
+    sf::Sprite mapSprite;
+    sf::Texture* mapTexture = nullptr;
+//    std::unique_ptr<ChunkManager> chunkManager;
     std::unique_ptr<Player>     player;
     std::unique_ptr<CarManager> carManager;
     std::unique_ptr<PoliceManager> policeManager;

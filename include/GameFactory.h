@@ -13,5 +13,5 @@ public:
     static std::unique_ptr<CarManager> createCarManager(const std::vector<RoadSegment>& roads);
     static std::unique_ptr<PoliceManager> createPoliceManager();
     static std::unique_ptr<PedestrianManager> createPedestrianManager();
-    static std::unique_ptr<ChunkManager> createChunkManager();
+//    static std::unique_ptr<ChunkManager> createChunkManager();
 };

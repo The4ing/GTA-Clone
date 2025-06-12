@@ -9,49 +9,80 @@ struct RoadSegment {
     bool is2D = false;
 
     sf::Vector2f getLaneCenter(int laneIndex) const {
-        if (direction == "up" || direction == "down") {
-            float laneWidth = bounds.width / lanes;
+        int realLanes = lanes;
+        std::string dir = direction;
+        bool reverse = false;
+        if (is2D && lanes > 1) {
+            int half = lanes / 2;
+            if (laneIndex < half) {
+                // ??????? ???????? - ??? ?????
+                reverse = true;
+            }
+        }
+
+        if (dir == "up" || dir == "down") {
+            float laneWidth = bounds.width / realLanes;
             float x = bounds.left + laneWidth * (laneIndex + 0.5f);
-            float y = (direction == "up") ? bounds.top : (bounds.top + bounds.height);
+            float y;
+            if ((dir == "up" && !reverse) || (dir == "down" && reverse))
+                y = bounds.top + bounds.height;
+            else
+                y = bounds.top;
             return { x, y };
         }
-        else { // "left" or "right"
-            float laneHeight = bounds.height / lanes;
-            float x = (direction == "right") ? bounds.left : (bounds.left + bounds.width);
+        else {
+            float laneHeight = bounds.height / realLanes;
             float y = bounds.top + laneHeight * (laneIndex + 0.5f);
+            float x;
+            if ((dir == "right" && !reverse) || (dir == "left" && reverse))
+                x = bounds.left;
+            else
+                x = bounds.left + bounds.width;
             return { x, y };
         }
     }
 
+
     sf::Vector2f getLaneEdge(int laneIndex, bool atStart) const {
-        if (direction == "up") {
-            float laneWidth = bounds.width / lanes;
+        int realLanes = lanes;
+        std::string dir = direction;
+        bool reverse = false;
+        if (is2D && lanes > 1) {
+            int half = lanes / 2;
+            if (laneIndex < half) {
+                reverse = true;
+            }
+        }
+
+        // ??????: atStart ???? ?-!atStart ???????? ????
+        bool effectiveAtStart = reverse ? !atStart : atStart;
+
+        if (dir == "up") {
+            float laneWidth = bounds.width / realLanes;
             float x = bounds.left + laneWidth * (laneIndex + 0.5f);
-            float y = atStart ? (bounds.top + bounds.height) : bounds.top;
+            float y = effectiveAtStart ? (bounds.top + bounds.height) : bounds.top;
             return { x, y };
         }
-        if (direction == "down") {
-            float laneWidth = bounds.width / lanes;
+        if (dir == "down") {
+            float laneWidth = bounds.width / realLanes;
             float x = bounds.left + laneWidth * (laneIndex + 0.5f);
-            float y = atStart ? bounds.top : (bounds.top + bounds.height);
+            float y = effectiveAtStart ? bounds.top : (bounds.top + bounds.height);
             return { x, y };
         }
-        if (direction == "left") {
-            float laneHeight = bounds.height / lanes;
+        if (dir == "left") {
+            float laneHeight = bounds.height / realLanes;
             float y = bounds.top + laneHeight * (laneIndex + 0.5f);
-            float x = atStart ? (bounds.left + bounds.width) : bounds.left;
+            float x = effectiveAtStart ? (bounds.left + bounds.width) : bounds.left;
             return { x, y };
         }
-        if (direction == "right") {
-            float laneHeight = bounds.height / lanes;
+        if (dir == "right") {
+            float laneHeight = bounds.height / realLanes;
             float y = bounds.top + laneHeight * (laneIndex + 0.5f);
-            float x = atStart ? bounds.left : (bounds.left + bounds.width);
+            float x = effectiveAtStart ? bounds.left : (bounds.left + bounds.width);
             return { x, y };
         }
         // fallback
         return { bounds.left, bounds.top };
     }
-
-
 
 };
