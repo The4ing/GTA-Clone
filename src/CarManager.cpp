@@ -36,6 +36,14 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
         if (vehicle.isInTurn())
             continue;
 
+        int laneIndex = vehicle.getCurrentLaneIndex();
+        sf::Vector2f endPoint = vehicle.getCurrentRoad()->getLaneEdge(laneIndex, false);
+        float distanceToEnd = length(vehicle.getPosition(), endPoint);
+
+        // ???? ?? ?? ???? ???? ?????
+        if (distanceToEnd > 10.f)
+            continue;
+
         sf::Vector2f pos = vehicle.getPosition();
         float queryRange = 100.f;
         sf::FloatRect queryArea(pos.x - queryRange / 2, pos.y - queryRange / 2, queryRange, queryRange);
@@ -56,15 +64,12 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
                     isLeftTurn(currentDir, nextDir) ||
                     isRightTurn(currentDir, nextDir)) {
 
-                    int laneIndex = vehicle.getCurrentLaneIndex();
-                    sf::Vector2f fromEdge = getEdgePointOfRoad(*vehicle.getCurrentRoad(), currentDir, laneIndex, false);
-                    sf::Vector2f toEdge = getEdgePointOfRoad(*nextRoad, nextDir, laneIndex, true);
+                    int nextLaneIndex = laneIndex;
+                    sf::Vector2f fromEdge = vehicle.getCurrentRoad()->getLaneEdge(nextLaneIndex, false);
+                    sf::Vector2f toEdge = nextRoad->getLaneEdge(nextLaneIndex, true);
                     float dist = length(fromEdge, toEdge);
-                    sf::Vector2f toEdger = getEdgePointOfRoad(*nextRoad, nextDir, laneIndex, false);
-                    float distEnd = length(fromEdge, toEdger);
-                    float minValue = std::min(dist, distEnd);
 
-                    if (minValue < 100.f && isDriveable(*nextRoad, toEdge, nextDir, 50.0f)) {
+                    if (dist < 100.f && isDriveable(*nextRoad, toEdge, nextDir, 50.0f)) {
                         possibleTurns.push_back(nextRoad);
                     }
                 }
@@ -75,20 +80,33 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
             const RoadSegment* chosen = possibleTurns[0];
             int currentLanes = vehicle.getCurrentRoad()->lanes;
             int nextLanes = chosen->lanes;
-            int laneIndex = vehicle.getCurrentLaneIndex();
-            if (laneIndex >= nextLanes) laneIndex = nextLanes - 1;
+            int chosenLaneIndex = laneIndex;
+            if (chosenLaneIndex >= nextLanes) chosenLaneIndex = nextLanes - 1;
 
-            sf::Vector2f from = vehicle.getCurrentRoad()->getLaneEdge(laneIndex, false);
-            sf::Vector2f to = chosen->getLaneEdge(laneIndex, true);
-            sf::Vector2f control = calcSmartControlPoint(from, to, currentDir, chosen->direction);
+            sf::Vector2f from = vehicle.getCurrentRoad()->getLaneEdge(chosenLaneIndex, false);
+            sf::Vector2f to = chosen->getLaneEdge(chosenLaneIndex, true);
+           // to.y = to.y - 2; //change to const Turn_offset
 
+            // --- ????? ??? ?????? ---
+            std::string turnType = "straight";
+            if (isLeftTurn(currentDir, chosen->direction)) turnType = "left";
+            else if (isRightTurn(currentDir, chosen->direction)) turnType = "right";
+
+            // --- ????? ????? control ---
+            sf::Vector2f control = calcSmartControlPoint(from, to, currentDir, turnType);
+            //sf::Vector2f control(
+            //    std::min(from.x, to.x),
+            //    std::min(from.y, to.y)
+            //);
+            std::cout << "control " <<control.x << " " << control.y;
             vehicle.startTurn(from, control, to);
-            vehicle.setDirectionVec(getActualLaneDirection(*chosen, laneIndex));
+            vehicle.setDirectionVec(getActualLaneDirection(*chosen, chosenLaneIndex));
             vehicle.setCurrentRoad(chosen);
-            vehicle.setCurrentLaneIndex(laneIndex);
+            vehicle.setCurrentLaneIndex(chosenLaneIndex);
         }
     }
 }
+
 
 void CarManager::draw(sf::RenderWindow& window) {
     for (auto& vehicle : vehicles)
@@ -114,9 +132,12 @@ void CarManager::spawnSingleVehicleOnRoad() {
         return;
     }
     int roadIdx = rand() % roads.size();
-    const RoadSegment& road = roads[roadIdx];
+   // const RoadSegment& road = roads[roadIdx];
+    const RoadSegment& road = roads[0];
+
 
     int laneIndex = rand() % std::max(1, road.lanes);
+    laneIndex = 1;
     sf::Vector2f laneCenter = road.getLaneCenter(laneIndex);
 
     float carLength = 50.f;
@@ -196,52 +217,67 @@ bool CarManager::isDriveable(const RoadSegment& road, sf::Vector2f from, const s
     return true;
 }
 
-sf::Vector2f CarManager::getEdgePointOfRoad(const RoadSegment& road, const std::string& direction, int laneIndex, bool entry) {
-    if (direction == "up") {
-        float x = road.bounds.left + road.bounds.width / 2.0f;
-        float y = entry ? road.bounds.top + road.bounds.height : road.bounds.top;
-        return { x, y };
-    }
-    if (direction == "down") {
-        float x = road.bounds.left + road.bounds.width / 2.0f;
-        float y = entry ? road.bounds.top : road.bounds.top + road.bounds.height;
-        return { x, y };
-    }
-    if (direction == "left") {
-        float y = road.bounds.top + road.bounds.height / 2.0f;
-        float x = entry ? road.bounds.left + road.bounds.width : road.bounds.left;
-        return { x, y };
-    }
-    if (direction == "right") {
-        float y = road.bounds.top + road.bounds.height / 2.0f;
-        float x = entry ? road.bounds.left : road.bounds.left + road.bounds.width;
-        return { x, y };
-    }
-    return { road.bounds.left, road.bounds.top };
-}
+//sf::Vector2f CarManager::getEdgePointOfRoad(const RoadSegment& road, const std::string& direction, int laneIndex, bool entry) {
+//    if (direction == "up") {
+//        float x = road.bounds.left + road.bounds.width / 2.0f;
+//        float y = entry ? road.bounds.top + road.bounds.height : road.bounds.top;
+//        return { x, y };
+//    }
+//    if (direction == "down") {
+//        float x = road.bounds.left + road.bounds.width / 2.0f;
+//        float y = entry ? road.bounds.top : road.bounds.top + road.bounds.height;
+//        return { x, y };
+//    }
+//    if (direction == "left") {
+//        float y = road.bounds.top + road.bounds.height / 2.0f;
+//        float x = entry ? road.bounds.left + road.bounds.width : road.bounds.left;
+//        return { x, y };
+//    }
+//    if (direction == "right") {
+//        float y = road.bounds.top + road.bounds.height / 2.0f;
+//        float x = entry ? road.bounds.left : road.bounds.left + road.bounds.width;
+//        return { x, y };
+//    }
+//    return { road.bounds.left, road.bounds.top };
+//}
 
 float CarManager::length(const sf::Vector2f& a, const sf::Vector2f& b) {
     return std::sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
 
-sf::Vector2f CarManager::calcSmartControlPoint(
-    const sf::Vector2f& from,
-    const sf::Vector2f& to,
-    const std::string& dirFrom,
-    const std::string& dirTo)
+sf::Vector2f CarManager::calcSmartControlPoint(const sf::Vector2f& from, const sf::Vector2f& to, const std::string& dirFrom, const std::string& turnType)
 {
-    if (dirFrom == dirTo) {
-        return (from + to) * 0.5f;
-    }
-    else {
-        if (std::abs(from.x - to.x) > std::abs(from.y - to.y)) {
+    std::cout << " **********************************************************************turn type " << turnType << " from " << dirFrom << std::endl;
+
+    if (turnType == "left") {
+        if (dirFrom == "right")
             return { from.x, to.y };
-        }
-        else {
+        if (dirFrom == "left")
             return { to.x, from.y };
-        }
+        if (dirFrom == "down")
+            return { from.x, to.y};
+        if (dirFrom == "up")
+            return { to.x, from.y };
     }
+    if (turnType == "right") {
+        if (dirFrom == "right")
+            return { from.x, to.y };
+        if (dirFrom == "left")
+            return { from.x, to.y };
+        if (dirFrom == "down")
+            return { to.x, from.y };
+        if (dirFrom == "up")
+            //sf::Vector2f control(
+//    std::min(from.x, to.x),
+//    std::min(from.y, to.y)
+//);
+            return { std::min(from.x, to.x), std::min(from.y, to.y)  + 2};
+    }
+  
+    // ???/????? ????: ???? ????
+    return (from + to) * 0.5f;
 }
+
 
 std::string CarManager::getActualLaneDirection(const RoadSegment& road, int laneIndex) {
     if (!road.is2D) return road.direction;

@@ -82,8 +82,8 @@ void GameManager::update(float dt) {
     if (newCenter.y > (MAP_HEIGHT - halfH))newCenter.y = MAP_HEIGHT - halfH;
 
     gameView.setCenter(newCenter);
-    chunkManager->updateChunks(newCenter, gameView);
-    chunkManager->updateObjects(dt, blockedPolygons);
+   //chunkManager->updateChunks(newCenter, gameView);
+ //   chunkManager->updateObjects(dt, blockedPolygons);
 
     if (policeManager) 
         policeManager->update(dt, player->getPosition(), blockedPolygons);
@@ -95,7 +95,9 @@ void GameManager::update(float dt) {
 void GameManager::render() {
     window.clear(sf::Color::Black);
     window.setView(gameView);
-    chunkManager->draw(window, gameView);
+    window.draw(mapSprite);
+
+ //   chunkManager->draw(window, gameView);
     player->draw(window);
 
     for (const auto& poly : blockedPolygons) {
@@ -195,17 +197,21 @@ void GameManager::startGameFullscreen() {
     window.create(desktop, "Top-Down GTA Clone", sf::Style::Fullscreen);
     window.setFramerateLimit(60);
 
-    loadCollisionRectsFromJSON("resources/map.tmj");
+    loadCollisionRectsFromJSON("resources/try.tmj");
+    mapTexture = &ResourceManager::getInstance().getTexture("map");
+    mapSprite.setTexture(*mapTexture);
+    //mapSprite.setPosition(0, 0);
+
 
     pedestrianManager = GameFactory::createPedestrianManager();
     policeManager = GameFactory::createPoliceManager();
     carManager = GameFactory::createCarManager(roads);
 
     carManager->spawnSingleVehicleOnRoad();
-    carManager->spawnSingleVehicleOnRoad();
-    carManager->spawnSingleVehicleOnRoad();
+  //  carManager->spawnSingleVehicleOnRoad();
+   // carManager->spawnSingleVehicleOnRoad();
 
-    chunkManager = GameFactory::createChunkManager();
+  //  chunkManager = GameFactory::createChunkManager();
     player = GameFactory::createPlayer({ 100.f, 100.f });
 
     float winW = static_cast<float>(window.getSize().x);

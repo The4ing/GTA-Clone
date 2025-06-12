@@ -16,7 +16,7 @@ public:
     std::vector<Vehicle>& getVehicles();
     void addVehicle(const Vehicle& vehicle);
 
-    void setRoads(const std::vector<RoadSegment>& newRoads); // New setter
+    void setRoads(const std::vector<RoadSegment>& newRoads);
     void buildRoadTree();
     std::vector<RoadSegment> findNearbyRoads(const sf::FloatRect& area);
     void spawnSingleVehicleOnRoad();
@@ -33,8 +33,7 @@ private:
     bool isLeftTurn(const std::string& from, const std::string& to);
     bool isStraight(const std::string& from, const std::string& to);
     bool isDriveable(const RoadSegment& road, sf::Vector2f from, const std::string& direction, float length);
-    sf::Vector2f getEdgePointOfRoad(const RoadSegment& road, const std::string& direction, int laneIndex, bool entry);
-    sf::Vector2f calcSmartControlPoint(const sf::Vector2f& from, const sf::Vector2f& to, const std::string& dirFrom, const std::string& dirTo);
     float length(const sf::Vector2f& a, const sf::Vector2f& b);
+    sf::Vector2f calcSmartControlPoint(const sf::Vector2f& from, const sf::Vector2f& to, const std::string& dirFrom, const std::string& turnType);
     std::string getActualLaneDirection(const RoadSegment& road, int laneIndex);
 };

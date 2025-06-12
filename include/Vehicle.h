@@ -41,7 +41,7 @@ private:
     std::string currentDirectionStr;
     sf::Sprite sprite;
     sf::Vector2f position;
-    float speed = 250.f;
+    float speed = 70.f;
     sf::Vector2f directionVec;
     bool inTurn = false;
     float bezierT = 0.f;
