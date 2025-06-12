@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <cmath>
 #include "Constants.h"
-
+#include "CollisionUtils.h"
 
 Pedestrian::Pedestrian(sf::Vector2f pos) : position(pos) {
     sprite.setTexture(ResourceManager::getInstance().getTexture("pedestrian"));
@@ -11,13 +11,12 @@ Pedestrian::Pedestrian(sf::Vector2f pos) : position(pos) {
     currentFrame = 0;
     sprite.setScale(0.5f, 0.5f);
 
-   
     sprite.setPosition(position);
 
     setRandomDirection();
     updateSprite();
 }
-
+// *** override ?????? ?-GameObject ***
 void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     timeSinceLastDirectionChange += dt;
     if (timeSinceLastDirectionChange >= directionChangeInterval) {
@@ -43,12 +42,12 @@ void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
         setRandomDirection();
     }
 
-    // Animation
+    // Animation (??? ????)
     animationTimer += dt;
     if (animationTimer >= animationSpeed) {
         animationTimer = 0.f;
         if (std::abs(direction.x) > 0.01f || std::abs(direction.y) > 0.01f) {
-            currentFrame = (currentFrame == 1) ? 2 : 1; 
+            currentFrame = (currentFrame == 1) ? 2 : 1;
         }
         else {
             currentFrame = 0; // Stand
@@ -58,10 +57,60 @@ void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
 
     if (std::abs(direction.x) > 0.01f || std::abs(direction.y) > 0.01f) {
         float angle = std::atan2(direction.y, direction.x) * 180.f / M_PI;
-        sprite.setRotation(angle + 270.f); 
+        sprite.setRotation(angle + 270.f);
     }
     else {
-        sprite.setRotation(90.f); 
+        sprite.setRotation(90.f);
+    }
+}
+
+// *** ????? ???? ?? QuadTree ***
+void Pedestrian::update(float dt, const QuadTree<std::vector<sf::Vector2f>>& blockedPolyTree) {
+    timeSinceLastDirectionChange += dt;
+    if (timeSinceLastDirectionChange >= directionChangeInterval) {
+        timeSinceLastDirectionChange = 0.f;
+        setRandomDirection();
+    }
+
+    sf::Vector2f nextPos = position + direction * speed * dt;
+    float radius = getCollisionRadius();
+    bool collision = false;
+    sf::FloatRect area(nextPos.x - radius, nextPos.y - radius, radius * 2, radius * 2);
+    auto nearby = blockedPolyTree.query(area);
+    for (const auto& poly : nearby) {
+        if (circleIntersectsPolygon(nextPos, radius, poly)) {
+            collision = true;
+            break;
+        }
+    }
+
+    if (!collision) {
+        position = nextPos;
+        sprite.setPosition(position);
+    }
+    else {
+        setRandomDirection();
+    }
+
+    // Animation (??? ????)
+    animationTimer += dt;
+    if (animationTimer >= animationSpeed) {
+        animationTimer = 0.f;
+        if (std::abs(direction.x) > 0.01f || std::abs(direction.y) > 0.01f) {
+            currentFrame = (currentFrame == 1) ? 2 : 1;
+        }
+        else {
+            currentFrame = 0; // Stand
+        }
+        updateSprite();
+    }
+
+    if (std::abs(direction.x) > 0.01f || std::abs(direction.y) > 0.01f) {
+        float angle = std::atan2(direction.y, direction.x) * 180.f / M_PI;
+        sprite.setRotation(angle + 270.f);
+    }
+    else {
+        sprite.setRotation(90.f);
     }
 }
 

@@ -3,6 +3,8 @@
 #include "Character.h"
 #include <SFML/Graphics.hpp>
 #include "Constants.h"
+#include "PathPlanner.h" 
+
 
 enum class PoliceState {
     Idle,
@@ -13,10 +15,10 @@ class Police : public Character {
 public:
     Police(sf::Vector2f target);
 
-    void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
-    void moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
+    void update(float dt, const QuadTree<std::vector<sf::Vector2f>>& blockedPolyTree);
+    void moveToward(const sf::Vector2f& target, float dt, const QuadTree<std::vector<sf::Vector2f>>& blockedPolyTree);
     void draw(sf::RenderWindow& window);
-
+    bool isBlocked(const sf::Vector2f& pos, const QuadTree<std::vector<sf::Vector2f>>& blockedPolyTree, float radius);
     void takeDamage(int amount);
     bool isDead() const;
 
@@ -33,6 +35,7 @@ public:
 private:
     void setRandomWanderDestination(const sf::FloatRect& mapBounds);
     float debugPrintTimer = 0.f;
+    float pathFailCooldown = 0.f;
 
     sf::Vector2f targetPos;
     int frameWidth;
@@ -49,4 +52,8 @@ private:
     int currentFrame = 0;
     float animationTimer = 0.f;
     float animationSpeed = 0.13f;
+
+    std::vector<sf::Vector2f> currentPath;
+    size_t currentPathIndex = 0;
+    float repathTimer = 0.f;
 };

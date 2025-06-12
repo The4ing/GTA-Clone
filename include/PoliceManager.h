@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <SFML/System/Vector2.hpp>
 #include "Constants.h"
-
+#include "QuadTree.h"
 
 
 class PoliceManager {
@@ -15,7 +15,7 @@ public:
 
     void spawnPolice(const sf::Vector2f& position);
     void update(float dt, const sf::Vector2f& playerPos,
-        const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
+        const QuadTree<std::vector<sf::Vector2f>>& blockedPolyTree);
 
     void draw(sf::RenderWindow& window);
     void damageClosest(const sf::Vector2f& pos, int amount);

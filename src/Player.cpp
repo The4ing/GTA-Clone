@@ -4,6 +4,7 @@
 #include <cmath>
 #include <algorithm> // for std::clamp
 
+
 Player::Player()
     : frameWidth(0)
     , frameHeight(0)

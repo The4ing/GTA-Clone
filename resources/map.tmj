@@ -7534,19 +7534,30 @@
         }, 
         {
          "draworder":"topdown",
-         "id":11,
+         "id":9,
          "name":"CW",
          "objects":[
                 {
-                 "height":46.7633108424076,
-                 "id":388,
+                 "height":40.5,
+                 "id":381,
                  "name":"",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":113.90206426615,
-                 "x":327.009152247979,
-                 "y":133.275435900862
+                 "width":67.5,
+                 "x":46.5,
+                 "y":392
+                }, 
+                {
+                 "height":37,
+                 "id":382,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":23.5,
+                 "x":137,
+                 "y":502.5
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -7554,8 +7565,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":12,
- "nextobjectid":389,
+ "nextlayerid":10,
+ "nextobjectid":384,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

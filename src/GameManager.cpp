@@ -85,11 +85,12 @@ void GameManager::update(float dt) {
    //chunkManager->updateChunks(newCenter, gameView);
  //   chunkManager->updateObjects(dt, blockedPolygons);
 
-    if (policeManager) 
-        policeManager->update(dt, player->getPosition(), blockedPolygons);
-    
+    if (policeManager)
+        policeManager->update(dt, player->getPosition(), blockedPolyTree);
+
     if (pedestrianManager)
-        pedestrianManager->update(dt, blockedPolygons);
+        pedestrianManager->update(dt, blockedPolyTree);
+
 }
 
 void GameManager::render() {
@@ -190,6 +191,21 @@ void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
     std::cout << "Loaded " << roads.size() << " road segments\n";
 }
 
+void GameManager::buildBlockedPolyTree() {
+    blockedPolyTree = QuadTree<std::vector<sf::Vector2f>>(sf::FloatRect(0, 0, 4640, 4672));
+    for (const auto& poly : blockedPolygons) {
+        float minX = poly[0].x, minY = poly[0].y, maxX = poly[0].x, maxY = poly[0].y;
+        for (const auto& pt : poly) {
+            minX = std::min(minX, pt.x);
+            minY = std::min(minY, pt.y);
+            maxX = std::max(maxX, pt.x);
+            maxY = std::max(maxY, pt.y);
+        }
+        blockedPolyTree.insert(sf::FloatRect(minX, minY, maxX - minX, maxY - minY), poly);
+    }
+
+}
+
 
 
 void GameManager::startGameFullscreen() {
@@ -197,7 +213,8 @@ void GameManager::startGameFullscreen() {
     window.create(desktop, "Top-Down GTA Clone", sf::Style::Fullscreen);
     window.setFramerateLimit(60);
 
-    loadCollisionRectsFromJSON("resources/try.tmj");
+    loadCollisionRectsFromJSON("resources/map.tmj");
+    buildBlockedPolyTree();
     mapTexture = &ResourceManager::getInstance().getTexture("map");
     mapSprite.setTexture(*mapTexture);
     //mapSprite.setPosition(0, 0);

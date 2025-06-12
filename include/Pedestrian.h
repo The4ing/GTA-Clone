@@ -1,11 +1,18 @@
 #pragma once
 #include "MovingObject.h"
 #include <SFML/Graphics.hpp>
+#include "QuadTree.h"
+#include <vector>
+#include "CollisionUtils.h"
+#include "CollisionUtils.h"
 
 class Pedestrian : public MovingObject {
 public:
     Pedestrian(sf::Vector2f pos);
+
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) override;
+    void update(float dt, const QuadTree<std::vector<sf::Vector2f>>& blockedPolyTree); // ?????? ?????/????
+
     void draw(sf::RenderTarget& target) override;
 
     sf::Vector2f getPosition() const override;
@@ -20,15 +27,15 @@ private:
     sf::Vector2f direction;
     float speed = 50.f;
 
-    int characterRow = 0; 
-    int currentFrame = 0; 
+    int characterRow = 0;
+    int currentFrame = 0;
     float animationTimer = 0.f;
     const float animationSpeed = 0.12f;
     float timeSinceLastDirectionChange = 0.f;
     const float directionChangeInterval = 2.0f;
 
-    static constexpr int frameWidth = 64;  
-    static constexpr int frameHeight = 64; 
+    static constexpr int frameWidth = 64;
+    static constexpr int frameHeight = 64;
     static constexpr int framesPerRow = 3;
     static constexpr int numCharacters = 7;
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "Character.h"
 #include <SFML/Graphics.hpp>
+#include "CollisionUtils.h"
 
 class Player : public Character {
 public:

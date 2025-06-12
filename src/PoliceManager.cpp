@@ -11,29 +11,17 @@ void PoliceManager::spawnPolice(const sf::Vector2f& position) {
 }
 
 void PoliceManager::update(float dt, const sf::Vector2f& playerPos,
-    const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+    const QuadTree<std::vector<sf::Vector2f>>& blockedPolyTree) {
     spawnCooldown -= dt;
-
-    // יצירה אקראית ליד צ’אנקים פעילים (אחת ל־5 שניות נניח)
-    // if (spawnCooldown <= 0.f) {
-    //     for (const auto& chunk : activeChunks) {
-    //         if (rand() % 100 < 25) { // 25% סיכוי ליצור שוטר
-    //             spawnPoliceNearChunk(chunk);
-    //         }
-    //     }
-    //     spawnCooldown = 5.f;
-    // }
 
     for (auto& unit : policeUnits) {
         unit->setTargetPosition(playerPos);
-        unit->update(dt, blockedPolygons);
+        unit->update(dt, blockedPolyTree);
     }
 
     policeUnits.erase(std::remove_if(policeUnits.begin(), policeUnits.end(),
         [](const std::unique_ptr<Police>& p) { return p->isDead(); }),
         policeUnits.end());
-
-
 }
 
 
