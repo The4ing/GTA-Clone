@@ -5,6 +5,7 @@
 #include <iostream>
 #include "CollisionUtils.h"
 
+
 const sf::FloatRect MAP_BOUNDS(0.f, 0.f, 4640.f, 4670.f);
 
 Police::Police(sf::Vector2f target) :targetPos(target) {

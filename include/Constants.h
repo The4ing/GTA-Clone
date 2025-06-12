@@ -7,3 +7,6 @@ const unsigned int WINDOW_WIDTH = 1920;
 const unsigned int WINDOW_HEIGHT = 1080;
 const unsigned int MAP_WIDTH = 4640;
 const unsigned int MAP_HEIGHT = 4672;
+
+
+#define M_PI 3.14159265358979323846
