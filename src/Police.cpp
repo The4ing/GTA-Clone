@@ -3,9 +3,8 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+#include "CollisionUtils.h"
+
 const sf::FloatRect MAP_BOUNDS(0.f, 0.f, 4640.f, 4670.f);
 
 Police::Police(sf::Vector2f target) :targetPos(target) {
