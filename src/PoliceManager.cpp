@@ -15,14 +15,14 @@ void PoliceManager::update(float dt, const sf::Vector2f& playerPos,
     spawnCooldown -= dt;
 
     // יצירה אקראית ליד צ’אנקים פעילים (אחת ל־5 שניות נניח)
-    if (spawnCooldown <= 0.f) {
-        for (const auto& chunk : activeChunks) {
-            if (rand() % 100 < 25) { // 25% סיכוי ליצור שוטר
-                spawnPoliceNearChunk(chunk);
-            }
-        }
-        spawnCooldown = 5.f;
-    }
+    // if (spawnCooldown <= 0.f) {
+    //     for (const auto& chunk : activeChunks) {
+    //         if (rand() % 100 < 25) { // 25% סיכוי ליצור שוטר
+    //             spawnPoliceNearChunk(chunk);
+    //         }
+    //     }
+    //     spawnCooldown = 5.f;
+    // }
 
     for (auto& unit : policeUnits) {
         unit->setTargetPosition(playerPos);
