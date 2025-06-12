@@ -2,6 +2,7 @@
 
 #include "Character.h"
 #include <SFML/Graphics.hpp>
+#include "Constants.h"
 
 enum class PoliceState {
     Idle,
