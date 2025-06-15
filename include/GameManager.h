@@ -8,6 +8,7 @@
 #include "CarManager.h"
 #include "PoliceManager.h"
 #include "PedestrianManager.h"
+#include "Present.h"
 
 
 
@@ -42,6 +43,7 @@ private:
     std::unique_ptr<CarManager> carManager;
     std::unique_ptr<PoliceManager> policeManager;
     std::unique_ptr<PedestrianManager> pedestrianManager;
+    std::vector<std::unique_ptr<Present>> presents;
     GameState                   currentState;
     sf::Clock                   clock;
 };

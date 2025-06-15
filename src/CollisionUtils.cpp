@@ -1,31 +1,18 @@
 ﻿#include "CollisionUtils.h"
-#include <cmath>
 
-// פונקציית עזר לחישוב מרחק בין שתי נקודות
-float distance(const sf::Vector2f& a, const sf::Vector2f& b) {
-    float dx = a.x - b.x;
-    float dy = a.y - b.y;
-    return std::sqrt(dx * dx + dy * dy);
-}
+bool CollisionUtils::pointInPolygon(const sf::Vector2f& p, const std::vector<sf::Vector2f>& poly) {
+    bool inside = false;
+    size_t n = poly.size();
 
-// בדיקה אם מעגל חותך מצולע
-bool circleIntersectsPolygon(const sf::Vector2f& circleCenter, float radius, const std::vector<sf::Vector2f>& polygon) {
-    for (size_t i = 0; i < polygon.size(); ++i) {
-        sf::Vector2f a = polygon[i];
-        sf::Vector2f b = polygon[(i + 1) % polygon.size()];
+    for (size_t i = 0, j = n - 1; i < n; j = i++) {
+        const sf::Vector2f& pi = poly[i];
+        const sf::Vector2f& pj = poly[j];
 
-        // הקרנה של מרכז המעגל על קטע
-        sf::Vector2f ab = b - a;
-        sf::Vector2f ac = circleCenter - a;
-        float abLenSq = ab.x * ab.x + ab.y * ab.y;
-        float proj = (ac.x * ab.x + ac.y * ab.y) / abLenSq;
-
-        proj = std::fmax(0.f, std::fmin(1.f, proj));
-        sf::Vector2f closest = a + proj * ab;
-
-        if (distance(closest, circleCenter) <= radius)
-            return true;
+        bool intersect = ((pi.y > p.y) != (pj.y > p.y)) &&
+            (p.x < (pj.x - pi.x) * (p.y - pi.y) / (pj.y - pi.y + 0.0001f) + pi.x);
+        if (intersect)
+            inside = !inside;
     }
 
-    return false;
+    return inside;
 }

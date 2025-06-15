@@ -90,6 +90,10 @@ void GameManager::update(float dt) {
     
     if (pedestrianManager)
         pedestrianManager->update(dt, blockedPolygons);
+
+    for (auto& present : presents)
+        present->update(dt, blockedPolygons);
+
 }
 
 void GameManager::render() {
@@ -117,6 +121,8 @@ void GameManager::render() {
         policeManager->draw(window);
     if (pedestrianManager)
         pedestrianManager->draw(window);
+    for (auto& present : presents)
+    present->draw(window);
 
     window.display();
 }
@@ -197,14 +203,14 @@ void GameManager::startGameFullscreen() {
     window.create(desktop, "Top-Down GTA Clone", sf::Style::Fullscreen);
     window.setFramerateLimit(60);
 
-    loadCollisionRectsFromJSON("resources/try.tmj");
+    loadCollisionRectsFromJSON("resources/map.tmj");
     mapTexture = &ResourceManager::getInstance().getTexture("map");
     mapSprite.setTexture(*mapTexture);
     //mapSprite.setPosition(0, 0);
 
 
-    pedestrianManager = GameFactory::createPedestrianManager();
-    policeManager = GameFactory::createPoliceManager();
+    pedestrianManager = GameFactory::createPedestrianManager(blockedPolygons);
+    policeManager = GameFactory::createPoliceManager(blockedPolygons);
     carManager = GameFactory::createCarManager(roads);
 
     carManager->spawnSingleVehicleOnRoad();
@@ -213,6 +219,7 @@ void GameManager::startGameFullscreen() {
 
   //  chunkManager = GameFactory::createChunkManager();
     player = GameFactory::createPlayer({ 100.f, 100.f });
+    presents = GameFactory::createPresents(30, blockedPolygons);
 
     float winW = static_cast<float>(window.getSize().x);
     float winH = static_cast<float>(window.getSize().y);

@@ -98,7 +98,7 @@ void Police::moveToward(const sf::Vector2f& target, float dt, const std::vector<
     sf::Vector2f nextPos = sprite.getPosition() + dir * speed * dt;
     bool collision = false;
     for (const auto& poly : blockedPolygons) {
-        if (circleIntersectsPolygon(nextPos, getCollisionRadius(), poly)) {
+        if (CollisionUtils::pointInPolygon(nextPos, poly)) {
             collision = true;
             break;
         }
