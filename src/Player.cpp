@@ -3,6 +3,9 @@
 #include "ResourceManager.h"
 #include <cmath>
 #include <algorithm> // for std::clamp
+#include "CollisionUtils.h"
+#include <iostream>
+
 
 Player::Player()
     : frameWidth(0)
@@ -75,13 +78,14 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
 
         bool collision = false;
         for (const auto& poly : blockedPolygons) {
-            if (circleIntersectsPolygon(nextPos, radius, poly)) {
+            if (CollisionUtils::pointInPolygon(nextPos, poly)) {
                 collision = true;
                 break;
             }
         }
 
         if (!collision) {
+           
             sprite.move(movement * speed * dt);
         }
 

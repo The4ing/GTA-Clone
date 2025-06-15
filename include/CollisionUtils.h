@@ -1,5 +1,8 @@
 #pragma once
-#include <SFML/System.hpp>
+#include <SFML/Graphics.hpp>
 #include <vector>
 
-bool circleIntersectsPolygon(const sf::Vector2f& circleCenter, float radius, const std::vector<sf::Vector2f>& polygon);
+class CollisionUtils {
+public:
+    static bool pointInPolygon(const sf::Vector2f& point, const std::vector<sf::Vector2f>& polygon);
+};

@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <cmath>
 #include "Constants.h"
-
+#include "CollisionUtils.h"
 
 Pedestrian::Pedestrian(sf::Vector2f pos) : position(pos) {
     sprite.setTexture(ResourceManager::getInstance().getTexture("pedestrian"));
@@ -29,7 +29,7 @@ void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
     float radius = getCollisionRadius();
     bool collision = false;
     for (const auto& poly : blockedPolygons) {
-        if (circleIntersectsPolygon(nextPos, radius, poly)) {
+        if (CollisionUtils::pointInPolygon(nextPos, poly)) {
             collision = true;
             break;
         }
