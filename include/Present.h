@@ -26,7 +26,7 @@ public:
     sf::Vector2f getPosition() const override;
     void setPosition(const sf::Vector2f& pos) override;
 
-    // לוגיקה שקשורה ל־Present
+// לוגיקה שקשורה ל־Present
     void collect();
     bool isCollected() const;
 
