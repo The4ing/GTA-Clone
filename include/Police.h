@@ -30,6 +30,10 @@ public:
         sprite.setPosition(pos);
     }
 
+    void onCollision(GameObject& other) {};
+    void collideWithPresent(Present& present) {};
+    void collideWithPlayer(Player& /*player*/) {}
+
 private:
     void setRandomWanderDestination(const sf::FloatRect& mapBounds);
     float debugPrintTimer = 0.f;

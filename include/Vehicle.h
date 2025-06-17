@@ -37,6 +37,11 @@ public:
     void setPreviousRoad(const RoadSegment* road) { previousRoad = road; }
     const RoadSegment* getPreviousRoad() const { return previousRoad; }
 
+
+    void onCollision(GameObject& other) {};
+    void collideWithPresent(Present& present) {};
+    void collideWithPlayer(Player& /*player*/) {}
+
 private:
     std::string currentDirectionStr;
     sf::Sprite sprite;
