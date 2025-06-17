@@ -24,13 +24,17 @@ public:
     void run();
 
 private:
+    bool isFullscreen = false;
     void processEvents();
     void update(float dt);
     void render();
     void startGameFullscreen();
+    void setFullscreen(bool fullscreen);
     void loadCollisionRectsFromJSON(const std::string& filename);
+    void buildBlockedPolyTree();
 
     std::vector<std::vector<sf::Vector2f>> blockedPolygons;
+    QuadTree<std::vector<sf::Vector2f>> blockedPolyTree{ sf::FloatRect(0, 0, 4640, 4672) };
     std::vector<RoadSegment> roads;
 
     sf::RenderWindow            window;

@@ -180,7 +180,9 @@ void Vehicle::setDirectionVec(const std::string& dir) {
     }
 }
 
-
+void Vehicle::stop() {
+    speed = 0.f;
+}
 
 std::string Vehicle::getDirection() const {
     return currentDirectionStr;

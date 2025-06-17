@@ -3,6 +3,8 @@
 #include "Character.h"
 #include <SFML/Graphics.hpp>
 #include "Constants.h"
+#include "PathPlanner.h" 
+#include  "QuadTree.h"
 
 enum class PoliceState {
     Idle,
@@ -37,6 +39,7 @@ public:
 private:
     void setRandomWanderDestination(const sf::FloatRect& mapBounds);
     float debugPrintTimer = 0.f;
+    float pathFailCooldown = 0.f;
 
     sf::Vector2f targetPos;
     int frameWidth;
@@ -53,4 +56,8 @@ private:
     int currentFrame = 0;
     float animationTimer = 0.f;
     float animationSpeed = 0.13f;
+
+    std::vector<sf::Vector2f> currentPath;
+    size_t currentPathIndex = 0;
+    float repathTimer = 0.f;
 };

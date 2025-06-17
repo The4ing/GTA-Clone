@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <SFML/Graphics.hpp>
+#include <type_traits>
 
 template <typename T>
 class QuadTree {
@@ -8,6 +9,8 @@ public:
     QuadTree(const sf::FloatRect& boundary, int capacity = 4, int level = 0, int maxLevel = 10)
         : boundary(boundary), capacity(capacity), level(level), maxLevel(maxLevel) {
     }
+
+    QuadTree() : QuadTree(sf::FloatRect(0.f, 0.f, 4640.f, 4672.f)) {}
 
     bool insert(const sf::FloatRect& bounds, const T& item) {
         if (!boundary.intersects(bounds))
@@ -28,10 +31,9 @@ public:
         return false;
     }
 
-    // ???? ??????? ????? ???
+    // Returns a vector of items (by value)
     std::vector<T> query(const sf::FloatRect& range) const {
         std::vector<T> found;
-
         if (!boundary.intersects(range))
             return found;
 
@@ -49,14 +51,18 @@ public:
         return found;
     }
 
-    // ???? ??????? ??????? (T*)
-    void query(const sf::FloatRect& range, std::vector<T*>& out) {
+    // non-const version
+    void query(const sf::FloatRect& range, std::vector<typename std::remove_pointer<T>::type*>& out) {
         if (!boundary.intersects(range))
             return;
 
         for (auto& pair : items)
-            if (range.intersects(pair.bounds))
-                out.push_back(&pair.data);
+            if (range.intersects(pair.bounds)) {
+                if constexpr (std::is_pointer<T>::value)
+                    out.push_back(pair.data);      // T is already a pointer (Vehicle*)
+                else
+                    out.push_back(&pair.data);     // T is value (RoadSegment)
+            }
 
         if (!nodes.empty()) {
             for (auto& node : nodes)
@@ -64,19 +70,28 @@ public:
         }
     }
 
-    // ???? ??????? ??????? (const T*)
-    void query(const sf::FloatRect& range, std::vector<const T*>& out) const {
+    // const version
+    void query(const sf::FloatRect& range, std::vector<const typename std::remove_pointer<T>::type*>& out) const {
         if (!boundary.intersects(range))
             return;
 
         for (const auto& pair : items)
-            if (range.intersects(pair.bounds))
-                out.push_back(&pair.data);
+            if (range.intersects(pair.bounds)) {
+                if constexpr (std::is_pointer<T>::value)
+                    out.push_back(pair.data);
+                else
+                    out.push_back(&pair.data);
+            }
 
         if (!nodes.empty()) {
             for (const auto& node : nodes)
                 node.query(range, out);
         }
+    }
+
+    void clear() {
+        items.clear();
+        nodes.clear();
     }
 
 private:
