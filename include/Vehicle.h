@@ -23,7 +23,7 @@ public:
     std::string getDirection() const;
 
     static sf::Vector2f bezier(float t, const sf::Vector2f& P0, const sf::Vector2f& P1, const sf::Vector2f& P2);
-
+    void stop();
 
     const RoadSegment* getCurrentRoad() const;
 

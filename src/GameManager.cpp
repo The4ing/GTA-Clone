@@ -53,11 +53,16 @@ void GameManager::processEvents() {
         if (event.type == sf::Event::Closed)
             window.close();
 
+        if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F11) {
+            setFullscreen(!isFullscreen); 
+        }
+
         if (currentState == GameState::Menu) {
             menu->update(event);
         }
     }
 }
+
 
 void GameManager::update(float dt) {
     player->update(dt, blockedPolygons);
@@ -207,29 +212,59 @@ void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
 }
 
 
+void GameManager::buildBlockedPolyTree() {
+    blockedPolyTree = QuadTree<std::vector<sf::Vector2f>>(sf::FloatRect(0, 0, 4640, 4672));
+    for (const auto& poly : blockedPolygons) {
+        float minX = poly[0].x, minY = poly[0].y, maxX = poly[0].x, maxY = poly[0].y;
+        for (const auto& pt : poly) {
+            minX = std::min(minX, pt.x);
+            minY = std::min(minY, pt.y);
+            maxX = std::max(maxX, pt.x);
+            maxY = std::max(maxY, pt.y);
+        }
+        blockedPolyTree.insert(sf::FloatRect(minX, minY, maxX - minX, maxY - minY), poly);
+    }
+
+}
+
+
 
 void GameManager::startGameFullscreen() {
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     window.create(desktop, "Top-Down GTA Clone", sf::Style::Fullscreen);
     window.setFramerateLimit(60);
+    isFullscreen = true;
 
-    loadCollisionRectsFromJSON("resources/map.tmj");
+    gameView.setSize(static_cast<float>(desktop.width), static_cast<float>(desktop.height));
+    gameView.setCenter(gameView.getSize().x / 2.f, gameView.getSize().y / 2.f);
+    window.setView(gameView);
+
+
+    loadCollisionRectsFromJSON("resources/try.tmj");
+    buildBlockedPolyTree();
     mapTexture = &ResourceManager::getInstance().getTexture("map");
     mapSprite.setTexture(*mapTexture);
     //mapSprite.setPosition(0, 0);
 
 
+//    pedestrianManager = GameFactory::createPedestrianManager();
+  //  policeManager = GameFactory::createPoliceManager();
     pedestrianManager = GameFactory::createPedestrianManager(blockedPolygons);
     policeManager = GameFactory::createPoliceManager(blockedPolygons);
+
+
     carManager = GameFactory::createCarManager(roads);
 
+    //    for (int i = 0; i < 20; ++i) {
     carManager->spawnSingleVehicleOnRoad();
-  //  carManager->spawnSingleVehicleOnRoad();
-   // carManager->spawnSingleVehicleOnRoad();
+    //  }
+    //  carManager->spawnSingleVehicleOnRoad();
+     // carManager->spawnSingleVehicleOnRoad();
 
-  //  chunkManager = GameFactory::createChunkManager();
+    //  chunkManager = GameFactory::createChunkManager();
     player = GameFactory::createPlayer({ 100.f, 100.f });
-    presents = GameFactory::createPresents(30, blockedPolygons);
+    //presents = GameFactory::createPresents(30, blockedPolygons);
+    presents = GameFactory::createPresents(1, blockedPolygons);
 
     float winW = static_cast<float>(window.getSize().x);
     float winH = static_cast<float>(window.getSize().y);
@@ -239,3 +274,37 @@ void GameManager::startGameFullscreen() {
     currentState = GameState::Playing;
 }
 
+void GameManager::setFullscreen(bool fullscreen) {
+    if (fullscreen == isFullscreen)
+        return;
+
+    isFullscreen = fullscreen;
+
+    sf::Vector2u size;
+    sf::Uint32 style;
+
+    if (fullscreen) {
+        sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+        size = { desktop.width, desktop.height };
+        style = sf::Style::Fullscreen;
+    }
+    else {
+        size = { WINDOW_WIDTH, WINDOW_HEIGHT };
+        style = sf::Style::Default;
+    }
+
+    window.create(sf::VideoMode(size.x, size.y), "Top-Down GTA Clone", style);
+    window.setFramerateLimit(60);
+
+    // ????? ???? ?-View ?????? ????? ????:
+    gameView.setSize(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT));
+    gameView.setCenter(gameView.getSize().x / 2.f, gameView.getSize().y / 2.f);
+    window.setView(gameView);
+
+    float winW = static_cast<float>(window.getSize().x);
+    float winH = static_cast<float>(window.getSize().y);
+    gameView.setSize(winW, winH);
+    gameView.zoom(0.25f);
+
+
+}

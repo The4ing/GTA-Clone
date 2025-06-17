@@ -5,6 +5,7 @@
 #include <vector>
 #include <SFML/Graphics.hpp>
 #include <memory>
+#include <iostream>
 
 class CarManager {
 public:
@@ -24,10 +25,24 @@ public:
     std::vector<RoadSegment>& getRoads();
     QuadTree<RoadSegment>& getRoadTree();
 
+
 private:
+    sf::Vector2f forwardPoint; // debug
+    struct DebugPoint {
+        sf::Vector2f pos;
+        bool valid;
+    };
+    std::vector<DebugPoint> driveableDebugPoints;
+
+
+    std::vector<std::pair<const RoadSegment*, std::string>> rejectedRoads;  // debug
+
     std::vector<Vehicle> vehicles;
+    QuadTree<Vehicle*> vehicleTree;
+
     std::vector<RoadSegment> roads;
     QuadTree<RoadSegment> roadTree{ sf::FloatRect(0, 0, 4640, 4672) };
+    sf::Font debugFont;
 
     bool isRightTurn(const std::string& from, const std::string& to);
     bool isLeftTurn(const std::string& from, const std::string& to);

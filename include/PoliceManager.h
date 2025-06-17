@@ -1,12 +1,11 @@
 #pragma once
-
 #include "Police.h"
 #include <vector>
 #include <memory>
 #include <unordered_map>
 #include <SFML/System/Vector2.hpp>
 #include "Constants.h"
-
+#include "QuadTree.h"
 
 
 class PoliceManager {
