@@ -14,6 +14,10 @@ public:
     float getSpeed() const override;
     float getCollisionRadius() const;
 
+    void onCollision(GameObject& ) {};
+    void collideWithPresent(Present& ) {};
+    void collideWithPlayer(Player& /*player*/) {}
+
 private:
     sf::Sprite sprite;
     sf::Vector2f position;

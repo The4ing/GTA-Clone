@@ -94,6 +94,16 @@ void GameManager::update(float dt) {
     for (auto& present : presents)
         present->update(dt, blockedPolygons);
 
+
+    for (auto& present : presents) {
+        if (!present->isCollected()) {
+            if (player->getCollisionBounds().intersects(present->getSprite().getGlobalBounds())) {
+                player->onCollision(*present);  // Double Dispatch
+            }
+        }
+    }
+
+
 }
 
 void GameManager::render() {
@@ -219,7 +229,7 @@ void GameManager::startGameFullscreen() {
 
   //  chunkManager = GameFactory::createChunkManager();
     player = GameFactory::createPlayer({ 100.f, 100.f });
-    presents = GameFactory::createPresents(30, blockedPolygons);
+    presents = GameFactory::createPresents(1, blockedPolygons);
 
     float winW = static_cast<float>(window.getSize().x);
     float winH = static_cast<float>(window.getSize().y);

@@ -15,8 +15,9 @@ public:
     float getCollisionRadius() const;
     void takeDamage(int amount) ;
     
-    
-
+    void onCollision(GameObject& other) ;
+    void collideWithPresent(Present& present);
+    void collideWithPlayer(Player& /*player*/)  {} 
 
 
 private:

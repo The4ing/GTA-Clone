@@ -5,6 +5,7 @@
 #include <algorithm> // for std::clamp
 #include "CollisionUtils.h"
 #include <iostream>
+#include "Present.h"
 
 
 Player::Player()
@@ -45,6 +46,9 @@ sf::Vector2f Player::getPosition() const {
 void Player::takeDamage(int amount)
 {
 }
+
+
+
 
 
 
@@ -145,4 +149,17 @@ sf::Vector2f Player::getCenter() const {
 float Player::getCollisionRadius() const {
     // Set to match visual size — adjust as needed
     return 6.f; // in pixels
+}
+
+
+void Player::onCollision(GameObject& other) {
+    other.collideWithPlayer(*this); // ← הפוך: אתה Player, שולח את עצמך
+}
+
+void Player::collideWithPresent(Present& present) {
+    /*if (!present.isCollected()) {
+        present.applyEffect(*this);
+        present.collect();
+    }*/ 
+    std::cout << "collide with present" << std::endl;
 }
