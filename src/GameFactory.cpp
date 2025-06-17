@@ -89,21 +89,24 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
 
         switch (type) {
         case 0:
-                //result.push_back(std::make_unique<HealthPresent>(
-                //ResourceManager::getInstance().getTexture("Health"), pos));
+                result.push_back(std::make_unique<HealthPresent>(
+                ResourceManager::getInstance().getTexture("health"), pos));
+               
             break;
         case 1:
                result.push_back(std::make_unique<WeaponPresent>(
-               ResourceManager::getInstance().getTexture("pistol"), sf::Vector2f (50.f,50.f)));
-               std::cout << "Present created at: (" << pos.x << ", " << pos.y << ")\n";
+               ResourceManager::getInstance().getTexture("pistol"),pos));
+              
             break;
         case 2:
-               // result.push_back(std::make_unique<SpeedBoost>(
-                //ResourceManager::getInstance().getTexture("Speed"), pos));
+               result.push_back(std::make_unique<SpeedBoost>(
+                ResourceManager::getInstance().getTexture("speed"),pos));
+           
             break;
         case 3:
-                //result.push_back(std::make_unique<AmmoPresent>(
-                //ResourceManager::getInstance().getTexture("Ammo"), pos));
+                result.push_back(std::make_unique<AmmoPresent>(
+                ResourceManager::getInstance().getTexture("ammo"), pos));
+                
             break;
         }
     }
