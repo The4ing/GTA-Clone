@@ -240,7 +240,7 @@ void GameManager::startGameFullscreen() {
     window.setView(gameView);
 
 
-    loadCollisionRectsFromJSON("resources/try.tmj");
+    loadCollisionRectsFromJSON("resources/map.tmj");
     buildBlockedPolyTree();
     mapTexture = &ResourceManager::getInstance().getTexture("map");
     mapSprite.setTexture(*mapTexture);
