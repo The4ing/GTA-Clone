@@ -9,14 +9,17 @@
 #include "PoliceManager.h"
 #include "PedestrianManager.h"
 #include "Present.h"
+#include "InventoryUI.h"
 
 
 
 enum class GameState {
     Menu,
     Playing,
+    Inventory,
     Exiting
 };
+
 
 class GameManager {
 public:
@@ -32,6 +35,7 @@ private:
     void setFullscreen(bool fullscreen);
     void loadCollisionRectsFromJSON(const std::string& filename);
     void buildBlockedPolyTree();
+   
 
     std::vector<std::vector<sf::Vector2f>> blockedPolygons;
     QuadTree<std::vector<sf::Vector2f>> blockedPolyTree{ sf::FloatRect(0, 0, 4640, 4672) };
@@ -50,4 +54,6 @@ private:
     std::vector<std::unique_ptr<Present>> presents;
     GameState                   currentState;
     sf::Clock                   clock;
+
+    InventoryUI inventoryUI;
 };

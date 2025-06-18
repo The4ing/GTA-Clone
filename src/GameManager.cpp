@@ -44,6 +44,15 @@ void GameManager::run() {
             update(deltaTime);
             render();
         }
+        //
+        else if (currentState == GameState::Inventory) {
+            inventoryUI.handleInput(*player ,player->getInventory(), window);
+           
+            window.clear();
+            inventoryUI.draw(window, player->getInventory());
+            window.display();
+        }
+
     }
 }
 
@@ -53,8 +62,13 @@ void GameManager::processEvents() {
         if (event.type == sf::Event::Closed)
             window.close();
 
-        if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F11) {
-            setFullscreen(!isFullscreen); 
+        if (event.type == sf::Event::KeyPressed) {
+            if (currentState == GameState::Playing && event.key.code == sf::Keyboard::I) {
+                currentState = GameState::Inventory;
+            }
+            else if (currentState == GameState::Inventory && event.key.code == sf::Keyboard::Escape) {
+                currentState = GameState::Playing;
+            }
         }
 
         if (currentState == GameState::Menu) {
@@ -62,6 +76,7 @@ void GameManager::processEvents() {
         }
     }
 }
+
 
 
 void GameManager::update(float dt) {
@@ -226,6 +241,7 @@ void GameManager::buildBlockedPolyTree() {
     }
 
 }
+
 
 
 

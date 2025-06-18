@@ -1,6 +1,8 @@
 #pragma once
 #include "Character.h"
 #include <SFML/Graphics.hpp>
+#include "Constants.h"
+#include "Inventory.h"
 
 class Player : public Character {
 public:
@@ -20,6 +22,11 @@ public:
     void collideWithPlayer(Player& /*player*/)  {} 
 
 
+    Inventory& getInventory();
+    const Inventory& getInventory() const;
+
+    void heal(int amount);
+
 private:
 
     sf::Sprite  sprite;
@@ -32,4 +39,8 @@ private:
     float       animTimer;
     float       animDelay;
     sf::Vector2f position;
+
+
+    int health = 100;
+    Inventory inventory;
 };
