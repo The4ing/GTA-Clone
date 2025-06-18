@@ -19,6 +19,7 @@ void PedestrianManager::update(float dt, const std::vector<std::vector<sf::Vecto
     }
 }
 
+
 void PedestrianManager::draw(sf::RenderTarget& target) const {
     for (const auto& ped : pedestrians) {
         ped->draw(target);
@@ -50,3 +51,4 @@ bool PedestrianManager::isBlocked(const sf::Vector2f& pos, const std::vector<std
     }
     return false;
 }
+
