@@ -5,6 +5,7 @@
 class Pedestrian : public MovingObject {
 public:
     Pedestrian(sf::Vector2f pos);
+
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) override;
     void draw(sf::RenderTarget& target) override;
 
@@ -14,29 +15,47 @@ public:
     float getSpeed() const override;
     float getCollisionRadius() const;
 
-    void onCollision(GameObject& ) {};
-    void collideWithPresent(Present& ) {};
-    void collideWithPlayer(Player& /*player*/) {}
+    void onCollision(GameObject&) {};
+    void collideWithPresent(Present&) {};
+    void collideWithPlayer(Player&) {}
+
+    void startBackingUp();
+    bool getIsBackingUp() const;
 
 private:
+    bool checkCollision(const sf::Vector2f& currentPos, const sf::Vector2f& nextPos, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons, float radius);
+
     sf::Sprite sprite;
     sf::Vector2f position;
-    sf::Vector2f direction;
+
+    sf::Vector2f direction;        
+    sf::Vector2f nextDirection;   
+
     float speed = 50.f;
 
-    int characterRow = 0; 
-    int currentFrame = 0; 
+    int characterRow = 0;
+    int currentFrame = 0;
     float animationTimer = 0.f;
     const float animationSpeed = 0.12f;
+
     float timeSinceLastDirectionChange = 0.f;
     const float directionChangeInterval = 2.0f;
 
-    static constexpr int frameWidth = 64;  
-    static constexpr int frameHeight = 64; 
+    static constexpr int frameWidth = 64;
+    static constexpr int frameHeight = 64;
     static constexpr int framesPerRow = 3;
     static constexpr int numCharacters = 7;
 
-    bool facingLeft = false;
+    const float backupDistance = 30.f;
+    bool isBackingUp = false;
+    float backupProgress = 0.f;
+
+
+    bool isIdle = false;
+    float idleTimer = 0.f;
+    float idleDurationMin = 1.f;
+    float idleDurationMax = 3.f;
+    float idleProbability = 0.15f;
 
     void setRandomDirection();
     void updateSprite();

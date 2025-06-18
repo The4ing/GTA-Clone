@@ -13,7 +13,6 @@ public:
     void spawnMultiple(int count, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons, int mapWidth, int mapHeight);
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void draw(sf::RenderTarget& target) const;
-
     const std::vector<std::unique_ptr<Pedestrian>>& getPedestrians() const;
 
 private:
