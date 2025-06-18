@@ -10,6 +10,6 @@ std::string HealthPresent::getType() const {
 }
 
 void HealthPresent::applyEffect(Player& player) {
-    //player.heal(25);
+    player.heal(25);
     collect();
 }

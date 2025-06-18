@@ -163,3 +163,30 @@ void Player::collideWithPresent(Present& present) {
     }*/ 
     std::cout << "collide with present" << std::endl;
 }
+
+
+Inventory& Player::getInventory()
+{
+    return inventory; // ← מחזיר הפניה!
+}
+
+const Inventory& Player::getInventory() const
+{
+    return inventory;
+}
+
+void Player::heal(int amount) {
+    if (health < MaxHealth) {
+        int before = health;
+        health += amount;
+        if (health > MaxHealth)
+            health = MaxHealth;
+
+        std::cout << "Healed from " << before << " to " << health << " HP.\n";
+    }
+    else {
+        // אם החיים כבר מלאים – שמור את הפריט
+        inventory.addItem("Health");
+        std::cout << "Health is full! Added Health item to inventory.\n";
+    }
+}
