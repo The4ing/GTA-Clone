@@ -7,7 +7,8 @@ void PoliceManager::spawnPolice(const sf::Vector2f& position) {
 
     policeUnits.push_back(std::make_unique<Police>(position));
 
-   // std::cout << "Spawned police at: (" << position.x << ", " << position.y << ")\n";
+   // 
+   // << "Spawned police at: (" << position.x << ", " << position.y << ")\n";
 }
 
 void PoliceManager::update(float dt, const sf::Vector2f& playerPos,

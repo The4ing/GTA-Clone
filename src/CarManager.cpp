@@ -802,7 +802,7 @@ float CarManager::length(const sf::Vector2f& a, const sf::Vector2f& b) {
 
 sf::Vector2f CarManager::calcSmartControlPoint(const sf::Vector2f& from, const sf::Vector2f& to, const std::string& dirFrom, const std::string& turnType)
 {
-    std::cout << " **********************************************************************turn type " << turnType << " from " << dirFrom << std::endl;
+   // std::cout << " **********************************************************************turn type " << turnType << " from " << dirFrom << std::endl;
     //min(x) = left
     //max(x) = right
     //min(y) = up

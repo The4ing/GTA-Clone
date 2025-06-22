@@ -265,8 +265,8 @@ void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
         }
     }
 
-    std::cout << "Loaded " << blockedPolygons.size() << " polygons\n";
-    std::cout << "Loaded " << roads.size() << " road segments\n";
+   // std::cout << "Loaded " << blockedPolygons.size() << " polygons\n";
+    //std::cout << "Loaded " << roads.size() << " road segments\n";
 }
 
 
@@ -323,7 +323,7 @@ void GameManager::startGameFullscreen() {
     //  chunkManager = GameFactory::createChunkManager();
     player = GameFactory::createPlayer({ 100.f, 100.f });
     //presents = GameFactory::createPresents(30, blockedPolygons);
-    presents = GameFactory::createPresents(45, blockedPolygons);
+    presents = GameFactory::createPresents(5, blockedPolygons);
 
     float winW = static_cast<float>(window.getSize().x);
     float winH = static_cast<float>(window.getSize().y);

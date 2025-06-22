@@ -195,8 +195,9 @@ void Player::heal(int amount) {
     }
 }
 void Player::increaseSpeed() {
-    if (speedBoostTimer == 0.f) {
-        speed += 15.f;
+    std::cout << speedBoostTimer << std::endl;
+    if (speedBoostTimer <= 0.f) {
+        speed += 30.f;
         speedBoostTimer = 15.f;        
     }
     else {
