@@ -116,7 +116,7 @@ void Settings::decreaseBrightness() {
 }
 
 void Settings::showHelp() {
-    std::cout << "This is a game where you must survive and complete levels.\n";
+    //std::cout << "This is a game where you must survive and complete levels.\n";
 }
 
 bool Settings::shouldExit() const {

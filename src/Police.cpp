@@ -193,7 +193,7 @@ bool Police::moveToward(const sf::Vector2f& target, float dt, const std::vector<
         sf::Vector2f nextPos = currentPos + dir * (traveled + segment);
 
         if (checkCollision(currentPos, nextPos, blockedPolygons, getCollisionRadius())) {
-            std::cout << "Police: Collision detected, stopping movement at segment " << traveled << std::endl;
+           // std::cout << "Police: Collision detected, stopping movement at segment " << traveled << std::endl;
             return true; // collision detected
         }
 
