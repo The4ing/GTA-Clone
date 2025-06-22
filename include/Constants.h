@@ -11,5 +11,5 @@ const sf::FloatRect MAP_BOUNDS(0.f, 0.f, 4640.f, 4670.f);
 
 #define M_PI 3.14159265358979323846
 
-
+const float BasicSpeed = 250.f;
 const int MaxHealth = 100;

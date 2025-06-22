@@ -69,6 +69,14 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
 
     bool isMoving = (movement.x != 0.f || movement.y != 0.f);
 
+    if (speedBoostTimer > 0.f) {
+        speedBoostTimer -= dt;
+        
+    }
+    else {
+        speed = BasicSpeed;
+    }
+
     if (isMoving) {
         float len = std::sqrt(movement.x * movement.x + movement.y * movement.y);
         if (len != 0.f)
@@ -115,7 +123,7 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
     }
 }
 
-void Player::draw(sf::RenderWindow& window) {
+void Player::draw(sf::RenderTarget& window) {
     sf::CircleShape circle(getCollisionRadius());
     circle.setOrigin(getCollisionRadius(), getCollisionRadius());
     circle.setPosition(getCenter());
@@ -161,7 +169,7 @@ void Player::collideWithPresent(Present& present) {
         present.applyEffect(*this);
         present.collect();
     }*/ 
-    std::cout << "collide with present" << std::endl;
+    //std::cout << "collide with present" << std::endl;
 }
 
 
@@ -181,12 +189,27 @@ void Player::heal(int amount) {
         health += amount;
         if (health > MaxHealth)
             health = MaxHealth;
-
-        std::cout << "Healed from " << before << " to " << health << " HP.\n";
     }
     else {
-        // אם החיים כבר מלאים – שמור את הפריט
         inventory.addItem("Health");
-        std::cout << "Health is full! Added Health item to inventory.\n";
     }
 }
+void Player::increaseSpeed() {
+    if (speedBoostTimer == 0.f) {
+        speed += 15.f;
+        speedBoostTimer = 15.f;        
+    }
+    else {
+       inventory.addItem("Speed");
+    }
+}
+void Player::AddAmmo() {
+    //bullets amount 
+}
+
+void Player::AddPistol() {
+    //bullets amount 
+}
+
+
+

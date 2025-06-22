@@ -16,7 +16,7 @@ public:
     void update(float dt, const sf::Vector2f& playerPos,
         const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
 
-    void draw(sf::RenderWindow& window);
+    void draw(sf::RenderTarget& window);
     void damageClosest(const sf::Vector2f& pos, int amount);
 
 

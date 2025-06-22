@@ -12,7 +12,7 @@ public:
     CarManager();
 
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
-    void draw(sf::RenderWindow& window);
+    void draw(sf::RenderTarget& window);
 
     std::vector<Vehicle>& getVehicles();
     void addVehicle(const Vehicle& vehicle);

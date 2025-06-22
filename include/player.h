@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Character.h"
 #include <SFML/Graphics.hpp>
 #include "Constants.h"
@@ -11,7 +11,7 @@ public:
     void setPosition(const sf::Vector2f& pos);
     sf::Vector2f getPosition() const;
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
-    void draw(sf::RenderWindow& window);
+    void draw(sf::RenderTarget& window);
     sf::FloatRect getCollisionBounds(const sf::Vector2f& offset = {}) const;
     sf::Vector2f getCenter() const;
     float getCollisionRadius() const;
@@ -26,6 +26,10 @@ public:
     const Inventory& getInventory() const;
 
     void heal(int amount);
+    void increaseSpeed();
+    void AddAmmo();
+    void AddPistol();
+    
 
 private:
 
@@ -40,7 +44,9 @@ private:
     float       animDelay;
     sf::Vector2f position;
 
-
-    int health = 100;
+   
     Inventory inventory;
+    int Bullets = 0;
+    int health = 100;
+    float speedBoostTimer = 0.f;
 };
