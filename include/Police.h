@@ -21,7 +21,7 @@ public:
 
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     bool moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
-    void draw(sf::RenderWindow& window);
+    void draw(sf::RenderTarget& window);
 
     void takeDamage(int amount);
     bool isDead() const;

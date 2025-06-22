@@ -29,6 +29,11 @@ public:
 private:
     bool isFullscreen = false;
     void processEvents();
+
+    //FOR THE INVENTORY SHOW
+    void renderFrozenGame(sf::RenderTarget& target);
+    ///--------------
+
     void update(float dt);
     void render();
     void startGameFullscreen();
@@ -55,5 +60,10 @@ private:
     GameState                   currentState;
     sf::Clock                   clock;
 
+
+    ///-------------
     InventoryUI inventoryUI;
+    sf::RenderTexture frozenBackgroundTexture;
+    sf::Sprite frozenBackgroundSprite;
+
 };

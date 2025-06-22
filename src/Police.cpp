@@ -44,7 +44,7 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
             currentPath.clear(); // Clear previous path
             currentPathIndex = 0;
             repathTimer = 1.0f; // Force repath quickly when switching to chase
-            std::cout << "Police: Switched to Chasing state." << std::endl;
+           // std::cout << "Police: Switched to Chasing state." << std::endl;
         }
     }
     else if (state == PoliceState::Chasing && distToPlayer > detectionRadius + 30.f) { // Add hysteresis
@@ -53,7 +53,7 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         currentPath.clear(); // Clear previous path
         currentPathIndex = 0;
         setRandomWanderDestination(MAP_BOUNDS); // Get a new wander destination
-        std::cout << "Police: Switched to Idle state." << std::endl;
+        //std::cout << "Police: Switched to Idle state." << std::endl;
     }
 
     // Backing up state: move backwards smoothly
@@ -94,13 +94,13 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
     // Pathfinding and Destination Logic
     if (state == PoliceState::Chasing) {
         if (pathFailCooldown <= 0.f && (currentPath.empty() || currentPathIndex >= currentPath.size() || repathTimer > 1.0f)) {
-            std::cout << "Police (Chasing): Attempting to find path to player at (" << targetPos.x << ", " << targetPos.y << ")" << std::endl;
+            //std::cout << "Police (Chasing): Attempting to find path to player at (" << targetPos.x << ", " << targetPos.y << ")" << std::endl;
             currentPath = pathfinder.findPath(getPosition(), targetPos, blockedPolygons, MAP_BOUNDS, PATHFINDING_GRID_SIZE);
-            std::cout << "Police (Chasing): Path found with size: " << currentPath.size() << std::endl;
+            //std::cout << "Police (Chasing): Path found with size: " << currentPath.size() << std::endl;
             currentPathIndex = 0;
             repathTimer = 0.f;
             if (currentPath.empty()) {
-                std::cerr << "Police (Chasing): Failed to find path to player." << std::endl;
+              //  std::cerr << "Police (Chasing): Failed to find path to player." << std::endl;
                 pathFailCooldown = 3.0f;
             }
         }
@@ -108,13 +108,13 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
     else if (state == PoliceState::Idle) {
         if (currentPath.empty() || currentPathIndex >= currentPath.size()) {
             if (pathFailCooldown <= 0.f) {
-                std::cout << "Police (Idle): Attempting to find path to wander destination (" << wanderDestination.x << ", " << wanderDestination.y << ")" << std::endl;
+                //std::cout << "Police (Idle): Attempting to find path to wander destination (" << wanderDestination.x << ", " << wanderDestination.y << ")" << std::endl;
                 currentPath = pathfinder.findPath(getPosition(), wanderDestination, blockedPolygons, MAP_BOUNDS, PATHFINDING_GRID_SIZE);
-                std::cout << "Police (Idle): Path found with size: " << currentPath.size() << std::endl;
+                //std::cout << "Police (Idle): Path found with size: " << currentPath.size() << std::endl;
                 currentPathIndex = 0;
                 repathTimer = 0.f;
                 if (currentPath.empty()) {
-                    std::cerr << "Police (Idle): Failed to find path to wander destination. Setting new one." << std::endl;
+                   // std::cerr << "Police (Idle): Failed to find path to wander destination. Setting new one." << std::endl;
                     pathFailCooldown = 1.0f;
                     setRandomWanderDestination(MAP_BOUNDS);
                 }
@@ -210,7 +210,7 @@ bool Police::moveToward(const sf::Vector2f& target, float dt, const std::vector<
 
 
 
-void Police::draw(sf::RenderWindow& window) {
+void Police::draw(sf::RenderTarget& window) {
     window.draw(sprite);
 }
 

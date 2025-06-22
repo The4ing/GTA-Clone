@@ -13,6 +13,8 @@ using json = nlohmann::json;
 
 GameManager::GameManager()
     : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top-Down GTA Clone") {
+
+    frozenBackgroundTexture.create(WINDOW_WIDTH, WINDOW_HEIGHT); // או desktop.width,height אחרי startGameFullscreen
     window.setFramerateLimit(60);
     menu = std::make_unique<Menu>(window);
     currentState = GameState::Menu;
@@ -44,14 +46,19 @@ void GameManager::run() {
             update(deltaTime);
             render();
         }
+
         //
         else if (currentState == GameState::Inventory) {
-            inventoryUI.handleInput(*player ,player->getInventory(), window);
-           
             window.clear();
-            inventoryUI.draw(window, player->getInventory());
+            window.setView(window.getDefaultView());  // הצגה לפי View רגיל של המסך
+            inventoryUI.handleInput(*player, player->getInventory(), window);
+            window.draw(frozenBackgroundSprite); // הרקע הקפוא
+            inventoryUI.draw(window, player->getInventory()); // האינבנטורי מעל
             window.display();
         }
+
+
+
 
     }
 }
@@ -64,8 +71,16 @@ void GameManager::processEvents() {
 
         if (event.type == sf::Event::KeyPressed) {
             if (currentState == GameState::Playing && event.key.code == sf::Keyboard::I) {
+                // שמור את המצב הנוכחי של המשחק לתמונה
+                frozenBackgroundTexture.clear();
+                frozenBackgroundTexture.setView(gameView); // חשוב מאוד!
+                renderFrozenGame(frozenBackgroundTexture);
+                frozenBackgroundTexture.display();
+                frozenBackgroundSprite.setTexture(frozenBackgroundTexture.getTexture());
+
                 currentState = GameState::Inventory;
             }
+
             else if (currentState == GameState::Inventory && event.key.code == sf::Keyboard::Escape) {
                 currentState = GameState::Playing;
             }
@@ -76,6 +91,33 @@ void GameManager::processEvents() {
         }
     }
 }
+
+//FOR SHOWING IN THE BACKGROUNG THE GAME WHIKE INVENTORY
+void GameManager::renderFrozenGame(sf::RenderTarget& target) {
+    target.draw(mapSprite);
+    player->draw(target);
+
+    for (const auto& poly : blockedPolygons) {
+        sf::ConvexShape shape;
+        shape.setPointCount(poly.size());
+        for (size_t i = 0; i < poly.size(); ++i)
+            shape.setPoint(i, poly[i]);
+        shape.setFillColor(sf::Color::Transparent);
+        shape.setOutlineColor(sf::Color::Green);
+        shape.setOutlineThickness(1.f);
+        target.draw(shape);
+    }
+
+    if (carManager)
+        carManager->draw(target);
+    if (policeManager)
+        policeManager->draw(target);
+    if (pedestrianManager)
+        pedestrianManager->draw(target);
+    for (auto& present : presents)
+        present->draw(target);
+}
+//-------------------------------------------
 
 
 
@@ -127,11 +169,12 @@ void GameManager::update(float dt) {
 }
 
 void GameManager::render() {
+    
     window.clear(sf::Color::Black);
     window.setView(gameView);
     window.draw(mapSprite);
 
- //   chunkManager->draw(window, gameView);
+     //   chunkManager->draw(window, gameView);
     player->draw(window);
 
     for (const auto& poly : blockedPolygons) {
@@ -153,7 +196,7 @@ void GameManager::render() {
         pedestrianManager->draw(window);
     for (auto& present : presents)
     present->draw(window);
-
+    
     window.display();
 }
 
@@ -280,7 +323,7 @@ void GameManager::startGameFullscreen() {
     //  chunkManager = GameFactory::createChunkManager();
     player = GameFactory::createPlayer({ 100.f, 100.f });
     //presents = GameFactory::createPresents(30, blockedPolygons);
-    presents = GameFactory::createPresents(1, blockedPolygons);
+    presents = GameFactory::createPresents(45, blockedPolygons);
 
     float winW = static_cast<float>(window.getSize().x);
     float winH = static_cast<float>(window.getSize().y);
@@ -312,7 +355,7 @@ void GameManager::setFullscreen(bool fullscreen) {
     window.create(sf::VideoMode(size.x, size.y), "Top-Down GTA Clone", style);
     window.setFramerateLimit(60);
 
-    // ????? ???? ?-View ?????? ????? ????:
+   
     gameView.setSize(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT));
     gameView.setCenter(gameView.getSize().x / 2.f, gameView.getSize().y / 2.f);
     window.setView(gameView);

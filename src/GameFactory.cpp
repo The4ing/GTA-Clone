@@ -1,7 +1,7 @@
 ﻿// GameFactory.cpp
 #include "GameFactory.h"
 #include "HealthPresent.h"
-#include "WeaponPresent.h"
+#include "PistolPresent.h"
 #include "SpeedBoost.h"
 #include "AmmoPresent.h"
 #include "CollisionUtils.h"
@@ -90,22 +90,22 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
         switch (type) {
         case 0:
                 result.push_back(std::make_unique<HealthPresent>(
-                ResourceManager::getInstance().getTexture("health"), pos));
+                ResourceManager::getInstance().getTexture("Health"), pos));
                
             break;
         case 1:
-               result.push_back(std::make_unique<WeaponPresent>(
-               ResourceManager::getInstance().getTexture("pistol"),pos));
+               result.push_back(std::make_unique<PistolPresent>(
+               ResourceManager::getInstance().getTexture("Pistol"),pos));
               
             break;
         case 2:
                result.push_back(std::make_unique<SpeedBoost>(
-                ResourceManager::getInstance().getTexture("speed"),pos));
+                ResourceManager::getInstance().getTexture("Speed"),pos));
            
             break;
         case 3:
                 result.push_back(std::make_unique<AmmoPresent>(
-                ResourceManager::getInstance().getTexture("ammo"), pos));
+                ResourceManager::getInstance().getTexture("Ammo"), pos));
                 
             break;
         }

@@ -1,37 +1,40 @@
-#include "Inventory.h"
+﻿#include "Inventory.h"
+#include "ResourceManager.h"
 
-
-Inventory::Inventory()
-{
-    // Items to pre-fill
-    addItem("Health");
-    addItem("Pistol");
-    addItem("Ammo");
-    addItem("SpeedBoost");
+Inventory::Inventory() {
+    // Add starter items
+    addItem("Health", &ResourceManager::getInstance().getTexture("Health"));
+    addItem("Pistol", &ResourceManager::getInstance().getTexture("Pistol"));
+    addItem("Speed", &ResourceManager::getInstance().getTexture("Speed"));
 }
 
-const std::unordered_map<std::string, int>& Inventory::getAllItems() const
-{
-    return items;
+void Inventory::addItem(const std::string& name, sf::Texture* texture) {
+    auto& item = items[name];
+    item.count++;
+    if (texture)
+        item.texture = texture;
 }
 
-
-void Inventory::addItem(const std::string& name)
-{
-    items[name]++;
-}
-
-bool Inventory::useItem(const std::string& name)
-{
-    if (items[name] > 0) {
-        items[name]--;
+bool Inventory::useItem(const std::string& name) {
+    auto it = items.find(name);
+    if (it != items.end() && it->second.count > 0) {
+        it->second.count--;
         return true;
     }
     return false;
 }
 
-int Inventory::getCount(const std::string& name) const
-{
+int Inventory::getCount(const std::string& name) const {
     auto it = items.find(name);
-    return (it != items.end()) ? it->second : 0;
+    return (it != items.end()) ? it->second.count : 0;
 }
+
+const std::unordered_map<std::string, InventoryItem>& Inventory::getAllItems() const {
+    return items;
+}
+
+const sf::Texture* Inventory::getItemTexture(const std::string& name) const {
+    auto it = items.find(name);  // ✔️ תיקון כאן
+    return (it != items.end()) ? it->second.texture : nullptr;
+}
+
