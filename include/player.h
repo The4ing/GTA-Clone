@@ -31,9 +31,9 @@ public:
     void setHealth(int health) { m_health = std::max(0, health); } // Prevent negative health
     void setArmor(int armor) { m_armor = std::max(0, armor); }   // Prevent negative armor
     void setWantedLevel(int level) { m_wantedLevel = std::max(0, std::min(level, 6)); } // Clamp 0-6
-    void setCurrentWeapon(const std::string& name, int ammo, int maxAmmo) {
+    void setCurrentWeapon(const std::string& name, CurrentWepapon Weapon , int maxAmmo) {
         m_currentWeaponName = name;
-        m_currentWeaponAmmo = ammo;
+        m_currentWeaponAmmo = Weapon;
         m_maxWeaponAmmo = maxAmmo;
     }
     
@@ -49,7 +49,8 @@ public:
     void increaseSpeed(); 
     void AddAmmo();
     void AddPistol();
-
+    void UsingPistol();
+    void UsingFist();
 private:
 
     sf::Sprite  sprite;
@@ -68,11 +69,10 @@ private:
     int m_health;
     int m_armor;
     std::string m_currentWeaponName;
-    int m_currentWeaponAmmo; // -1 for melee/infinite
+    CurrentWepapon m_currentWeaponAmmo; // -1 for melee/infinite
     int m_maxWeaponAmmo;
     int m_wantedLevel;
 
-    int health = 100;
     Inventory inventory;
     int Bullets = 0; 
     float speedBoostTimer = 0.f;

@@ -6,6 +6,7 @@
 struct InventoryItem {
     int count = 0;
     sf::Texture* texture = nullptr;
+    bool infinite = false; 
 };
 
 class Inventory {

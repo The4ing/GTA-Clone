@@ -54,7 +54,8 @@ void InventoryUI::draw(sf::RenderWindow& window, const Inventory& inventory) {
         itemRects.emplace_back(icon.getGlobalBounds());
 
         // הצגת בועה עם מספר
-        if (item.second.count > 0) {
+        if (!item.second.infinite && item.second.count > 0) {
+
             // בועה קטנה — ימינה למעלה יחסית לאייקון
             sf::CircleShape bubble(13.f);
             bubble.setFillColor(sf::Color::Red);
@@ -140,6 +141,10 @@ void InventoryUI::handleInput(Player& player, Inventory& inventory, sf::RenderWi
                             std::cout << "Radar used\n";
                         else if (itemName == "Speed")
                             player.increaseSpeed();
+                        else if (itemName == "Pistol")
+                            player.UsingPistol();
+                        else if (itemName == "Fists")
+                            player.UsingFist();
                     }
                     break;
                 }

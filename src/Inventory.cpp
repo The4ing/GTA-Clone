@@ -1,4 +1,4 @@
-
+﻿
 #include "ResourceManager.h"
 #include "Inventory.h"
 
@@ -7,6 +7,9 @@ Inventory::Inventory() {
     addItem("Health", &ResourceManager::getInstance().getTexture("Health"));
     addItem("Pistol", &ResourceManager::getInstance().getTexture("Pistol"));
     addItem("Speed", &ResourceManager::getInstance().getTexture("Speed"));
+
+    addItem("Fists", &ResourceManager::getInstance().getTexture("Fists"));
+    items["Fists"].infinite = true;  // 🔴 פריט אינסופי
 }
 
 void Inventory::addItem(const std::string& name, sf::Texture* texture) {
@@ -18,9 +21,14 @@ void Inventory::addItem(const std::string& name, sf::Texture* texture) {
 
 bool Inventory::useItem(const std::string& name) {
     auto it = items.find(name);
-    if (it != items.end() && it->second.count > 0) {
-        it->second.count--;
-        return true;
+    if (it != items.end()) {
+        if (it->second.infinite) {
+            return true; // ✅ תמיד מותר להשתמש
+        }
+        if (it->second.count > 0) {
+            it->second.count--;
+            return true;
+        }
     }
     return false;
 }

@@ -4,13 +4,13 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <vector>
+#include "Constants.h"
 
 struct PlayerData {
     int money = 0;
     int health = 100;
     int armor = 0;
     std::string weaponName = "Fists";
-    int currentAmmo = 0;
     int maxAmmo = 0; // 0 ?? ????? = ??????? / ??? ???
 };
 
