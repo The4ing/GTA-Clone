@@ -9,7 +9,7 @@
 
 
 Player::Player()
-    : frameWidth(0),
+    :frameWidth(0),
     frameHeight(0),
     currentFrame(0),
     sheetCols(4),
@@ -17,10 +17,10 @@ Player::Player()
     animTimer(0.f),
     animDelay(0.1f),
     m_money(0),
-    m_health(100),
+    m_health(MaxHealth),
     m_armor(100),
     m_currentWeaponName("Fists"),
-    m_currentWeaponAmmo(-1), // -1 for melee (Fists)
+    m_currentWeaponAmmo(Fists), // -1 for melee (Fists)
     m_maxWeaponAmmo(0),
     m_wantedLevel(6)
 {
@@ -187,11 +187,10 @@ const Inventory& Player::getInventory() const
 }
 
 void Player::heal(int amount) {
-    if (health < MaxHealth) {
-        int before = health;
-        health += amount;
-        if (health > MaxHealth)
-            health = MaxHealth;
+    if (m_health < MaxHealth) {
+        m_health += amount;
+        if (m_health > MaxHealth)
+            m_health = MaxHealth;
 
         //std::cout << "Healed from " << before << " to " << health << " HP.\n";
     }
@@ -217,4 +216,14 @@ void Player::AddAmmo() {
 
 void Player::AddPistol() {
     //bullets amount 
+}
+
+void Player::UsingPistol()
+{
+  setCurrentWeapon("Pistol", Pistol, 0);
+}
+
+void Player::UsingFist()
+{
+    setCurrentWeapon("Fists", Fists, 0);
 }

@@ -179,7 +179,7 @@ void GameManager::update(float dt) {
         playerData.health = player->getHealth();
         playerData.armor = player->getArmor();
         playerData.weaponName = player->getCurrentWeaponName();
-        playerData.currentAmmo = player->getCurrentAmmo();
+        //playerData.currentAmmo = player->getCurrentAmmo();
         playerData.maxAmmo = player->getMaxAmmo();
 
         int wantedLevel = player->getWantedLevel();
