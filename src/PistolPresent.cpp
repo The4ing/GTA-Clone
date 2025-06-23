@@ -10,6 +10,6 @@ std::string PistolPresent::getType() const {
 }
 
 void PistolPresent::applyEffect(Player& player) {
-   // player.giveWeapon();
+    // player.giveWeapon();
     collect();
 }

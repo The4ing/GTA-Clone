@@ -9,13 +9,20 @@
 
 
 Player::Player()
-    : frameWidth(0)
-    , frameHeight(0)
-    , currentFrame(0)
-    , sheetCols(4)
-    , sheetRows(2)
-    , animTimer(0.f)
-    , animDelay(0.1f)
+    : frameWidth(0),
+    frameHeight(0),
+    currentFrame(0),
+    sheetCols(4),
+    sheetRows(2),
+    animTimer(0.f),
+    animDelay(0.1f),
+    m_money(0),
+    m_health(100),
+    m_armor(100),
+    m_currentWeaponName("Fists"),
+    m_currentWeaponAmmo(-1), // -1 for melee (Fists)
+    m_maxWeaponAmmo(0),
+    m_wantedLevel(6)
 {
     sf::Texture& texture = ResourceManager::getInstance().getTexture("player");
     sprite.setTexture(texture);
@@ -68,14 +75,10 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         movement.y += 1.f;
 
     bool isMoving = (movement.x != 0.f || movement.y != 0.f);
-
-    if (speedBoostTimer > 0.f) {
-        speedBoostTimer -= dt;
-        
-    }
-    else {
+    if (speedBoostTimer > 0.f)
+            speedBoostTimer -= dt;
+    else 
         speed = BasicSpeed;
-    }
 
     if (isMoving) {
         float len = std::sqrt(movement.x * movement.x + movement.y * movement.y);
@@ -169,7 +172,7 @@ void Player::collideWithPresent(Present& present) {
         present.applyEffect(*this);
         present.collect();
     }*/ 
-    //std::cout << "collide with present" << std::endl;
+   // std::cout << "collide with present" << std::endl;
 }
 
 
@@ -189,19 +192,23 @@ void Player::heal(int amount) {
         health += amount;
         if (health > MaxHealth)
             health = MaxHealth;
+
+        //std::cout << "Healed from " << before << " to " << health << " HP.\n";
     }
     else {
+        // אם החיים כבר מלאים – שמור את הפריט
         inventory.addItem("Health");
+      //  std::cout << "Health is full! Added Health item to inventory.\n";
     }
 }
 void Player::increaseSpeed() {
     std::cout << speedBoostTimer << std::endl;
-    if (speedBoostTimer <= 0.f) {
-        speed += 30.f;
-        speedBoostTimer = 15.f;        
+        if (speedBoostTimer <= 0.f) {
+            speed += 30.f;
+        speedBoostTimer = 15.f;
     }
     else {
-       inventory.addItem("Speed");
+        inventory.addItem("Speed");
     }
 }
 void Player::AddAmmo() {
@@ -211,6 +218,3 @@ void Player::AddAmmo() {
 void Player::AddPistol() {
     //bullets amount 
 }
-
-
-

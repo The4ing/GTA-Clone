@@ -34,7 +34,7 @@ void Present::onCollision(GameObject& other) {
 void Present::collideWithPlayer(Player& player) {
     if (!collected && respawnTimer <= 0.f) {
         applyEffect(player);
-       
+        //collect();
         respawnTimer = 30.f;
     }
 }

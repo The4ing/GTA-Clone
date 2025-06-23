@@ -135,9 +135,9 @@ void Vehicle::startTurn(sf::Vector2f from, sf::Vector2f control, sf::Vector2f to
     inTurn = true;
     position = from;
     sprite.setPosition(position);
-    /*std::cout << "[START TURN] from: " << from.x << "," << from.y
-        << " control: " << control.x << "," << control.y
-        << " to: " << to.x << "," << to.y << std::endl;*/
+    //std::cout << "[START TURN] from: " << from.x << "," << from.y
+    //    << " control: " << control.x << "," << control.y
+    //    << " to: " << to.x << "," << to.y << std::endl;
 }
 
 

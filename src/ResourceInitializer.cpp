@@ -23,8 +23,6 @@ void ResourceInitializer::loadAll() {
     rm.loadTexture("Health", "resources/health.png");
     rm.loadTexture("Speed", "resources/speed.png");
     rm.loadTexture("Ammo", "resources/ammo.png");
-    rm.loadTexture("Ammo", "resources/ammo.png");
- 
 
 
     // 4️⃣ טוען תמונת StaticObject לדוגמה (כתל/בניין)
