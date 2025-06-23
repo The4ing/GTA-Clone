@@ -1,14 +1,14 @@
-﻿#include "InventoryUI.h"
+﻿
 #include "InventoryUI.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "ResourceManager.h"
 
 
-InventoryUI::InventoryUI():selectedIndex(0)
+InventoryUI::InventoryUI() :selectedIndex(0)
 {
     font = ResourceManager::getInstance().getFont("main");
-   
+
 }
 
 void InventoryUI::draw(sf::RenderWindow& window, const Inventory& inventory) {

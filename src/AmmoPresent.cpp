@@ -10,6 +10,6 @@ std::string AmmoPresent::getType() const {
 }
 
 void AmmoPresent::applyEffect(Player& player) {
-    //player.AddAmmo(30);
+    //player.addAmmo(30);
     collect();
 }

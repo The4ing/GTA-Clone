@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Character.h"
 #include <SFML/Graphics.hpp>
 #include "Constants.h"
@@ -16,6 +16,26 @@ public:
     sf::Vector2f getCenter() const;
     float getCollisionRadius() const;
     void takeDamage(int amount) ;
+
+    // HUD Data Getters
+    int getMoney() const { return m_money; }
+    int getHealth() const { return m_health; }
+    int getArmor() const { return m_armor; }
+    std::string getCurrentWeaponName() const { return m_currentWeaponName; }
+    int getCurrentAmmo() const { return m_currentWeaponAmmo; }
+    int getMaxAmmo() const { return m_maxWeaponAmmo; }
+    int getWantedLevel() const { return m_wantedLevel; }
+
+    // HUD Data Setters (for testing/game logic)
+    void setMoney(int money) { m_money = money; }
+    void setHealth(int health) { m_health = std::max(0, health); } // Prevent negative health
+    void setArmor(int armor) { m_armor = std::max(0, armor); }   // Prevent negative armor
+    void setWantedLevel(int level) { m_wantedLevel = std::max(0, std::min(level, 6)); } // Clamp 0-6
+    void setCurrentWeapon(const std::string& name, int ammo, int maxAmmo) {
+        m_currentWeaponName = name;
+        m_currentWeaponAmmo = ammo;
+        m_maxWeaponAmmo = maxAmmo;
+    }
     
     void onCollision(GameObject& other) ;
     void collideWithPresent(Present& present);
@@ -26,10 +46,9 @@ public:
     const Inventory& getInventory() const;
 
     void heal(int amount);
-    void increaseSpeed();
+    void increaseSpeed(); 
     void AddAmmo();
     void AddPistol();
-    
 
 private:
 
@@ -44,9 +63,17 @@ private:
     float       animDelay;
     sf::Vector2f position;
 
-   
-    Inventory inventory;
-    int Bullets = 0;
+    // HUD-related members
+    int m_money;
+    int m_health;
+    int m_armor;
+    std::string m_currentWeaponName;
+    int m_currentWeaponAmmo; // -1 for melee/infinite
+    int m_maxWeaponAmmo;
+    int m_wantedLevel;
+
     int health = 100;
+    Inventory inventory;
+    int Bullets = 0; 
     float speedBoostTimer = 0.f;
 };

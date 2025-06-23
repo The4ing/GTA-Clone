@@ -318,7 +318,7 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
             if (dist < 30.f) {
                 vehicle.stop();
                 hasCollision = true;
-                //std::cout << "Collision blocked\n";
+               // std::cout << "Collision blocked\n";
                 break;
             }
         }
@@ -713,9 +713,9 @@ void CarManager::spawnSingleVehicleOnRoad() {
     vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), &vehicles.back());
 
 
-   // std::cout << "Spawned car at (" << laneCenter.x << ", " << laneCenter.y
-        //<< ") on lane " << laneIndex << " direction: " << actualDir
-        //<< " (road#" << roadIdx << ")\n";
+    //std::cout << "Spawned car at (" << laneCenter.x << ", " << laneCenter.y
+    //    << ") on lane " << laneIndex << " direction: " << actualDir
+    //    << " (road#" << roadIdx << ")\n";
 }
 
 
@@ -747,7 +747,7 @@ bool CarManager::isDriveable(const RoadSegment& road, sf::Vector2f from, const s
     else if (direction == "up")    dirVec = { 0, -1 };
     else if (direction == "down")  dirVec = { 0, 1 };
     else {
-        //std::cout << "[isDriveable] Invalid direction: " << direction << "\n";
+   //     std::cout << "[isDriveable] Invalid direction: " << direction << "\n";
         return false;
     }
 
@@ -757,7 +757,7 @@ bool CarManager::isDriveable(const RoadSegment& road, sf::Vector2f from, const s
         driveableDebugPoints.push_back({ point, valid });
 
         if (!valid) {
-            /*std::cout << "[isDriveable] FAILED at step " << i
+     /*       std::cout << "[isDriveable] FAILED at step " << i
                 << " | point: (" << point.x << ", " << point.y << ")"
                 << " | direction: " << direction
                 << " | road bounds: left=" << road.bounds.left
@@ -802,7 +802,7 @@ float CarManager::length(const sf::Vector2f& a, const sf::Vector2f& b) {
 
 sf::Vector2f CarManager::calcSmartControlPoint(const sf::Vector2f& from, const sf::Vector2f& to, const std::string& dirFrom, const std::string& turnType)
 {
-   // std::cout << " **********************************************************************turn type " << turnType << " from " << dirFrom << std::endl;
+    std::cout << " **********************************************************************turn type " << turnType << " from " << dirFrom << std::endl;
     //min(x) = left
     //max(x) = right
     //min(y) = up

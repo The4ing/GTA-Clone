@@ -1,5 +1,6 @@
-﻿#include "Inventory.h"
+
 #include "ResourceManager.h"
+#include "Inventory.h"
 
 Inventory::Inventory() {
     // Add starter items
@@ -34,7 +35,6 @@ const std::unordered_map<std::string, InventoryItem>& Inventory::getAllItems() c
 }
 
 const sf::Texture* Inventory::getItemTexture(const std::string& name) const {
-    auto it = items.find(name);  // ✔️ תיקון כאן
+    auto it = items.find(name);  // ?? ????? ???
     return (it != items.end()) ? it->second.texture : nullptr;
 }
-

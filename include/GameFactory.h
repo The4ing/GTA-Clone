@@ -4,7 +4,7 @@
 #include "Player.h"
 #include "CarManager.h"
 #include "PoliceManager.h"
-#include "ChunkManager.h"
+//#include "ChunkManager.h"
 #include "PedestrianManager.h"
 #include "Present.h"
 

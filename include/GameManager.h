@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "player.h"
+#include "HUD.h" 
 //#include "ChunkManager.h"
 #include "CarManager.h"
 #include "PoliceManager.h"
@@ -29,18 +30,14 @@ public:
 private:
     bool isFullscreen = false;
     void processEvents();
-
-    //FOR THE INVENTORY SHOW
-    void renderFrozenGame(sf::RenderTarget& target);
-    ///--------------
-
     void update(float dt);
     void render();
     void startGameFullscreen();
     void setFullscreen(bool fullscreen);
     void loadCollisionRectsFromJSON(const std::string& filename);
     void buildBlockedPolyTree();
-   
+    //FOR THE INVENTORY SHOWAdd commentMore actions
+    void renderFrozenGame(sf::RenderTarget& target);
 
     std::vector<std::vector<sf::Vector2f>> blockedPolygons;
     QuadTree<std::vector<sf::Vector2f>> blockedPolyTree{ sf::FloatRect(0, 0, 4640, 4672) };
@@ -59,11 +56,13 @@ private:
     std::vector<std::unique_ptr<Present>> presents;
     GameState                   currentState;
     sf::Clock                   clock;
+    sf::Time                    m_gameTime;
+    // HUD Members
+    std::unique_ptr<HUD>        m_hud;
+    sf::View                    m_hudView;
+    static constexpr float GAME_TIME_SCALE = 60.0f; // Each real second advances game time by 1 minute.
 
-
-    ///-------------
     InventoryUI inventoryUI;
     sf::RenderTexture frozenBackgroundTexture;
     sf::Sprite frozenBackgroundSprite;
-
 };

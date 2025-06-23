@@ -87,25 +87,26 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
         if (isBlocked(pos, blockedPolygons))
             continue;
 
-        switch (2) {
+      //  switch (type) {
+    switch (2) {
         case 0:
                 result.push_back(std::make_unique<HealthPresent>(
-                ResourceManager::getInstance().getTexture("Health"), sf::Vector2f(110.f,110.f)));
+                    ResourceManager::getInstance().getTexture("Health"), sf::Vector2f(110.f, 110.f)));
                
             break;
         case 1:
-               result.push_back(std::make_unique<PistolPresent>(
-               ResourceManager::getInstance().getTexture("Pistol") , sf::Vector2f(50.f, 50.f)));
+            result.push_back(std::make_unique<PistolPresent>(
+                ResourceManager::getInstance().getTexture("Pistol"), sf::Vector2f(50.f, 50.f)));
               
             break;
         case 2:
                result.push_back(std::make_unique<SpeedBoost>(
-                ResourceManager::getInstance().getTexture("Speed"), sf::Vector2f(60.f, 60.f)));
+                   ResourceManager::getInstance().getTexture("Speed"), sf::Vector2f(60.f, 60.f)));
            
             break;
         case 3:
                 result.push_back(std::make_unique<AmmoPresent>(
-                ResourceManager::getInstance().getTexture("Ammo"), sf::Vector2f(45.f, 45.f)));
+                    ResourceManager::getInstance().getTexture("Ammo"), sf::Vector2f(45.f, 45.f)));
                 
             break;
         }

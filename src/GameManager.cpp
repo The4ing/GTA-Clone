@@ -12,8 +12,8 @@
 using json = nlohmann::json;
 
 GameManager::GameManager()
-    : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top-Down GTA Clone") {
-
+    : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top-Down GTA Clone"), m_gameTime(sf::Time::Zero)
+{
     frozenBackgroundTexture.create(WINDOW_WIDTH, WINDOW_HEIGHT); // או desktop.width,height אחרי startGameFullscreen
     window.setFramerateLimit(60);
     menu = std::make_unique<Menu>(window);
@@ -35,7 +35,7 @@ void GameManager::run() {
                     startGameFullscreen();
                 else if (selected == "Exit")
                     window.close();
-            }
+            }   
 
             window.clear();
             menu->draw();
@@ -46,19 +46,18 @@ void GameManager::run() {
             update(deltaTime);
             render();
         }
-
         //
         else if (currentState == GameState::Inventory) {
+            //inventoryUI.handleInput(*player ,player->getInventory(), window);
+           
             window.clear();
+           // inventoryUI.draw(window, player->getInventory());
             window.setView(window.getDefaultView());  // הצגה לפי View רגיל של המסך
             inventoryUI.handleInput(*player, player->getInventory(), window);
-            window.draw(frozenBackgroundSprite); // הרקע הקפוא
+            window.draw(frozenBackgroundSprite); // הרקע הקפואAdd commentMore actions
             inventoryUI.draw(window, player->getInventory()); // האינבנטורי מעל
             window.display();
         }
-
-
-
 
     }
 }
@@ -68,19 +67,26 @@ void GameManager::processEvents() {
     while (window.pollEvent(event)) {
         if (event.type == sf::Event::Closed)
             window.close();
+        if (event.type == sf::Event::Resized) {
+            float w = static_cast<float>(event.size.width);
+            float h = static_cast<float>(event.size.height);
+            if (m_hud) {
+                m_hud->updateElementPositions(w, h);
+            }
+        }
 
         if (event.type == sf::Event::KeyPressed) {
+            if (event.key.code == sf::Keyboard::F11)
+                setFullscreen(!isFullscreen);
             if (currentState == GameState::Playing && event.key.code == sf::Keyboard::I) {
-                // שמור את המצב הנוכחי של המשחק לתמונה
+                // שמור את המצב הנוכחי של המשחק לתמונהAdd commentMore actions
                 frozenBackgroundTexture.clear();
                 frozenBackgroundTexture.setView(gameView); // חשוב מאוד!
                 renderFrozenGame(frozenBackgroundTexture);
                 frozenBackgroundTexture.display();
                 frozenBackgroundSprite.setTexture(frozenBackgroundTexture.getTexture());
-
                 currentState = GameState::Inventory;
             }
-
             else if (currentState == GameState::Inventory && event.key.code == sf::Keyboard::Escape) {
                 currentState = GameState::Playing;
             }
@@ -92,9 +98,10 @@ void GameManager::processEvents() {
     }
 }
 
+
 //FOR SHOWING IN THE BACKGROUNG THE GAME WHIKE INVENTORY
 void GameManager::renderFrozenGame(sf::RenderTarget& target) {
-    target.draw(mapSprite);
+        target.draw(mapSprite);
     player->draw(target);
 
     for (const auto& poly : blockedPolygons) {
@@ -117,11 +124,12 @@ void GameManager::renderFrozenGame(sf::RenderTarget& target) {
     for (auto& present : presents)
         present->draw(target);
 }
-//-------------------------------------------
-
-
 
 void GameManager::update(float dt) {
+    // Update game time
+    m_gameTime += sf::seconds(dt * GAME_TIME_SCALE);
+
+    if (!player) return; // Early exit if player isn't initialized
     player->update(dt, blockedPolygons);
 
     if (carManager)
@@ -164,17 +172,32 @@ void GameManager::update(float dt) {
             }
         }
     }
+    // Update HUD
+    if (m_hud && player && currentState == GameState::Playing) {
+        PlayerData playerData;
+        playerData.money = player->getMoney();
+        playerData.health = player->getHealth();
+        playerData.armor = player->getArmor();
+        playerData.weaponName = player->getCurrentWeaponName();
+        playerData.currentAmmo = player->getCurrentAmmo();
+        playerData.maxAmmo = player->getMaxAmmo();
+
+        int wantedLevel = player->getWantedLevel();
+        // m_gameTime is already updated
+        std::cout << "Weapon: " << player->getCurrentWeaponName() << ", Ammo: " << player->getCurrentAmmo() << ", Wanted: " << player->getWantedLevel() << std::endl;
+
+        m_hud->update(playerData, wantedLevel, m_gameTime);
+    }
 
 
 }
 
 void GameManager::render() {
-    
     window.clear(sf::Color::Black);
     window.setView(gameView);
     window.draw(mapSprite);
 
-     //   chunkManager->draw(window, gameView);
+ //   chunkManager->draw(window, gameView);
     player->draw(window);
 
     for (const auto& poly : blockedPolygons) {
@@ -196,7 +219,10 @@ void GameManager::render() {
         pedestrianManager->draw(window);
     for (auto& present : presents)
     present->draw(window);
-    
+
+    window.setView(m_hudView);
+    if (m_hud) m_hud->draw(window);
+
     window.display();
 }
 
@@ -265,8 +291,8 @@ void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
         }
     }
 
-   // std::cout << "Loaded " << blockedPolygons.size() << " polygons\n";
-    //std::cout << "Loaded " << roads.size() << " road segments\n";
+    //std::cout << "Loaded " << blockedPolygons.size() << " polygons\n";
+  //  std::cout << "Loaded " << roads.size() << " road segments\n";
 }
 
 
@@ -325,10 +351,31 @@ void GameManager::startGameFullscreen() {
     //presents = GameFactory::createPresents(30, blockedPolygons);
     presents = GameFactory::createPresents(5, blockedPolygons);
 
+    // Initialize HUD View
+    m_hudView.setSize(static_cast<float>(window.getSize().x), static_cast<float>(window.getSize().y));
+    m_hudView.setCenter(m_hudView.getSize().x / 2.f, m_hudView.getSize().y / 2.f);
+
+    // Create and load HUD
+    m_hud = std::make_unique<HUD>();
+    std::string fontPath = "resources/Pricedown.otf"; // Make sure this path is correct
+    std::string starTexturePath = "resources/star.png";   // Make sure this path is correct
+
+    if (m_hud && !m_hud->loadResources(fontPath, starTexturePath)) {
+        std::cerr << "CRITICAL: Failed to load HUD resources!" << std::endl;
+        m_hud.reset(); // Disable HUD if loading failed
+    }
+
+    // Initial call to set HUD element positions based on the current view size
+    if (m_hud) {
+        m_hud->updateElementPositions(m_hudView.getSize().x, m_hudView.getSize().y);
+    }
+
     float winW = static_cast<float>(window.getSize().x);
     float winH = static_cast<float>(window.getSize().y);
     gameView.setSize(winW, winH);
     gameView.zoom(0.25f);
+
+    m_hud->updateElementPositions(window.getSize().x, window.getSize().y);
 
     currentState = GameState::Playing;
 }
@@ -355,7 +402,7 @@ void GameManager::setFullscreen(bool fullscreen) {
     window.create(sf::VideoMode(size.x, size.y), "Top-Down GTA Clone", style);
     window.setFramerateLimit(60);
 
-   
+    // ????? ???? ?-View ?????? ????? ????:
     gameView.setSize(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT));
     gameView.setCenter(gameView.getSize().x / 2.f, gameView.getSize().y / 2.f);
     window.setView(gameView);
