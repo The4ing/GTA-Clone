@@ -104,11 +104,11 @@ std::vector<sf::Vector2f> Pathfinder::findPath(
 
     // Basic validation for start/goal positions
     if (!isWalkable(startNodePos.x, startNodePos.y, gridWidth, gridHeight, obstacles, gridSize, mapOrigin)) {
-        std::cerr << "Pathfinder Error: Start position (" << startPos.x << "," << startPos.y << ") mapped to grid (" << startNodePos.x << "," << startNodePos.y << ") is not walkable or out of bounds." << std::endl;
+      //  std::cerr << "Pathfinder Error: Start position (" << startPos.x << "," << startPos.y << ") mapped to grid (" << startNodePos.x << "," << startNodePos.y << ") is not walkable or out of bounds." << std::endl;
         return worldPath; // Return empty path
     }
     if (!isWalkable(goalNodePos.x, goalNodePos.y, gridWidth, gridHeight, obstacles, gridSize, mapOrigin)) {
-        std::cerr << "Pathfinder Error: Goal position (" << goalPos.x << "," << goalPos.y << ") mapped to grid (" << goalNodePos.x << "," << goalNodePos.y << ") is not walkable or out of bounds." << std::endl;
+    //    std::cerr << "Pathfinder Error: Goal position (" << goalPos.x << "," << goalPos.y << ") mapped to grid (" << goalNodePos.x << "," << goalNodePos.y << ") is not walkable or out of bounds." << std::endl;
         return worldPath; // Return empty path
     }
     if (startNodePos == goalNodePos) {

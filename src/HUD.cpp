@@ -39,10 +39,15 @@ bool HUD::loadResources(const std::string& fontPath, const std::string& starText
     m_armorTexture.setSmooth(true);
     m_armorSprite.setTexture(m_armorTexture);
 
-    m_weaponIconRects["Fists"] = sf::IntRect(0, 0, 250, 250);
-    m_weaponIconRects["Pistol"] = sf::IntRect(250, 0, 250, 250);
-    m_weaponIconRects["Shotgun"] = sf::IntRect(500, 0, 250, 250);
-    m_weaponIconRects["Combat Shotgun"] = sf::IntRect(192, 0, 250, 250);
+    m_weaponIconRects["Fists"] = sf::IntRect(0, 0, 185, 185);
+    m_weaponIconRects["Pistol"] = sf::IntRect(185, 0, 185, 185);
+    m_weaponIconRects["Rifle"] = sf::IntRect(370, 0, 185, 185);
+    m_weaponIconRects["Knife"] = sf::IntRect(550, 0, 185, 185);
+    m_weaponIconRects["Grenade"] = sf::IntRect(740, 0, 185, 185);
+    m_weaponIconRects["Bazooka"] = sf::IntRect(925, 0, 185, 185);
+    m_weaponIconRects["Minigun"] = sf::IntRect(1110, 0, 185, 185);
+
+
 
     // ?????? ???????? ????? ?????
     m_moneyText.setString("$9999999");
@@ -187,11 +192,12 @@ void HUD::update(const PlayerData& playerData, int wantedLevel, const sf::Time& 
 
     // ????? ?????? ???? ??? ?? ????
     auto it = m_weaponIconRects.find(playerData.weaponName);
-    std::cout << "Updating weapon icon: " << playerData.weaponName << std::endl;
+   // std::cout << "Updating weapon icon: " << playerData.weaponName << std::endl;
     if (it != m_weaponIconRects.end()) {
-        std::cout << "Texture rect: " << it->second.left << ", " << it->second.top
-            << ", " << it->second.width << ", " << it->second.height << std::endl;
+        //std::cout << "Texture rect: " << it->second.left << ", " << it->second.top
+        //    << ", " << it->second.width << ", " << it->second.height << std::endl;
         m_weaponIcon.setTextureRect(it->second);
+
         // ????? ????? ?? ????
         //float desiredSize = 48.f; // ???? ???? ?? ??????? ????????
         //float scaleX = desiredSize / it->second.width;
@@ -245,7 +251,7 @@ void HUD::drawTextWithShadow(sf::RenderWindow& window, sf::Text& text, const sf:
     text.setFillColor(originalColor);
     window.draw(text);
 
-    std::cout << "drew \n";
+   // std::cout << "drew \n";
 }
 
 void HUD::draw(sf::RenderWindow& window) {
@@ -253,17 +259,17 @@ void HUD::draw(sf::RenderWindow& window) {
     float viewHeight = static_cast<float>(window.getView().getSize().y);
 
     // ????? ?? ?????? ????????
-    std::cout << "HUD Elements positions:" << std::endl;
-    std::cout << "Money: " << m_moneyText.getPosition().x << ", " << m_moneyText.getPosition().y << std::endl;
-    std::cout << "Health: " << m_healthText.getPosition().x << ", " << m_healthText.getPosition().y << std::endl;
-    std::cout << "Armor: " << m_armorText.getPosition().x << ", " << m_armorText.getPosition().y << std::endl;
-    std::cout << "Weapon Name: " << m_weaponNameText.getPosition().x << ", " << m_weaponNameText.getPosition().y << std::endl;
-    std::cout << "Ammo: " << m_ammoText.getPosition().x << ", " << m_ammoText.getPosition().y << std::endl;
-    std::cout << "Time: " << m_timeText.getPosition().x << ", " << m_timeText.getPosition().y << std::endl;
+    //std::cout << "HUD Elements positions:" << std::endl;
+    //std::cout << "Money: " << m_moneyText.getPosition().x << ", " << m_moneyText.getPosition().y << std::endl;
+    //std::cout << "Health: " << m_healthText.getPosition().x << ", " << m_healthText.getPosition().y << std::endl;
+    //std::cout << "Armor: " << m_armorText.getPosition().x << ", " << m_armorText.getPosition().y << std::endl;
+    //std::cout << "Weapon Name: " << m_weaponNameText.getPosition().x << ", " << m_weaponNameText.getPosition().y << std::endl;
+    //std::cout << "Ammo: " << m_ammoText.getPosition().x << ", " << m_ammoText.getPosition().y << std::endl;
+    //std::cout << "Time: " << m_timeText.getPosition().x << ", " << m_timeText.getPosition().y << std::endl;
 
     if (m_currentWantedLevel > 0) {
         for (int i = 0; i < m_currentWantedLevel; ++i) {
-            std::cout << "Star " << i << ": " << m_starSprites[i].getPosition().x << ", " << m_starSprites[i].getPosition().y << std::endl;
+       //     std::cout << "Star " << i << ": " << m_starSprites[i].getPosition().x << ", " << m_starSprites[i].getPosition().y << std::endl;
         }
     }
 
@@ -289,9 +295,9 @@ void HUD::draw(sf::RenderWindow& window) {
             window.draw(m_starSprites[i]);
         }
     }
-    std::cout << "Weapon Icon position at draw: ("
-        << m_weaponIcon.getPosition().x << ", "
-        << m_weaponIcon.getPosition().y << ")" << std::endl;
+    //std::cout << "Weapon Icon position at draw: ("
+    //    << m_weaponIcon.getPosition().x << ", "
+    //    << m_weaponIcon.getPosition().y << ")" << std::endl;
     window.draw(m_heartSprite);
     window.draw(m_armorSprite);
     window.draw(m_weaponIcon); // ????? ?????? ????

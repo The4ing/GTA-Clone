@@ -14,7 +14,7 @@ using json = nlohmann::json;
 GameManager::GameManager()
     : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top-Down GTA Clone"), m_gameTime(sf::Time::Zero)
 {
-    frozenBackgroundTexture.create(WINDOW_WIDTH, WINDOW_HEIGHT); // או desktop.width,height אחרי startGameFullscreen
+    frozenBackgroundTexture.create(window.getSize().x, window.getSize().y);
     window.setFramerateLimit(60);
     menu = std::make_unique<Menu>(window);
     currentState = GameState::Menu;
@@ -85,6 +85,11 @@ void GameManager::processEvents() {
                 renderFrozenGame(frozenBackgroundTexture);
                 frozenBackgroundTexture.display();
                 frozenBackgroundSprite.setTexture(frozenBackgroundTexture.getTexture());
+                frozenBackgroundSprite.setPosition(0, 0);
+                frozenBackgroundSprite.setScale(
+                    float(window.getSize().x) / frozenBackgroundTexture.getSize().x,
+                    float(window.getSize().y) / frozenBackgroundTexture.getSize().y
+                );
                 currentState = GameState::Inventory;
             }
             else if (currentState == GameState::Inventory && event.key.code == sf::Keyboard::Escape) {
@@ -152,8 +157,6 @@ void GameManager::update(float dt) {
     if (newCenter.y > (MAP_HEIGHT - halfH))newCenter.y = MAP_HEIGHT - halfH;
 
     gameView.setCenter(newCenter);
-   //chunkManager->updateChunks(newCenter, gameView);
- //   chunkManager->updateObjects(dt, blockedPolygons);
 
     if (policeManager) 
         policeManager->update(dt, player->getPosition(), blockedPolygons);
@@ -183,9 +186,6 @@ void GameManager::update(float dt) {
         playerData.maxAmmo = player->getMaxAmmo();
 
         int wantedLevel = player->getWantedLevel();
-        // m_gameTime is already updated
-        std::cout << "Weapon: " << player->getCurrentWeaponName() << ", Ammo: " << player->getCurrentAmmo() << ", Wanted: " << player->getWantedLevel() << std::endl;
-
         m_hud->update(playerData, wantedLevel, m_gameTime);
     }
 
@@ -196,8 +196,6 @@ void GameManager::render() {
     window.clear(sf::Color::Black);
     window.setView(gameView);
     window.draw(mapSprite);
-
- //   chunkManager->draw(window, gameView);
     player->draw(window);
 
     for (const auto& poly : blockedPolygons) {
@@ -329,11 +327,6 @@ void GameManager::startGameFullscreen() {
     buildBlockedPolyTree();
     mapTexture = &ResourceManager::getInstance().getTexture("map");
     mapSprite.setTexture(*mapTexture);
-    //mapSprite.setPosition(0, 0);
-
-
-//    pedestrianManager = GameFactory::createPedestrianManager();
-  //  policeManager = GameFactory::createPoliceManager();
     pedestrianManager = GameFactory::createPedestrianManager(blockedPolygons);
     policeManager = GameFactory::createPoliceManager(blockedPolygons);
 
@@ -343,10 +336,6 @@ void GameManager::startGameFullscreen() {
     //    for (int i = 0; i < 20; ++i) {
     carManager->spawnSingleVehicleOnRoad();
     //  }
-    //  carManager->spawnSingleVehicleOnRoad();
-     // carManager->spawnSingleVehicleOnRoad();
-
-    //  chunkManager = GameFactory::createChunkManager();
     player = GameFactory::createPlayer({ 100.f, 100.f });
     //presents = GameFactory::createPresents(30, blockedPolygons);
     presents = GameFactory::createPresents(5, blockedPolygons);
@@ -401,8 +390,6 @@ void GameManager::setFullscreen(bool fullscreen) {
 
     window.create(sf::VideoMode(size.x, size.y), "Top-Down GTA Clone", style);
     window.setFramerateLimit(60);
-
-    // ????? ???? ?-View ?????? ????? ????:
     gameView.setSize(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT));
     gameView.setCenter(gameView.getSize().x / 2.f, gameView.getSize().y / 2.f);
     window.setView(gameView);
