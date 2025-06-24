@@ -9,19 +9,10 @@
 
 
 Player::Player()
-    :frameWidth(0),
-    frameHeight(0),
-    currentFrame(0),
-    sheetCols(4),
-    sheetRows(2),
-    animTimer(0.f),
-    animDelay(0.1f),
-    m_money(0),
-    m_health(MaxHealth),
-    m_armor(100),
-    m_currentWeaponName("Fists"),
-    m_currentWeaponAmmo(Fists), // -1 for melee (Fists)
-    m_maxWeaponAmmo(0),
+    : frameWidth(0), frameHeight(0), currentFrame(0),
+    sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
+    m_money(0), m_health(MaxHealth), m_armor(100),
+    m_currentWeaponName("Fists"), m_currentWeaponAmmo(Fists), m_maxWeaponAmmo(0),
     m_wantedLevel(6)
 {
     sf::Texture& texture = ResourceManager::getInstance().getTexture("player");
@@ -38,6 +29,10 @@ Player::Player()
 
     position = { 100.f, 100.f };
     sprite.setPosition(position);
+    sprite.setScale(0.07, 0.07);
+
+    animationManager = std::make_unique<AnimationManager>(sprite, frameWidth, frameHeight, sheetCols, sheetRows);
+    animationManager->initAnimations();
 }
 
 void Player::setPosition(const sf::Vector2f& pos) {
@@ -57,12 +52,7 @@ void Player::takeDamage(int amount)
 
 
 
-
-
-
-
-
-void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     sf::Vector2f movement(0.f, 0.f);
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
@@ -75,9 +65,13 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         movement.y += 1.f;
 
     bool isMoving = (movement.x != 0.f || movement.y != 0.f);
+    bool isShooting = sf::Keyboard::isKeyPressed(sf::Keyboard::Space);
+    bool isHit = false; // החלף ללוגיקה שלך
+    bool isDead = false; // החלף ללוגיקה שלך
+
     if (speedBoostTimer > 0.f)
-            speedBoostTimer -= dt;
-    else 
+        speedBoostTimer -= dt;
+    else
         speed = BasicSpeed;
 
     if (isMoving) {
@@ -89,7 +83,6 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         sprite.setRotation(angle);
 
         sf::Vector2f nextPos = sprite.getPosition() + movement * speed * dt;
-        float radius = getCollisionRadius();
 
         bool collision = false;
         for (const auto& poly : blockedPolygons) {
@@ -100,31 +93,107 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         }
 
         if (!collision) {
-           
             sprite.move(movement * speed * dt);
         }
+    }
 
-        animTimer += dt;
-        if (animTimer >= animDelay) {
-            animTimer -= animDelay;
-            const int walkingFrames = 4;
-            currentFrame = (currentFrame + 1) % walkingFrames;
-        }
+    bool shootingAnimPlaying = false;
+    if (!currentAnimationName.empty()) {
+        bool isShootAnim = currentAnimationName.find("Shoot") != std::string::npos ||
+                           currentAnimationName.find("Attack") != std::string::npos;
+        shootingAnimPlaying = isShootAnim && !animationManager->isAnimationFinished();
+    }
 
-        int col = currentFrame;
-        int row = 0;
-        int left = col * frameWidth;
-        int top = row * frameHeight;
-        sprite.setTextureRect(sf::IntRect(left, top, frameWidth, frameHeight));
+    if (isDead) {
+        playAnimation("HurtDie");
+    }
+    else if (isHit) {
+        playAnimation("Hurt");
     }
     else {
-        animTimer = 0.f;
-        currentFrame = 0;
-        int left = 0 * frameWidth;
-        int top = 1 * frameHeight;
-        sprite.setTextureRect(sf::IntRect(left, top, frameWidth, frameHeight));
+        if (isShooting && !shootingAnimPlaying) {
+            if (m_currentWeaponName == "Fists") {
+                playAnimation("BatAttack", false);
+            }
+            else if (m_currentWeaponName == "Pistol") {
+                playAnimation("PistolShoot", false);
+            }
+            else if (m_currentWeaponName == "Rifle") {
+                playAnimation("RifleShoot", false);
+            }
+            else if (m_currentWeaponName == "Minigun") {
+                playAnimation("MinigunShoot", false);
+            }
+            else if (m_currentWeaponName == "Bazooka") {
+                playAnimation("BazookaShoot", false);
+            }
+            else if (m_currentWeaponName == "Knife") {
+                playAnimation("KnifeAttack", false);
+            }
+            else if (m_currentWeaponName == "Grenade") {
+                playAnimation("ThrowGrenade", false);
+            }
+        }
+        else if (shootingAnimPlaying) {
+            // ממשיכים להנגן את אנימציית הירי עד לסיומה - לא עושים כלום כאן
+        }
+        else {
+            // לולאת הליכה / עמידה רגילה
+            if (m_currentWeaponName == "Fists") {
+                if (isMoving)
+                    playAnimation("Idle_NoWeapon");
+                else {
+                    setSpecificFrame(0, 0);
+                    return;
+                }
+            }
+            else if (m_currentWeaponName == "Pistol") {
+                if (isMoving)
+                    playAnimation("PistolWalk");
+                else {
+                    setSpecificFrame(6, 10);
+                    return;
+                }
+            }
+            else if (m_currentWeaponName == "Rifle") {
+                if (isMoving)
+                    playAnimation("RifleWalk");
+                else {
+                    setSpecificFrame(5, 5);
+                    return;
+                }
+            }
+            else if (m_currentWeaponName == "Minigun") {
+                if (isMoving)
+                    playAnimation("MinigunWalk");
+                else {
+                    setSpecificFrame(8, 1);
+                    return;
+                }
+            }
+            else if (m_currentWeaponName == "Bazooka") {
+                if (isMoving)
+                    playAnimation("BazookaWalk");
+                else {
+                    setSpecificFrame(9, 9);
+                    return;
+                }
+            }
+            else if (m_currentWeaponName == "Knife") {
+                playAnimation("Idle_NoWeapon");
+            }
+            else if (m_currentWeaponName == "Grenade") {
+                playAnimation("Idle_NoWeapon");
+            }
+        }
     }
+
+    animationManager->update(dt);
 }
+
+
+
+
 
 void Player::draw(sf::RenderTarget& window) {
     sf::CircleShape circle(getCollisionRadius());
@@ -226,4 +295,18 @@ void Player::UsingPistol()
 void Player::UsingFist()
 {
     setCurrentWeapon("Fists", Fists, 0);
+}
+
+void Player::playAnimation(const std::string& animName, bool loop, bool pingpong) {
+    if (!animationManager) return;
+    if (currentAnimationName != animName) {
+        animationManager->setAnimation(animName, loop, pingpong);
+        currentAnimationName = animName;
+    }
+}
+
+// להציג פריים ספציפי בספרייט שיט
+void Player::setSpecificFrame(int row, int col) {
+    sf::IntRect rect(col * frameWidth, row * frameHeight, frameWidth, frameHeight);
+    sprite.setTextureRect(rect);
 }

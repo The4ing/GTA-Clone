@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include "Constants.h"
 #include "Inventory.h"
+#include "AnimationManager.h"
 
 class Player : public Character {
 public:
@@ -52,7 +53,8 @@ public:
     void UsingPistol();
     void UsingFist();
 private:
-
+    void setSpecificFrame(int row, int col);
+    void playAnimation(const std::string& animName, bool loop = true, bool pingpong = false);
     sf::Sprite  sprite;
     float       speed = 250.f;
     int         frameWidth;
@@ -63,6 +65,8 @@ private:
     float       animTimer;
     float       animDelay;
     sf::Vector2f position;
+    bool wasShooting = false;
+    bool isFinishingShootAnim = false;
 
     // HUD-related members
     int m_money;
@@ -76,4 +80,6 @@ private:
     Inventory inventory;
     int Bullets = 0; 
     float speedBoostTimer = 0.f;
+    std::string currentAnimationName;
+    std::unique_ptr<AnimationManager> animationManager;
 };
