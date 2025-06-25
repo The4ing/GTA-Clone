@@ -23,7 +23,9 @@ public:
     int getHealth() const { return m_health; }
     int getArmor() const { return m_armor; }
     std::string getCurrentWeaponName() const { return m_currentWeaponName; }
-    int getCurrentAmmo() const { return m_currentWeaponAmmo; }
+    int getCurrentAmmo(const std::string& name) const {
+          return WeaponsAmmo.at(name).Ammo;  // throws std::out_of_range if not found
+      }
     int getMaxAmmo() const { return m_maxWeaponAmmo; }
     int getWantedLevel() const { return m_wantedLevel; }
 
@@ -50,8 +52,7 @@ public:
     void increaseSpeed(); 
     void AddAmmo();
     void AddPistol();
-    void UsingPistol();
-    void UsingFist();
+    
 private:
     void setSpecificFrame(int row, int col);
     void playAnimation(const std::string& animName, bool loop = true, bool pingpong = false);
@@ -82,4 +83,5 @@ private:
     float speedBoostTimer = 0.f;
     std::string currentAnimationName;
     std::unique_ptr<AnimationManager> animationManager;
+      std::unordered_map<std::string, AmmoSetting> WeaponsAmmo;
 };
