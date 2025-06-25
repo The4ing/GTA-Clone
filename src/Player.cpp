@@ -99,7 +99,8 @@ void Player::takeDamage(int amount)
 
     bool shootingAnimPlaying = false;
     if (!currentAnimationName.empty()) {
-        bool isShootAnim = currentAnimationName.find("Shoot") != std::string::npos ||
+        bool isShootAnim = currentAnimationName.find("Throw") != std::string::npos ||
+                           currentAnimationName.find("Shoot") != std::string::npos ||
                            currentAnimationName.find("Attack") != std::string::npos;
         shootingAnimPlaying = isShootAnim && !animationManager->isAnimationFinished();
     }
@@ -116,22 +117,28 @@ void Player::takeDamage(int amount)
                 playAnimation("BatAttack", false);
             }
             else if (m_currentWeaponName == "Pistol") {
-                playAnimation("PistolShoot", false);
-            }
+                playAnimation("Pistol", false);
+                //SoundManager::getInstance().playSound("gunshot"); 
+                SoundManager::getInstance().playSound("guns");        }
             else if (m_currentWeaponName == "Rifle") {
                 playAnimation("RifleShoot", false);
+                SoundManager::getInstance().playSound("rifleShot");
             }
             else if (m_currentWeaponName == "Minigun") {
                 playAnimation("MinigunShoot", false);
+                SoundManager::getInstance().playSound("minigunShot"); //need to review
             }
             else if (m_currentWeaponName == "Bazooka") {
                 playAnimation("BazookaShoot", false);
+                SoundManager::getInstance().playSound("RPGshot"); 
             }
             else if (m_currentWeaponName == "Knife") {
                 playAnimation("KnifeAttack", false);
+                SoundManager::getInstance().playSound("KnifeAttack"); 
             }
             else if (m_currentWeaponName == "Grenade") {
                 playAnimation("ThrowGrenade", false);
+                SoundManager::getInstance().playSound("ThrowGrenade"); //need to review
             }
         }
         else if (shootingAnimPlaying) {

@@ -32,9 +32,14 @@ void ResourceInitializer::loadAll() {
     rm.loadTexture("car", "resources/car.png");
     // 5️⃣ (אופציונלי) תמונת הולך רגל נוספות, כדור, פיצוץ וכדומהerrres\n";
         // Load sounds
- /*   rm.loadSoundBuffer("startup", "resources/sounds/startup.wav");
-    rm.loadSoundBuffer("shot", "resources/sounds/shot.wav");
-    rm.loadSoundBuffer("explosion", "resources/sounds/explosion.wav");*/
+    //rm.loadSoundBuffer("startup", "resources/sounds/startup.wav");
+    rm.loadSoundBuffer("gunshot", "resources/sounds/gunshot.wav");
+    rm.loadSoundBuffer("rifleShot", "resources/sounds/rifleShot.wav");
+    rm.loadSoundBuffer("minigunShot", "resources/sounds/minigunShot.wav");
+    rm.loadSoundBuffer("RPGshot", "resources/sounds/RPGshot.wav");
+    rm.loadSoundBuffer("KnifeAttack", "resources/sounds/KnifeAttack.wav");
+    rm.loadSoundBuffer("ThrowGrenade", "resources/sounds/ThrowGrenade.wav");
+   // rm.loadSoundBuffer("explosion", "resources/sounds/explosion.wav");
 
 
 
