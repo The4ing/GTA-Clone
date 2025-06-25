@@ -1,4 +1,4 @@
-﻿
+
 #include "InventoryUI.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -8,7 +8,7 @@
 InventoryUI::InventoryUI() :selectedIndex(0)
 {
     font = ResourceManager::getInstance().getFont("main");
-
+    
 }
 
 void InventoryUI::draw(sf::RenderWindow& window, const Inventory& inventory) {
@@ -92,6 +92,16 @@ void InventoryUI::handleInput(Player& player, Inventory& inventory, sf::RenderWi
     const int cols = 4;
     const int totalItems = static_cast<int>(inventory.getAllItems().size());
     static bool leftPressed = false, rightPressed = false, upPressed = false, downPressed = false, enterPressed = false;
+    static const std::unordered_map<std::string, std::function<void()>>   itemActions = {
+    { "Health", [&player]() { player.heal(25); } },
+    { "Radar",  []() { std::cout << "Radar used\n"; } },
+    { "Speed",  [&player]() { player.increaseSpeed(); } },
+    { "Pistol", [&player]() { player.setCurrentWeapon("Pistol", Pistol, 0); } },
+    { "Fists",  [&player]() { player.setCurrentWeapon("Fists", Fists, player.getCurrentAmmo("Fists")); } },
+    { "Rifle",  [&player]() { player.setCurrentWeapon("Rifle", Rifle, player.getCurrentAmmo("Rifle")); } },
+    { "Minigun",  [&player]() { player.setCurrentWeapon("Minigun", Minigun, player.getCurrentAmmo("Minigun")); } },
+    { "Bazooka",  [&player]() { player.setCurrentWeapon("Bazooka", Bazooka, player.getCurrentAmmo("Bazooka")); } },
+    };
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
         if (!leftPressed) {
@@ -135,17 +145,13 @@ void InventoryUI::handleInput(Player& player, Inventory& inventory, sf::RenderWi
                 if (index == selectedIndex) {
                     std::string itemName = pair.first;
                     if (inventory.useItem(itemName)) {
-                        if (itemName == "Health")
-                            player.heal(25);
-                        else if (itemName == "Radar")
-                            std::cout << "Radar used\n";
-                        else if (itemName == "Speed")
-                            player.increaseSpeed();
-                        else if (itemName == "Pistol")
-                            player.UsingPistol();
-                        else if (itemName == "Fists")
-                            player.UsingFist();
+                        
+                        auto it = itemActions.find(itemName);
+                        if (it != itemActions.end()) {
+                            it->second(); 
+                        }
                     }
+
                     break;
                 }
                 ++index;
