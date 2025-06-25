@@ -33,6 +33,16 @@ Player::Player()
 
     animationManager = std::make_unique<AnimationManager>(sprite, frameWidth, frameHeight, sheetCols, sheetRows);
     animationManager->initAnimations();
+    
+    WeaponsAmmo = {
+     {"Fists",   AmmoSetting{}},
+     {"Pistol",  AmmoSetting{}},
+     {"Rifle",   AmmoSetting{}},
+     {"Minigun", AmmoSetting{}},
+     {"Bazooka", AmmoSetting{}},
+     {"Knife",   AmmoSetting{}},
+     {"Grenade", AmmoSetting{}}
+    };
 }
 
 void Player::setPosition(const sf::Vector2f& pos) {
@@ -294,15 +304,7 @@ void Player::AddPistol() {
     //bullets amount 
 }
 
-void Player::UsingPistol()
-{
-  setCurrentWeapon("Pistol", Pistol, 0);
-}
 
-void Player::UsingFist()
-{
-    setCurrentWeapon("Fists", Fists, 0);
-}
 
 void Player::playAnimation(const std::string& animName, bool loop, bool pingpong) {
     if (!animationManager) return;
