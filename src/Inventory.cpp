@@ -1,13 +1,9 @@
-﻿
+
 #include "ResourceManager.h"
 #include "Inventory.h"
 
 Inventory::Inventory() {
     // Add starter items
-    addItem("Health", &ResourceManager::getInstance().getTexture("Health"));
-    addItem("Pistol", &ResourceManager::getInstance().getTexture("Pistol"));
-    addItem("Speed", &ResourceManager::getInstance().getTexture("Speed"));
-
     addItem("Fists", &ResourceManager::getInstance().getTexture("Fists"));
     items["Fists"].infinite = true;  // 🔴 פריט אינסופי
 }
