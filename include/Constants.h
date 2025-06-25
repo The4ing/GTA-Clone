@@ -18,4 +18,13 @@ const int MaxHealth = 100;
 enum CurrentWepapon {
     Fists = -1,
     Pistol,
+    Rifle,
+    Minigun,
+    Bazooka,
+};
+
+struct AmmoSetting {
+    int Ammo = 0;
+    int MaxAmmo = 0;
+
 };
