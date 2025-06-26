@@ -8,10 +8,6 @@ Bullet::Bullet() : active(false) {
     sf::FloatRect bounds = sprite.getLocalBounds();
     sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
     sprite.setScale(0.1, 0.1);
-
-    float angleRad = std::atan2(direction.y, direction.x);
-    float angleDeg = angleRad * 180.f / 3.14159f;
-    sprite.setRotation(angleDeg);
 }
 
 void Bullet::init(const sf::Vector2f& startPos, const sf::Vector2f& dir, float initialSpeed) {
