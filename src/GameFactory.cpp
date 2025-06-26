@@ -7,7 +7,7 @@
 #include "CollisionUtils.h"
 #include "ResourceManager.h"
 #include "Rifle.h"
-#include "Minigan.h"
+#include "Minigun.h"
 #include "Bazooka.h"
 #include <iostream>
 #include "GameManager.h" 
@@ -117,8 +117,8 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
                 ResourceManager::getInstance().getTexture("Rifle"), pos));
             break;
         case 5:
-            result.push_back(std::make_unique<Minigan>(
-                ResourceManager::getInstance().getTexture("Minigan"), sf::Vector2f(50.f, 50.f)));
+            result.push_back(std::make_unique<Minigun>(
+                ResourceManager::getInstance().getTexture("Minigun"), sf::Vector2f(50.f, 50.f)));
             break;
         case 6:
             result.push_back(std::make_unique<Bazooka>(

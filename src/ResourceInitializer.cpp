@@ -25,7 +25,7 @@ void ResourceInitializer::loadAll() {
     rm.loadTexture("Ammo", "resources/ammo.png");
     rm.loadTexture("Fists", "resources/fist.png");
     rm.loadTexture("Rifle", "resources/Rifle.png");
-    rm.loadTexture("Minigan", "resources/Minigan.png");
+    rm.loadTexture("Minigun", "resources/Minigun.png");
     rm.loadTexture("Bazooka", "resources/Bazooka.png");
     // 4️⃣ טוען תמונת StaticObject לדוגמה (כתל/בניין)
     rm.loadTexture("static_building", "resources/building.png");
