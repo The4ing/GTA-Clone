@@ -11,7 +11,8 @@
 #include "PedestrianManager.h"
 #include "Present.h"
 #include "InventoryUI.h"
-
+#include <vector> // Added for std::vector
+#include "BulletPool.h"
 
 
 enum class GameState {
@@ -25,6 +26,8 @@ enum class GameState {
 class GameManager {
 public:
     GameManager();
+    // void addBullet(std::unique_ptr<Bullet> bullet); // Old methodAdd commentMore actions
+    void addBullet(const sf::Vector2f& startPos, const sf::Vector2f& direction); // New method for pool
     void run();
 
 private:
@@ -38,11 +41,13 @@ private:
     void buildBlockedPolyTree();
     //FOR THE INVENTORY SHOWAdd commentMore actions
     void renderFrozenGame(sf::RenderTarget& target);
+  
 
     std::vector<std::vector<sf::Vector2f>> blockedPolygons;
     QuadTree<std::vector<sf::Vector2f>> blockedPolyTree{ sf::FloatRect(0, 0, 4640, 4672) };
     std::vector<RoadSegment> roads;
-
+    // std::vector<std::unique_ptr<Bullet>> bullets; // Replaced with BulletPoolAdd commentMore actions
+    BulletPool                  bulletPool; // Added BulletPool instance
     sf::RenderWindow            window;
     sf::View                    gameView;
     std::unique_ptr<Menu>       menu;
@@ -60,7 +65,7 @@ private:
     // HUD Members
     std::unique_ptr<HUD>        m_hud;
     sf::View                    m_hudView;
-    static constexpr float GAME_TIME_SCALE = 60.0f; // Each real second advances game time by 1 minute.
+    static constexpr float GAME_TIME_SCALE = 60.0f; 
 
     InventoryUI inventoryUI;
     sf::RenderTexture frozenBackgroundTexture;

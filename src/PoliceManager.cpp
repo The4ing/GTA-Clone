@@ -2,39 +2,42 @@
 #include <limits>
 #include <cmath>
 #include <iostream>
+#include "GameManager.h" // Required for GameManager type
+
+PoliceManager::PoliceManager(GameManager& gameManager) : m_gameManager(gameManager) {} // Initialize GameManager reference
 
 void PoliceManager::spawnPolice(const sf::Vector2f& position) {
-
-    policeUnits.push_back(std::make_unique<Police>(position));
-
+    // Pass the GameManager reference to the Police constructor
+    policeUnits.push_back(std::make_unique<Police>(m_gameManager));
+    // Set position after creation, or modify Police constructor if it needs position directly and GM.
+    // For now, Police constructor only takes GM, position is set if needed by other means (e.g. a setInitialPosition method or default)
+    // The current Police constructor does not take position, it's set internally or defaults.
+    // Let's ensure new police units are positioned correctly.
+    // The Police constructor sets a default position. We should override it.
+    if (!policeUnits.empty()) {
+        policeUnits.back()->setPosition(position); // Set the position for the newly spawned police
+    }
     //std::cout << "Spawned police at: (" << position.x << ", " << position.y << ")\n";
 }
+
 
 void PoliceManager::update(float dt, const sf::Vector2f& playerPos,
     const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     spawnCooldown -= dt;
 
-    // יצירה אקראית ליד צ’אנקים פעילים (אחת ל־5 שניות נניח)
-    // if (spawnCooldown <= 0.f) {
-    //     for (const auto& chunk : activeChunks) {
-    //         if (rand() % 100 < 25) { // 25% סיכוי ליצור שוטר
-    //             spawnPoliceNearChunk(chunk);
-    //         }
-    //     }
-    //     spawnCooldown = 5.f;
-    // }
+    // ... (rest of the spawning logic if any) ...
 
     for (auto& unit : policeUnits) {
-        unit->setTargetPosition(playerPos);
-        unit->update(dt, blockedPolygons);
+        // unit->setTargetPosition(playerPos); // This is now done inside Police::update
+        unit->update(dt, playerPos, blockedPolygons); // Pass playerPos to Police::update
     }
 
     policeUnits.erase(std::remove_if(policeUnits.begin(), policeUnits.end(),
         [](const std::unique_ptr<Police>& p) { return p->isDead(); }),
         policeUnits.end());
-
-
 }
+
+
 
 
 void PoliceManager::draw(sf::RenderTarget& window) {

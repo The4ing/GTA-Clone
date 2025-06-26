@@ -12,15 +12,18 @@
 enum class PoliceState {
     Idle,
     Chasing,
+    Shooting,
     BackingUp
 };
 
+class GameManager;
 
 class Police : public Character {
 public:
-    Police(sf::Vector2f target);
+    Police(GameManager& gameManager, sf::Vector2f initialTarget); 
+    Police(GameManager& gameManager); 
 
-    void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
+    void update(float dt, const sf::Vector2f& playerPosition, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     bool moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void draw(sf::RenderTarget& window);
 
@@ -74,12 +77,19 @@ private:
     size_t currentPathIndex = 0;
     float repathTimer = 0.f;
 
+    GameManager& m_gameManager; // Reference to GameManager for shootingAdd commentMore actions
+    float fireCooldownTimer = 0.f;
+    const float fireRate = 1.5f; // Seconds between shots
+    const float shootingRange = 200.f; // Max distance to shoot
+    const float lineOfSightRange = 250.f; // Max distance to detect/see player for shooting state
+
     std::unique_ptr<AnimationManager> animationManager; 
-        int sheetCols = 10;
+    int sheetCols = 10;
     int sheetRows = 10;
     int frameWidth;
     int frameHeight;
 
     void initAnimations();
     void setSpecificFrame(int row, int col);
+    void handleShooting(const sf::Vector2f& playerPosition, float dt);
 };
