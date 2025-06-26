@@ -1,11 +1,14 @@
 ﻿// GameFactory.cpp
 #include "GameFactory.h"
 #include "HealthPresent.h"
-#include "PistolPresent.h"
+#include "Pistol.h"
 #include "SpeedBoost.h"
 #include "AmmoPresent.h"
 #include "CollisionUtils.h"
 #include "ResourceManager.h"
+#include "Rifle.h"
+#include "Minigan.h"
+#include "Bazooka.h"
 #include <iostream>
 
 std::unique_ptr<Player> GameFactory::createPlayer(const sf::Vector2f& pos) {
@@ -79,7 +82,7 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
     while (result.size() < count && attempts < maxAttempts) {
         ++attempts;
 
-        int type = rand() % 4;
+        int type = rand() % 7;
         float x = static_cast<float>(rand() % MAP_WIDTH);
         float y = static_cast<float>(rand() % MAP_HEIGHT);
         sf::Vector2f pos(x, y);
@@ -88,22 +91,31 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
             continue;
 
       //  switch (type) {
-    switch (1) {
+    switch (5) {
         case 0:
                 result.push_back(std::make_unique<HealthPresent>(
-                    ResourceManager::getInstance().getTexture("Health"), sf::Vector2f(110.f, 110.f)));
+                    ResourceManager::getInstance().getTexture("Health"), pos));
             break;
         case 1:
-            result.push_back(std::make_unique<PistolPresent>(
-                ResourceManager::getInstance().getTexture("Pistol"), sf::Vector2f(50.f, 50.f)));
+            result.push_back(std::make_unique<Pistol>(
+                ResourceManager::getInstance().getTexture("Pistol"), pos));
             break;
         case 2:
                result.push_back(std::make_unique<SpeedBoost>(
-                   ResourceManager::getInstance().getTexture("Speed"), sf::Vector2f(60.f, 60.f)));          
+                   ResourceManager::getInstance().getTexture("Speed"), pos));
             break;
         case 3:
                 result.push_back(std::make_unique<AmmoPresent>(
-                    ResourceManager::getInstance().getTexture("Ammo"), sf::Vector2f(45.f, 45.f)));
+                    ResourceManager::getInstance().getTexture("Ammo"), pos));
+        case 4:
+            result.push_back(std::make_unique<Rifle>(
+                ResourceManager::getInstance().getTexture("Rifle"), pos));
+        case 5:
+            result.push_back(std::make_unique<Minigan>(
+                ResourceManager::getInstance().getTexture("Minigan"), sf::Vector2f(50.f, 50.f)));
+        case 6:
+            result.push_back(std::make_unique<Bazooka>(
+                ResourceManager::getInstance().getTexture("Bazooka"), sf::Vector2f(50.f, 50.f)));
                 
             break;
         }

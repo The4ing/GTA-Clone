@@ -7,6 +7,7 @@
 //#include "PathPlanner.h" 
 #include "Pathfinder.h"  
 #include  "QuadTree.h"
+#include "AnimationManager.h"
 
 enum class PoliceState {
     Idle,
@@ -49,8 +50,7 @@ private:
     float pathFailCooldown = 0.f;
 
     sf::Vector2f targetPos;
-    int frameWidth;
-    int frameHeight;
+    
     int framesPerRow = 6;
     sf::Sprite sprite;
     float speed = 40.f;
@@ -62,12 +62,24 @@ private:
     sf::Vector2f backUpDirection;  
     float wanderTimer = 0.f;
     sf::Vector2f wanderDestination;
+    float pauseTimer = 0.f;      // כמה זמן נשאר לעצור עכשיוAdd commentMore actions
+    float nextPauseTime = 0.f;   // מתי לעצור בפעם הבאה (בין 30 ל-60 שניות)
+    bool isPaused = false;
 
     int currentFrame = 0;
     float animationTimer = 0.f;
-    float animationSpeed = 0.13f;
+    float animationSpeed;
     Pathfinder pathfinder; // Added Pathfinder member
     std::vector<sf::Vector2f> currentPath;
     size_t currentPathIndex = 0;
     float repathTimer = 0.f;
+
+    std::unique_ptr<AnimationManager> animationManager; 
+        int sheetCols = 10;
+    int sheetRows = 10;
+    int frameWidth;
+    int frameHeight;
+
+    void initAnimations();
+    void setSpecificFrame(int row, int col);
 };

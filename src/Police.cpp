@@ -6,26 +6,31 @@
 #include "CollisionUtils.h"
 
 
-
-Police::Police(sf::Vector2f target) :targetPos(target) {
+Police::Police(sf::Vector2f target) : targetPos(target), state(PoliceState::Idle), 
+currentPathIndex(0), repathTimer(0.f), pathFailCooldown(0.f),
+animationTimer(0.f), animationSpeed(0.005f), currentFrame(0),
+framesPerRow(10) // 10 columns
+{
     sprite.setTexture(ResourceManager::getInstance().getTexture("police"));
-    framesPerRow = 6;
-    frameWidth = sprite.getTexture()->getSize().x / framesPerRow;
-    frameHeight = sprite.getTexture()->getSize().y;
+    sheetCols = 10;
+    sheetRows = 10;
+    frameWidth = sprite.getTexture()->getSize().x / sheetCols;
+    frameHeight = sprite.getTexture()->getSize().y / sheetRows;
     sprite.setTextureRect({ 0, 0, frameWidth, frameHeight });
     sprite.setOrigin(frameWidth / 2.f, frameHeight / 2.f);
-    //sprite.setPosition(target);
+    
     sprite.setPosition(100, 100);
+    sprite.setScale(0.15f, 0.15f);
+    speed = 40.f;
+    
+    nextPauseTime = 30.f + static_cast<float>(rand()) / RAND_MAX * 30.f;  // בין 30 ל-60 שניות
+
+
+    animationManager = std::make_unique<AnimationManager>(sprite, frameWidth, frameHeight, sheetCols, sheetRows); 
+    initAnimations();
+
     setRandomWanderDestination(MAP_BOUNDS);
 
-     sprite.setScale(0.07f, 0.07f); 
-    speed = 40.f;
-    currentFrame = 0;
-
-    // Initialize pathfinding members
-    currentPathIndex = 0;
-    repathTimer = 0.f;
-    pathFailCooldown = 0.f; // Initialize this as well
 }
 
 void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
@@ -34,29 +39,52 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         pathFailCooldown -= dt;
     }
 
+    if (isPaused) {
+        
+            pauseTimer -= dt;
+        if (pauseTimer <= 0.f) {
+            isPaused = false;
+            // קבע מתי העצירה הבאה תתרחש מחדש
+            nextPauseTime = 30.f + static_cast<float>(rand()) / RAND_MAX * 30.f;
+        }
+    }
+    else {
+        nextPauseTime -= dt;
+        if (nextPauseTime <= 0.f) {
+            // מתחיל עצירה
+            isPaused = true;
+            pauseTimer = 3;  // כאן תקבע את משך העצירה בשניות (לדוגמה, 3 שניות)
+        }
+    }
+
+    // אם עצור - אל תבצע תזוזה או שינוי מצב
+    if (isPaused) {
+        // יכול לשים כאן גם אנימציית Idle או דומם
+     //   animationManager->setAnimation("Idle_NoWeapon", true);
+        setSpecificFrame(0, 0);
+        // animationManager->update(dt);
+        return; // מפסיק כאן ומונע תזוזה עד שהעצירה תסתיים
+    }
+    
     float distToPlayer = std::hypot(targetPos.x - getPosition().x, targetPos.y - getPosition().y);
 
     // State transition logic
     if (distToPlayer <= detectionRadius) {
         if (state != PoliceState::Chasing) {
             state = PoliceState::Chasing;
-            currentFrame = 0; // Reset animation
-            currentPath.clear(); // Clear previous path
+            currentPath.clear();
             currentPathIndex = 0;
-            repathTimer = 1.0f; // Force repath quickly when switching to chase
-          //  std::cout << "Police: Switched to Chasing state." << std::endl;
+            repathTimer = 1.0f;
         }
     }
-    else if (state == PoliceState::Chasing && distToPlayer > detectionRadius + 30.f) { // Add hysteresis
+    else if (state == PoliceState::Chasing && distToPlayer > detectionRadius + 30.f) {
         state = PoliceState::Idle;
-        currentFrame = 0; // Reset animation
-        currentPath.clear(); // Clear previous path
+        currentPath.clear();
         currentPathIndex = 0;
-        setRandomWanderDestination(MAP_BOUNDS); // Get a new wander destination
-      //  std::cout << "Police: Switched to Idle state." << std::endl;
+        setRandomWanderDestination(MAP_BOUNDS);
     }
 
-    // Backing up state: move backwards smoothly
+   
     if (state == PoliceState::BackingUp) {
         float stepSize = speed * dt;
         if (backedUpSoFar < backUpDistance) {
@@ -64,7 +92,6 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
             sf::Vector2f nextPos = currentPos + backUpDirection * stepSize;
 
             if (checkCollision(currentPos, nextPos, blockedPolygons, getCollisionRadius())) {
-                // Stuck even going back, reset path and pick new destination
                 currentPath.clear();
                 currentPathIndex = 0;
                 setRandomWanderDestination(MAP_BOUNDS);
@@ -78,10 +105,10 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
 
             float angle = std::atan2(backUpDirection.y, backUpDirection.x) * 180.f / M_PI;
             sprite.setRotation(angle - 270.f);
-            return; // Do not continue normal movement while backing up
+            return; 
         }
         else {
-            // Finished backing up, reset and go idle
+           
             backedUpSoFar = 0.f;
             state = PoliceState::Idle;
             currentPath.clear();
@@ -91,16 +118,13 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         }
     }
 
-    // Pathfinding and Destination Logic
+   
     if (state == PoliceState::Chasing) {
         if (pathFailCooldown <= 0.f && (currentPath.empty() || currentPathIndex >= currentPath.size() || repathTimer > 1.0f)) {
-           // std::cout << "Police (Chasing): Attempting to find path to player at (" << targetPos.x << ", " << targetPos.y << ")" << std::endl;
             currentPath = pathfinder.findPath(getPosition(), targetPos, blockedPolygons, MAP_BOUNDS, PATHFINDING_GRID_SIZE);
-         //   std::cout << "Police (Chasing): Path found with size: " << currentPath.size() << std::endl;
             currentPathIndex = 0;
             repathTimer = 0.f;
             if (currentPath.empty()) {
-         //       std::cerr << "Police (Chasing): Failed to find path to player." << std::endl;
                 pathFailCooldown = 3.0f;
             }
         }
@@ -108,13 +132,10 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
     else if (state == PoliceState::Idle) {
         if (currentPath.empty() || currentPathIndex >= currentPath.size()) {
             if (pathFailCooldown <= 0.f) {
-           //     std::cout << "Police (Idle): Attempting to find path to wander destination (" << wanderDestination.x << ", " << wanderDestination.y << ")" << std::endl;
                 currentPath = pathfinder.findPath(getPosition(), wanderDestination, blockedPolygons, MAP_BOUNDS, PATHFINDING_GRID_SIZE);
-           //     std::cout << "Police (Idle): Path found with size: " << currentPath.size() << std::endl;
                 currentPathIndex = 0;
                 repathTimer = 0.f;
                 if (currentPath.empty()) {
-          //          std::cerr << "Police (Idle): Failed to find path to wander destination. Setting new one." << std::endl;
                     pathFailCooldown = 1.0f;
                     setRandomWanderDestination(MAP_BOUNDS);
                 }
@@ -125,20 +146,18 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
     // Movement Execution along the path
     if (!currentPath.empty() && currentPathIndex < currentPath.size()) {
         sf::Vector2f nextWaypoint = currentPath[currentPathIndex];
-        bool hitObstacle = moveToward(nextWaypoint, dt, blockedPolygons); // returns true if collision detected
+        bool hitObstacle = moveToward(nextWaypoint, dt, blockedPolygons);
 
         if (hitObstacle) {
-            // Enter backing up state
             state = PoliceState::BackingUp;
             backedUpSoFar = 0.f;
 
-            sf::Vector2f currentPos = getPosition();
-            sf::Vector2f dir = nextWaypoint - currentPos;
+            sf::Vector2f dir = nextWaypoint - getPosition();
             float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
             if (len > 0.01f)
                 backUpDirection = -dir / len;
 
-            return; // stop further movement this frame
+            return; 
         }
 
         float distanceToWaypoint = std::hypot(nextWaypoint.x - getPosition().x, nextWaypoint.y - getPosition().y);
@@ -154,25 +173,22 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         }
     }
 
-    // Animation update
     animationTimer += dt;
     if (animationTimer >= animationSpeed) {
         animationTimer = 0.f;
         bool isMoving = !currentPath.empty() && currentPathIndex < currentPath.size();
-        if (isMoving) {
-            currentFrame = (currentFrame + 1) % framesPerRow;
+        if (state == PoliceState::Idle) {
+          animationManager->setAnimation(isMoving ? "Walk_NoWeapon" : "Idle_NoWeapon", true);
         }
-        else {
-            currentFrame = 0;
+        else if (state == PoliceState::Chasing) {
+              animationManager->setAnimation(isMoving ? "Walk_Gun_1" : "Idle_Gun_1", true);
         }
     }
+    else if (state == PoliceState::BackingUp) {
 
-    sprite.setTextureRect({
-        currentFrame * frameWidth,
-        0,
-        frameWidth,
-        frameHeight
-        });
+        animationManager->setAnimation("BackingUp", true);
+    }
+    animationManager->update(dt);
 }
 
 
@@ -287,4 +303,18 @@ bool Police::checkCollision(const sf::Vector2f& currentPos, const sf::Vector2f& 
         }
     }
     return false;
+}
+void Police::initAnimations() {
+    animationManager->addAnimation("Walk_NoWeapon", { 0, 0, 1, 6 });       // שורה 0 עד 1, עמודה 0 עד 6
+    animationManager->addAnimation("Walk_Gun_1", { 1, 7, 3, 3 });       // שורה 1 עד 3, עמודה 7 עד 3 (שים לב: צריך לשים לב לסדר, כנראה {1,7,3,3} משמעותו שורה 1 עד 3, עמודה 7 עד 3 - אם זה לא הגיוני אפשר לתקן)
+    animationManager->addAnimation("Walk_Gun_2", { 3, 4, 4, 8 });       // שורה 3 עד 4, עמודה 4 עד 8
+    animationManager->addAnimation("Walk_Shield", { 4, 9, 6, 9 });       // שורה 4 עד 6, עמודה 9
+    animationManager->addAnimation("Throw_Grenade", { 7, 0, 7, 9 });       // שורה 7, עמודה 0 עד 9
+    animationManager->addAnimation("Baton_Attack", { 8, 0, 8, 8 });       // שורה 8, עמודה 0 עד 8
+    animationManager->addAnimation("Dying", { 8, 9, 9, 7 });       // שורה 8 עד 9, עמודה 9 עד 7 (גם כאן, אם סדר העמודות הפוך יש לתקן)
+}
+
+void Police::setSpecificFrame(int row, int col) {
+    sf::IntRect rect(col * frameWidth, row * frameHeight, frameWidth, frameHeight);
+    sprite.setTextureRect(rect);
 }

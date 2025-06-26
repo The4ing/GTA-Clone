@@ -4,23 +4,32 @@
 #include <fstream>
 #include <cmath>
 #include <iostream>
+#include "Player.h" 
+#include <algorithm> // for std::min/max
+#include "Constants.h"
+#include "CollisionUtils.h"
+
 
 using json = nlohmann::json;
 
-Vehicle::Vehicle() {
+Vehicle::Vehicle() : m_driver(nullptr), parking(false) { // Initialize m_driver
     sprite.setTexture(ResourceManager::getInstance().getTexture("car"));
 
-    // ????? origin ????? ??????
+    // Set origin to center for rotation
     sf::FloatRect bounds = sprite.getLocalBounds();
     sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
 
     position = { 300.f, 300.f };
     sprite.setPosition(position);
+    // Initialize angle based on initial directionVec if needed, or default to 0
+    // For now, player will control angle directly. AI uses directionVec.
+    angle = sprite.getRotation(); // Assuming initial rotation is set by setDirectionVec if AI
 }
 
 void Vehicle::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     if (inTurn) {
-        bezierT += dt * 0.7f;  // ????? ?????? ????? ???
+        // U-turn / Bezier curve logic from first function
+        bezierT += dt * 0.7f;
         if (bezierT >= 1.f) {
             bezierT = 1.f;
             inTurn = false;
@@ -49,17 +58,79 @@ void Vehicle::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blo
         position = pos;
         sprite.setPosition(pos);
     }
-    else {
-        // ????? ????
-        sf::Vector2f dir = directionVec;
-        float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
-        if (len > 0) dir /= len;
+    else if (m_driver) {
+        // Player driving logic from second function
 
-        position += dir * speed * dt;
+        // Speed decay / friction
+        if (speed > 0) {
+            speed -= decelerationRate * 0.3f * dt;
+            if (speed < 0) speed = 0;
+        }
+        else if (speed < 0) {
+            speed += decelerationRate * 0.3f * dt;
+            if (speed > 0) speed = 0;
+        }
+
+        // Calculate direction vector from angle
+        float radAngle = (angle - 90.f) * M_PI / 180.f;
+        sf::Vector2f currentDir(std::cos(radAngle), std::sin(radAngle));
+
+        // Calculate next position
+        sf::Vector2f nextPosition = position + currentDir * speed * dt;
+
+        // Collision detection
+        bool collisionDetected = false;
+        if (speed != 0.f) {
+            sf::Transform transform = sprite.getTransform();
+            sf::FloatRect localBounds = sprite.getLocalBounds();
+
+            // Get corners of vehicle sprite at next position
+            sf::Sprite nextSprite = sprite;
+            nextSprite.setPosition(nextPosition);
+            nextSprite.setRotation(angle);
+            sf::Transform nextTransform = nextSprite.getTransform();
+
+            std::vector<sf::Vector2f> nextVehiclePoints = {
+                nextTransform.transformPoint({ localBounds.left, localBounds.top }),
+                nextTransform.transformPoint({ localBounds.left + localBounds.width, localBounds.top }),
+                nextTransform.transformPoint({ localBounds.left + localBounds.width, localBounds.top + localBounds.height }),
+                nextTransform.transformPoint({ localBounds.left, localBounds.top + localBounds.height })
+            };
+
+            for (const auto& point : nextVehiclePoints) {
+                for (const auto& poly : blockedPolygons) {
+                    if (CollisionUtils::pointInPolygon(point, poly)) {
+                        collisionDetected = true;
+                        break;
+                    }
+                }
+                if (collisionDetected) break;
+            }
+        }
+
+        if (!collisionDetected) {
+            position = nextPosition;
+        }
+        else {
+            speed = 0; // Stop on collision
+        }
+
         sprite.setPosition(position);
-
-        float angle = std::atan2(dir.y, dir.x) * 180.f / 3.14159f + 90.f;
         sprite.setRotation(angle);
+    }
+    else {
+        if (!parking) {
+            // AI straight movement logic from first function
+            sf::Vector2f dir = directionVec;
+            float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+            if (len > 0) dir /= len;
+
+            position += dir * speed * dt;
+            sprite.setPosition(position);
+
+            float angle = std::atan2(dir.y, dir.x) * 180.f / 3.14159f + 90.f;
+            sprite.setRotation(angle);
+        }
     }
 }
 
@@ -212,4 +283,72 @@ sf::Vector2f Vehicle::bezier(float t, const sf::Vector2f& P0, const sf::Vector2f
     return oneMinusT * oneMinusT * P0 +
         2 * oneMinusT * t * P1 +
         t * t * P2;
+}
+
+// Player control method implementations
+void Vehicle::accelerate(float dt) {
+    if (m_driver) {
+        speed += accelerationRate * dt;
+        speed = std::min(speed, maxSpeed);
+    }
+}
+
+void Vehicle::brake(float dt) {
+    if (m_driver) {
+        if (speed > 0) {
+            speed -= decelerationRate * dt;
+            speed = std::max(speed, 0.f); // Don't go into reverse from braking forward motion
+        }
+        else { // Allow braking to become reversing if already stopped or moving backward
+            speed -= accelerationRate * dt * 0.7f; // Slower acceleration for reverse
+            speed = std::max(speed, reverseSpeed);
+        }
+    }
+}
+
+void Vehicle::steerLeft(float dt) {
+    if (m_driver && std::abs(speed) > 0.1f) { // Allow steering only if moving
+        angle -= turnRate * dt * (speed / maxSpeed); // Steering input less effective at low speeds
+        if (angle < 0.f) angle += 360.f;
+    }
+}
+
+void Vehicle::steerRight(float dt) {
+    if (m_driver && std::abs(speed) > 0.1f) { // Allow steering only if moving
+        angle += turnRate * dt * (speed / maxSpeed); // Steering input less effective at low speeds
+        if (angle >= 360.f) angle -= 360.f;
+    }
+}
+
+void Vehicle::setDriver(Player* driver) {
+    m_driver = driver;
+    if (m_driver) {
+        // When player enters, sync vehicle's angle with its current sprite rotation
+        // if it was previously AI controlled.
+        // Or, reset speed and angle for player control.
+        // For now, let's reset speed. Angle will be taken from sprite.
+        speed = 0.f; // Reset speed when player takes over
+        angle = sprite.getRotation(); // Sync angle with current visual rotation
+        inTurn = false; // Player control overrides AI turning
+    }
+    else {
+        parking = true;
+        // Player exited, potentially hand back to AI.
+        // AI logic in CarManager would need to re-engage pathfinding.
+        // For now, vehicle just stops if player exits.
+        // speed = 0.f; // Or let it coast, or let AI take over.
+        // The AI's setDirectionVec would set the sprite rotation appropriately.
+    }
+}
+
+Player* Vehicle::getDriver() const {
+    return m_driver;
+}
+
+bool Vehicle::hasDriver() const {
+    return m_driver != nullptr;
+}
+
+const sf::Sprite& Vehicle::getSprite() const {
+    return sprite;
 }

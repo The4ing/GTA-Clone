@@ -6,13 +6,13 @@
 #include "CollisionUtils.h"
 #include <iostream>
 #include "Present.h"
-
+#include "Vehicle.h" 
 
 Player::Player()
-    : frameWidth(0), frameHeight(0), currentFrame(0),
+    : m_currentVehicle(nullptr), frameWidth(0), frameHeight(0), currentFrame(0),
     sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
     m_money(0), m_health(MaxHealth), m_armor(100),
-    m_currentWeaponName("Fists"), m_currentWeaponAmmo(Fists), m_maxWeaponAmmo(0),
+    m_currentWeaponName("Fists"), m_currentWeaponAmmo(W_Fists), m_maxWeaponAmmo(0),
     m_wantedLevel(6)
 {
     sf::Texture& texture = ResourceManager::getInstance().getTexture("player");
@@ -62,145 +62,161 @@ void Player::takeDamage(int amount)
 
 
 
- void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    sf::Vector2f movement(0.f, 0.f);
+void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+    if (m_currentVehicle) {
+        // שחקן ברכב - מעביר שליטה לרכב
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+            m_currentVehicle->accelerate(dt);
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+            m_currentVehicle->brake(dt);
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+            m_currentVehicle->steerLeft(dt);
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+            m_currentVehicle->steerRight(dt);
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-        movement.x -= 1.f;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-        movement.x += 1.f;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-        movement.y -= 1.f;
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-        movement.y += 1.f;
-
-    bool isMoving = (movement.x != 0.f || movement.y != 0.f);
-    bool isShooting = sf::Keyboard::isKeyPressed(sf::Keyboard::Space);
-    bool isHit = false; // החלף ללוגיקה שלך
-    bool isDead = false; // החלף ללוגיקה שלך
-
-    if (speedBoostTimer > 0.f)
-        speedBoostTimer -= dt;
-    else
-        speed = BasicSpeed;
-
-    if (isMoving) {
-        float len = std::sqrt(movement.x * movement.x + movement.y * movement.y);
-        if (len != 0.f)
-            movement /= len;
-
-        float angle = std::atan2(movement.y, movement.x) * 180.f / 3.14159f + 90.f;
-        sprite.setRotation(angle);
-
-        sf::Vector2f nextPos = sprite.getPosition() + movement * speed * dt;
-
-        bool collision = false;
-        for (const auto& poly : blockedPolygons) {
-            if (CollisionUtils::pointInPolygon(nextPos, poly)) {
-                collision = true;
-                break;
-            }
-        }
-
-        if (!collision) {
-            sprite.move(movement * speed * dt);
-        }
-    }
-
-    bool shootingAnimPlaying = false;
-    if (!currentAnimationName.empty()) {
-        bool isShootAnim = currentAnimationName.find("Throw") != std::string::npos ||
-                           currentAnimationName.find("Shoot") != std::string::npos ||
-                           currentAnimationName.find("Attack") != std::string::npos;
-        shootingAnimPlaying = isShootAnim && !animationManager->isAnimationFinished();
-    }
-
-    if (isDead) {
-        playAnimation("HurtDie");
-    }
-    else if (isHit) {
-        playAnimation("Hurt");
+        // סנכרון מיקום השחקן עם הרכב
+        setPosition(m_currentVehicle->getPosition());
     }
     else {
-        if (isShooting && !shootingAnimPlaying) {
-            if (m_currentWeaponName == "Fists") {
-                playAnimation("BatAttack", false);
+        // שחקן הולך ברגל
+        sf::Vector2f movement(0.f, 0.f);
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+            movement.x -= 1.f;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+            movement.x += 1.f;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+            movement.y -= 1.f;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+            movement.y += 1.f;
+
+        bool isMoving = (movement.x != 0.f || movement.y != 0.f);
+        bool isShooting = sf::Keyboard::isKeyPressed(sf::Keyboard::Space);
+        bool isHit = false;
+        bool isDead = false;
+
+        if (speedBoostTimer > 0.f)
+            speedBoostTimer -= dt;
+        else
+            speed = BasicSpeed;
+
+        if (isMoving) {
+            float len = std::sqrt(movement.x * movement.x + movement.y * movement.y);
+            if (len != 0.f)
+                movement /= len;
+
+            float angle = std::atan2(movement.y, movement.x) * 180.f / 3.14159f + 90.f;
+            sprite.setRotation(angle);
+
+            sf::Vector2f nextPos = sprite.getPosition() + movement * speed * dt;
+
+            bool collision = false;
+            for (const auto& poly : blockedPolygons) {
+                if (CollisionUtils::pointInPolygon(nextPos, poly)) {
+                    collision = true;
+                    break;
+                }
             }
-            else if (m_currentWeaponName == "Pistol") {
-                playAnimation("Pistol", false);
-                //SoundManager::getInstance().playSound("gunshot"); 
-                SoundManager::getInstance().playSound("guns");        }
-            else if (m_currentWeaponName == "Rifle") {
-                playAnimation("RifleShoot", false);
-                SoundManager::getInstance().playSound("rifleShot");
-            }
-            else if (m_currentWeaponName == "Minigun") {
-                playAnimation("MinigunShoot", false);
-                SoundManager::getInstance().playSound("minigunShot"); //need to review
-            }
-            else if (m_currentWeaponName == "Bazooka") {
-                playAnimation("BazookaShoot", false);
-                SoundManager::getInstance().playSound("RPGshot"); 
-            }
-            else if (m_currentWeaponName == "Knife") {
-                playAnimation("KnifeAttack", false);
-                SoundManager::getInstance().playSound("KnifeAttack"); 
-            }
-            else if (m_currentWeaponName == "Grenade") {
-                playAnimation("ThrowGrenade", false);
-                SoundManager::getInstance().playSound("ThrowGrenade"); //need to review
+
+            if (!collision) {
+                sprite.move(movement * speed * dt);
             }
         }
-        else if (shootingAnimPlaying) {
-            // ממשיכים להנגן את אנימציית הירי עד לסיומה - לא עושים כלום כאן
+
+        bool shootingAnimPlaying = false;
+        if (!currentAnimationName.empty()) {
+            bool isShootAnim = currentAnimationName.find("Throw") != std::string::npos ||
+                currentAnimationName.find("Shoot") != std::string::npos ||
+                currentAnimationName.find("Attack") != std::string::npos;
+            shootingAnimPlaying = isShootAnim && !animationManager->isAnimationFinished();
+        }
+
+        if (isDead) {
+            playAnimation("HurtDie");
+        }
+        else if (isHit) {
+            playAnimation("Hurt");
         }
         else {
-            // לולאת הליכה / עמידה רגילה
-            if (m_currentWeaponName == "Fists") {
-                if (isMoving)
+            if (isShooting && !shootingAnimPlaying) {
+                if (m_currentWeaponName == "Fists") {
+                    playAnimation("BatAttack", false);
+                }
+                else if (m_currentWeaponName == "Pistol") {
+                    playAnimation("PistolShoot", false);
+                    SoundManager::getInstance().playSound("gunshot");
+                }
+                else if (m_currentWeaponName == "Rifle") {
+                    playAnimation("RifleShoot", false);
+                    SoundManager::getInstance().playSound("rifleShot");
+                }
+                else if (m_currentWeaponName == "Minigun") {
+                    playAnimation("MinigunShoot", false);
+                    SoundManager::getInstance().playSound("minigunShot");
+                }
+                else if (m_currentWeaponName == "Bazooka") {
+                    playAnimation("BazookaShoot", false);
+                    SoundManager::getInstance().playSound("RPGshot");
+                }
+                else if (m_currentWeaponName == "Knife") {
+                    playAnimation("KnifeAttack", false);
+                    SoundManager::getInstance().playSound("KnifeAttack");
+                }
+                else if (m_currentWeaponName == "Grenade") {
+                    playAnimation("ThrowGrenade", false);
+                    SoundManager::getInstance().playSound("ThrowGrenade");
+                }
+            }
+            else if (shootingAnimPlaying) {
+                // המשך ניגון של אנימציית ירי - לא עושים כלום
+            }
+            else {
+                if (m_currentWeaponName == "Fists") {
+                    if (isMoving)
+                        playAnimation("Idle_NoWeapon");
+                    else {
+                        setSpecificFrame(0, 0);
+                        return;
+                    }
+                }
+                else if (m_currentWeaponName == "Pistol") {
+                    if (isMoving)
+                        playAnimation("PistolWalk");
+                    else {
+                        setSpecificFrame(6, 10);
+                        return;
+                    }
+                }
+                else if (m_currentWeaponName == "Rifle") {
+                    if (isMoving)
+                        playAnimation("RifleWalk");
+                    else {
+                        setSpecificFrame(5, 5);
+                        return;
+                    }
+                }
+                else if (m_currentWeaponName == "Minigun") {
+                    if (isMoving)
+                        playAnimation("MinigunWalk");
+                    else {
+                        setSpecificFrame(8, 1);
+                        return;
+                    }
+                }
+                else if (m_currentWeaponName == "Bazooka") {
+                    if (isMoving)
+                        playAnimation("BazookaWalk");
+                    else {
+                        setSpecificFrame(9, 9);
+                        return;
+                    }
+                }
+                else if (m_currentWeaponName == "Knife") {
                     playAnimation("Idle_NoWeapon");
-                else {
-                    setSpecificFrame(0, 0);
-                    return;
                 }
-            }
-            else if (m_currentWeaponName == "Pistol") {
-                if (isMoving)
-                    playAnimation("PistolWalk");
-                else {
-                    setSpecificFrame(6, 10);
-                    return;
+                else if (m_currentWeaponName == "Grenade") {
+                    playAnimation("Idle_NoWeapon");
                 }
-            }
-            else if (m_currentWeaponName == "Rifle") {
-                if (isMoving)
-                    playAnimation("RifleWalk");
-                else {
-                    setSpecificFrame(5, 5);
-                    return;
-                }
-            }
-            else if (m_currentWeaponName == "Minigun") {
-                if (isMoving)
-                    playAnimation("MinigunWalk");
-                else {
-                    setSpecificFrame(8, 1);
-                    return;
-                }
-            }
-            else if (m_currentWeaponName == "Bazooka") {
-                if (isMoving)
-                    playAnimation("BazookaWalk");
-                else {
-                    setSpecificFrame(9, 9);
-                    return;
-                }
-            }
-            else if (m_currentWeaponName == "Knife") {
-                playAnimation("Idle_NoWeapon");
-            }
-            else if (m_currentWeaponName == "Grenade") {
-                playAnimation("Idle_NoWeapon");
             }
         }
     }
@@ -212,7 +228,14 @@ void Player::takeDamage(int amount)
 
 
 
+
 void Player::draw(sf::RenderTarget& window) {
+    if (m_currentVehicle) {
+            // Optionally, don't draw player sprite, or draw a different "in car" sprite
+            // For now, we'll just not draw the player if they are in a vehicle,
+            // assuming the vehicle itself will be drawn by CarManager.
+            return;
+    }
     sf::CircleShape circle(getCollisionRadius());
     circle.setOrigin(getCollisionRadius(), getCollisionRadius());
     circle.setPosition(getCenter());
@@ -227,6 +250,12 @@ void Player::draw(sf::RenderTarget& window) {
 
 sf::FloatRect Player::getCollisionBounds(const sf::Vector2f& offset) const {
     // Get the center position of the sprite (already scaled)
+    if (m_currentVehicle) {
+        
+            // If in vehicle, collision bounds are effectively the vehicle's bounds
+            // This might need to be handled by the Vehicle class or GameManager
+            return {}; // Return empty rect, or vehicle's bounds
+    }
     sf::Vector2f pos = sprite.getPosition();
     sf::Vector2f size(frameWidth * sprite.getScale().x, frameHeight * sprite.getScale().y);
 
@@ -240,7 +269,7 @@ sf::FloatRect Player::getCollisionBounds(const sf::Vector2f& offset) const {
 
 sf::Vector2f Player::getCenter() const {
     sf::Vector2f pos = sprite.getPosition();
-    return { pos.x - 2.f, pos.y + 4.f }; // 🔁 שמאלה ולמטה
+    return { pos.x - 2.f, pos.y + 4.f };
 }
 
 float Player::getCollisionRadius() const {
@@ -278,12 +307,11 @@ void Player::heal(int amount) {
         if (m_health > MaxHealth)
             m_health = MaxHealth;
 
-        //std::cout << "Healed from " << before << " to " << health << " HP.\n";
     }
     else {
-        // אם החיים כבר מלאים – שמור את הפריט
-        inventory.addItem("Health");
-      //  std::cout << "Health is full! Added Health item to inventory.\n";
+        
+        inventory.addItem("Health", ResourceManager::getInstance().getTexture("Health"));
+     
     }
 }
 void Player::increaseSpeed() {
@@ -293,15 +321,15 @@ void Player::increaseSpeed() {
         speedBoostTimer = 15.f;
     }
     else {
-        inventory.addItem("Speed");
+        inventory.addItem("Speed", ResourceManager::getInstance().getTexture("Speed"));
     }
 }
 void Player::AddAmmo() {
-    //bullets amount 
+    
 }
 
-void Player::AddPistol() {
-    //bullets amount 
+void Player::AddWeapon(const std::string name) {
+    inventory.addItem(name, ResourceManager::getInstance().getTexture(name));
 }
 
 
@@ -318,4 +346,33 @@ void Player::playAnimation(const std::string& animName, bool loop, bool pingpong
 void Player::setSpecificFrame(int row, int col) {
     sf::IntRect rect(col * frameWidth, row * frameHeight, frameWidth, frameHeight);
     sprite.setTextureRect(rect);
+}
+
+
+void Player::enterVehicle(Vehicle* vehicle) {
+   
+        m_currentVehicle = vehicle;
+    // Player sprite could be hidden here, or its position updated to match vehicle
+    // For now, Player::draw() handles not drawing the player.
+    // Player::update() will sync position.
+}
+
+void Player::exitVehicle() {
+    if (m_currentVehicle) {
+        // Position the player slightly beside the vehicle when exiting
+        // This is a simple offset; might need adjustment based on vehicle size/orientation
+        sf::Vector2f vehiclePos = m_currentVehicle->getPosition();
+        // TODO: Get vehicle's current orientation to place player appropriately (e.g., beside a door)
+        // For now, simple offset
+        setPosition(sf::Vector2f(vehiclePos.x + 10.f, vehiclePos.y));
+        m_currentVehicle = nullptr;
+    }
+}
+
+Vehicle* Player::getCurrentVehicle() const {
+    return m_currentVehicle;
+}
+
+bool Player::isInVehicle() const {
+    return m_currentVehicle != nullptr;
 }

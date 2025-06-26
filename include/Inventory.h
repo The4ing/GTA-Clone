@@ -1,19 +1,22 @@
-#pragma once
+﻿#pragma once
 #include <unordered_map>
 #include <string>
 #include <SFML/Graphics.hpp>
 
 struct InventoryItem {
     int count = 0;
-    sf::Texture* texture = nullptr;
-    bool infinite = false; 
+    const sf::Texture* texture = nullptr;  // ✅ תיקון כאן
+    bool infinite = false;
 };
+
+
+
 
 class Inventory {
 public:
     Inventory();
 
-    void addItem(const std::string& name, sf::Texture* texture = nullptr);
+    void addItem(const std::string& name, const sf::Texture& texture );
     bool useItem(const std::string& name);
     int getCount(const std::string& name) const;
     const std::unordered_map<std::string, InventoryItem>& getAllItems() const;

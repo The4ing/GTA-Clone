@@ -96,11 +96,7 @@ void AnimationManager::updateSpriteRect() {
 
     sprite.setTextureRect(sf::IntRect(left, top, frameWidth, frameHeight));
 
-    // Debug info
-    std::cout << "Animation: " << currentAnim
-        << " | Frame: " << currentFrame
-        << " | Row: " << row << " | Col: " << col
-        << " | Pixel Rect: (" << left << "," << top << "," << frameWidth << "," << frameHeight << ")\n";
+    
 }
 
 int AnimationManager::countFrames(const AnimationRange& ar)const {
