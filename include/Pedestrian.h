@@ -18,6 +18,7 @@ public:
     void onCollision(GameObject&) {};
     void collideWithPresent(Present&) {};
     void collideWithPlayer(Player&) {}
+    sf::FloatRect getCollisionBounds() const;
 
     void startBackingUp();
     bool getIsBackingUp() const;

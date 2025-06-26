@@ -201,3 +201,13 @@ void Pedestrian::updateSprite() {
     sprite.setOrigin(frameWidth / 2.f, frameHeight / 2.f);
     sprite.setPosition(position);
 }
+
+sf::FloatRect Pedestrian::getCollisionBounds() const {
+    float radius = getCollisionRadius();
+    return sf::FloatRect(
+        position.x - radius,
+        position.y - radius,
+        radius * 2.f,
+        radius * 2.f
+    );
+}

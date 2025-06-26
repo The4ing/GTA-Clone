@@ -4,13 +4,17 @@
 #include <algorithm>
 #include <iostream>
 #include "CollisionUtils.h"
+#include "GameManager.h" // Required for GameManager reference and addBulletAdd commentMore actions
+#include <cmath> // For std::atan2, std::cos, std::sin
 
-
-Police::Police(sf::Vector2f target) : targetPos(target), state(PoliceState::Idle), 
-currentPathIndex(0), repathTimer(0.f), pathFailCooldown(0.f),
-animationTimer(0.f), animationSpeed(0.005f), currentFrame(0),
-framesPerRow(10) // 10 columns
+Police::Police(GameManager& gameManager) : // Updated constructor
+    m_gameManager(gameManager), // Store GameManager reference
+    state(PoliceState::Idle),
+    currentPathIndex(0), repathTimer(0.f), pathFailCooldown(0.f),
+    animationTimer(0.f), animationSpeed(0.005f), currentFrame(0),
+    framesPerRow(10), fireCooldownTimer(0.f)
 {
+    // targetPos will be updated by setTargetPosition called from PoliceManager/GameManager
     sprite.setTexture(ResourceManager::getInstance().getTexture("police"));
     sheetCols = 10;
     sheetRows = 10;
@@ -18,30 +22,58 @@ framesPerRow(10) // 10 columns
     frameHeight = sprite.getTexture()->getSize().y / sheetRows;
     sprite.setTextureRect({ 0, 0, frameWidth, frameHeight });
     sprite.setOrigin(frameWidth / 2.f, frameHeight / 2.f);
-    
+
     sprite.setPosition(100, 100);
     sprite.setScale(0.15f, 0.15f);
     speed = 40.f;
-    
+
     nextPauseTime = 30.f + static_cast<float>(rand()) / RAND_MAX * 30.f;  // בין 30 ל-60 שניות
 
 
-    animationManager = std::make_unique<AnimationManager>(sprite, frameWidth, frameHeight, sheetCols, sheetRows); 
+    animationManager = std::make_unique<AnimationManager>(sprite, frameWidth, frameHeight, sheetCols, sheetRows);
     initAnimations();
 
     setRandomWanderDestination(MAP_BOUNDS);
 
 }
 
-void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+
+void Police::handleShooting(const sf::Vector2f& playerPosition, float dt) {
+    // Aim at player
+    sf::Vector2f aimDir = playerPosition - getPosition();
+    float aimDirLen = std::sqrt(aimDir.x * aimDir.x + aimDir.y * aimDir.y);
+    if (aimDirLen > 0) { // Normalize
+        aimDir /= aimDirLen;
+    }
+
+    // Rotate sprite to face player (optional, but good for visuals)
+    float angle = std::atan2(aimDir.y, aimDir.x) * 180.f / M_PI;
+    sprite.setRotation(angle + 90.f); // Adjust if sprite orientation is different
+
+    if (fireCooldownTimer <= 0.f) {
+        // std::cout << "Police shooting at: " << playerPosition.x << ", " << playerPosition.y << std::endl;
+        m_gameManager.addBullet(getPosition() + aimDir * 20.f, aimDir); // Spawn bullet slightly in front
+        fireCooldownTimer = fireRate;
+        animationManager->setAnimation("Walk_Gun_1", false); // Play shooting animation (or a specific one)
+        // TODO: Add a dedicated "Shoot_Gun_1" animation
+    }
+}
+
+void Police::update(float dt, const sf::Vector2f& playerPosition, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+    setTargetPosition(playerPosition); // Update target position (player's current position)
     repathTimer += dt;
+
+    if (fireCooldownTimer > 0.f) {
+        fireCooldownTimer -= dt;
+    }
+
     if (pathFailCooldown > 0.f) {
         pathFailCooldown -= dt;
     }
 
     if (isPaused) {
-        
-            pauseTimer -= dt;
+
+        pauseTimer -= dt;
         if (pauseTimer <= 0.f) {
             isPaused = false;
             // קבע מתי העצירה הבאה תתרחש מחדש
@@ -65,26 +97,51 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         // animationManager->update(dt);
         return; // מפסיק כאן ומונע תזוזה עד שהעצירה תסתיים
     }
-    
+
     float distToPlayer = std::hypot(targetPos.x - getPosition().x, targetPos.y - getPosition().y);
 
     // State transition logic
-    if (distToPlayer <= detectionRadius) {
-        if (state != PoliceState::Chasing) {
+    if (state == PoliceState::Shooting) {
+        if (distToPlayer > lineOfSightRange || distToPlayer > shootingRange + 20.f) { // Add a buffer to stop shooting
+            state = PoliceState::Chasing; // Lost sight or too far, go back to chasing
+            currentPath.clear(); // Force repath
+            currentPathIndex = 0;
+        }
+        else {
+            handleShooting(playerPosition, dt);
+            // In shooting state, cops might not move or only make small adjustments.
+            // For now, they stop moving while shooting. Pathfinding is paused.
+            animationManager->update(dt); // Keep animation playing
+            return; // Skip pathfinding and movement while actively shooting
+        }
+    }
+    // Standard state transitions
+    if (distToPlayer <= shootingRange && distToPlayer <= lineOfSightRange) {
+        if (state != PoliceState::Shooting) {
+            // std::cout << "Police entering shooting state." << std::endl;
+            state = PoliceState::Shooting;
+            currentPath.clear(); // Stop current movement path
+            currentPathIndex = 0;
+        }
+        // If already shooting, the above block handles it.
+    }
+    else if (distToPlayer <= detectionRadius) { // Renamed lineOfSightRange to detectionRadius for general detection
+        if (state != PoliceState::Chasing && state != PoliceState::Shooting) {
             state = PoliceState::Chasing;
             currentPath.clear();
             currentPathIndex = 0;
-            repathTimer = 1.0f;
+            repathTimer = 1.0f; // Force repath soon
         }
     }
-    else if (state == PoliceState::Chasing && distToPlayer > detectionRadius + 30.f) {
+    else if ((state == PoliceState::Chasing || state == PoliceState::Shooting) && distToPlayer > detectionRadius + 30.f) {
+        // If was chasing or shooting and player gets far away
         state = PoliceState::Idle;
         currentPath.clear();
         currentPathIndex = 0;
         setRandomWanderDestination(MAP_BOUNDS);
     }
 
-   
+
     if (state == PoliceState::BackingUp) {
         float stepSize = speed * dt;
         if (backedUpSoFar < backUpDistance) {
@@ -105,10 +162,10 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
 
             float angle = std::atan2(backUpDirection.y, backUpDirection.x) * 180.f / M_PI;
             sprite.setRotation(angle - 270.f);
-            return; 
+            return;
         }
         else {
-           
+
             backedUpSoFar = 0.f;
             state = PoliceState::Idle;
             currentPath.clear();
@@ -118,7 +175,7 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         }
     }
 
-   
+
     if (state == PoliceState::Chasing) {
         if (pathFailCooldown <= 0.f && (currentPath.empty() || currentPathIndex >= currentPath.size() || repathTimer > 1.0f)) {
             currentPath = pathfinder.findPath(getPosition(), targetPos, blockedPolygons, MAP_BOUNDS, PATHFINDING_GRID_SIZE);
@@ -157,7 +214,7 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
             if (len > 0.01f)
                 backUpDirection = -dir / len;
 
-            return; 
+            return;
         }
 
         float distanceToWaypoint = std::hypot(nextWaypoint.x - getPosition().x, nextWaypoint.y - getPosition().y);
@@ -178,10 +235,10 @@ void Police::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         animationTimer = 0.f;
         bool isMoving = !currentPath.empty() && currentPathIndex < currentPath.size();
         if (state == PoliceState::Idle) {
-          animationManager->setAnimation(isMoving ? "Walk_NoWeapon" : "Idle_NoWeapon", true);
+            animationManager->setAnimation(isMoving ? "Walk_NoWeapon" : "Idle_NoWeapon", true);
         }
         else if (state == PoliceState::Chasing) {
-              animationManager->setAnimation(isMoving ? "Walk_Gun_1" : "Idle_Gun_1", true);
+            animationManager->setAnimation(isMoving ? "Walk_Gun_1" : "Idle_Gun_1", true);
         }
     }
     else if (state == PoliceState::BackingUp) {

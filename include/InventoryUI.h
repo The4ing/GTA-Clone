@@ -2,7 +2,10 @@
 
 #include <SFML/Graphics.hpp>
 #include "Inventory.h"
-#include "Player.h"
+//#include "Player.h"
+
+class Player;  // Forward declaration
+
 
 class InventoryUI {
 public:

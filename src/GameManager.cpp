@@ -10,6 +10,8 @@
 #include "GameFactory.h"
 #include "Vehicle.h"
 #include <limits>
+#include "player.h"
+#include "InventoryUI.h"
 
 using json = nlohmann::json;
 
@@ -150,9 +152,8 @@ void GameManager::processEvents() {
 }
 
 
-//FOR SHOWING IN THE BACKGROUNG THE GAME WHIKE INVENTORY
 void GameManager::renderFrozenGame(sf::RenderTarget& target) {
-        target.draw(mapSprite);
+    target.draw(mapSprite);
     player->draw(target);
 
     for (const auto& poly : blockedPolygons) {
@@ -174,6 +175,11 @@ void GameManager::renderFrozenGame(sf::RenderTarget& target) {
         pedestrianManager->draw(target);
     for (auto& present : presents)
         present->draw(target);
+    for (const auto& bullet_ptr : bulletPool.getAllBullets()) { // Draw bullets from pool
+        if (bullet_ptr->isActive()) {
+            bullet_ptr->draw(target);
+        }
+    }
 }
 
 void GameManager::update(float dt) {
@@ -186,7 +192,7 @@ void GameManager::update(float dt) {
     if (carManager)
         carManager->update(dt, blockedPolygons);
 
-    
+
     //  sf::Vector2f playerPos = player->getPosition();Add commentMore actions
   //  sf::Vector2f newCenter = playerPos;
 
@@ -197,7 +203,7 @@ void GameManager::update(float dt) {
     else {
         focusPosition = player->getPosition();
     }
-        sf::Vector2f newCenter = focusPosition;
+    sf::Vector2f newCenter = focusPosition;
     sf::Vector2f viewSize = gameView.getSize();
     float halfW = viewSize.x * 0.5f;
     float halfH = viewSize.y * 0.5f;
@@ -212,15 +218,42 @@ void GameManager::update(float dt) {
 
     gameView.setCenter(newCenter);
 
-    if (policeManager) 
+    if (policeManager)
         policeManager->update(dt, player->getPosition(), blockedPolygons);
-    
+
     if (pedestrianManager)
         pedestrianManager->update(dt, blockedPolygons);
 
     for (auto& present : presents)
         present->update(dt, blockedPolygons);
 
+    // Update bullets from the pool
+    for (auto& bullet_ptr : bulletPool.getAllBullets()) {
+        if (bullet_ptr->isActive()) {
+            bullet_ptr->update(dt, blockedPolygons);
+
+            std::vector<Pedestrian> current_npcs;
+            if (pedestrianManager) {
+                for (const auto& p_ptr : pedestrianManager->getPedestrians()) {
+                    if (p_ptr) current_npcs.push_back(*p_ptr);
+                }
+            }
+            std::vector<Vehicle> current_cars;
+            if (carManager) {
+                current_cars = carManager->getVehicles();
+            }
+
+            if (bullet_ptr->checkCollision(blockedPolygons, current_npcs, current_cars)) {
+                // checkCollision now sets active to false. BulletPool::returnBullet is not strictly needed here
+                // as the bullet is already marked inactive. The pool reuses inactive bullets.
+                // However, if returnBullet had other logic (e.g. tracking), it would be called.
+                // For now, checkCollision handles making it inactive.
+            }
+        }
+    }
+
+    // No need to explicitly remove bullets from a vector here,
+    // as the pool manages inactive bullets.
 
     for (auto& present : presents) {
         if (!present->isCollected()) {
@@ -259,7 +292,7 @@ void GameManager::update(float dt) {
                     playerVehicle->stop(); // stop() method sets speed to 0
                     aiVehicle.stop();
                     // Could add sound, visual effect, damage later
-                    std::cout << "Player vehicle collided with AI vehicle!" << std::endl;
+    // std::cout << "Player vehicle collided with AI vehicle!" << std::endl; // Commented out for less console spam
                 }
             }
         }
@@ -291,7 +324,13 @@ void GameManager::render() {
     if (pedestrianManager)
         pedestrianManager->draw(window);
     for (auto& present : presents)
-    present->draw(window);
+        present->draw(window);
+
+    for (const auto& bullet_ptr : bulletPool.getAllBullets()) { // Draw bullets from pool
+        if (bullet_ptr->isActive()) {
+            bullet_ptr->draw(window);
+        }
+    }
 
     window.setView(m_hudView);
     if (m_hud) m_hud->draw(window);
@@ -403,7 +442,7 @@ void GameManager::startGameFullscreen() {
     mapTexture = &ResourceManager::getInstance().getTexture("map");
     mapSprite.setTexture(*mapTexture);
     pedestrianManager = GameFactory::createPedestrianManager(blockedPolygons);
-    policeManager = GameFactory::createPoliceManager(blockedPolygons);
+    policeManager = GameFactory::createPoliceManager(*this, blockedPolygons);
 
 
     carManager = GameFactory::createCarManager(roads);
@@ -411,7 +450,7 @@ void GameManager::startGameFullscreen() {
     //    for (int i = 0; i < 20; ++i) {
     carManager->spawnSingleVehicleOnRoad();
     //  }
-    player = GameFactory::createPlayer({ 100.f, 100.f });
+    player = GameFactory::createPlayer(*this, { 100.f, 100.f }); // Pass *this (GameManager instance)
     //presents = GameFactory::createPresents(30, blockedPolygons);
     presents = GameFactory::createPresents(5, blockedPolygons);
 
@@ -475,4 +514,18 @@ void GameManager::setFullscreen(bool fullscreen) {
     gameView.zoom(0.25f);
 
 
+
+}
+
+
+void GameManager::addBullet(const sf::Vector2f& startPos, const sf::Vector2f& direction) {
+    Bullet* bullet = bulletPool.getBullet();
+    if (bullet) {
+        bullet->init(startPos, direction); // Call the new init method
+    }
+    else {
+        // Optional: Log that the bullet pool is exhausted
+        // std::cerr << "Bullet pool exhausted!" << std::endl;
+    }
+    // If bullet is nullptr, no bullet is fired. This is safer than crashing.
 }

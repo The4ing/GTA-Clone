@@ -7,10 +7,10 @@
 #include "Constants.h"
 #include "QuadTree.h"
 
-
+class GameManager;
 class PoliceManager {
 public:
-    PoliceManager() = default;
+    PoliceManager(GameManager& gameManager); 
 
     void spawnPolice(const sf::Vector2f& position);
     void update(float dt, const sf::Vector2f& playerPos,
@@ -26,7 +26,7 @@ public:
 
 private:
     void spawnPoliceNearChunk(const sf::Vector2i& chunkCoord); // NEW
-   
+    GameManager& m_gameManager; // Store reference to GameManager
 
     std::vector<std::unique_ptr<Police>> policeUnits;
     std::vector<sf::Vector2i> activeChunks;  //NEW

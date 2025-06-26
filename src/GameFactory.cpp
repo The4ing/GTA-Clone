@@ -10,9 +10,10 @@
 #include "Minigan.h"
 #include "Bazooka.h"
 #include <iostream>
+#include "GameManager.h" 
 
-std::unique_ptr<Player> GameFactory::createPlayer(const sf::Vector2f& pos) {
-    auto player = std::make_unique<Player>();
+std::unique_ptr<Player> GameFactory::createPlayer(GameManager& gameManager, const sf::Vector2f& pos) { 
+    auto player = std::make_unique<Player>(gameManager); // Pass gameManager to constructor
     player->setPosition(pos);
     return player;
 }
@@ -25,8 +26,8 @@ std::unique_ptr<CarManager> GameFactory::createCarManager(const std::vector<Road
     return carManager;
 }
 
-std::unique_ptr<PoliceManager> GameFactory::createPoliceManager(std::vector<std::vector<sf::Vector2f>> blockedPolygons) {
-    auto policeManager = std::make_unique<PoliceManager>();
+std::unique_ptr<PoliceManager> GameFactory::createPoliceManager(GameManager& gameManager, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+    auto policeManager = std::make_unique<PoliceManager>(gameManager); // Pass GameManager
     const int numInitialPolice = 10;
     int attempts = 0;
 
@@ -46,7 +47,10 @@ std::unique_ptr<PoliceManager> GameFactory::createPoliceManager(std::vector<std:
 }
 
 
-std::unique_ptr<PedestrianManager> GameFactory::createPedestrianManager(std::vector<std::vector<sf::Vector2f>> blockedPolygons) {
+
+
+
+std::unique_ptr<PedestrianManager> GameFactory::createPedestrianManager(const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     auto pedestrianManager = std::make_unique<PedestrianManager>();
     const int numInitialPedestrians = 100;
     int attempts = 0;
@@ -73,7 +77,7 @@ std::unique_ptr<PedestrianManager> GameFactory::createPedestrianManager(std::vec
 //    return std::make_unique<ChunkManager>();
 //}
 
-std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, const std::vector<std::vector<sf::Vector2f>> blockedPolygons)
+std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons)
 {
     std::vector<std::unique_ptr<Present>> result;
     int attempts = 0;
@@ -107,12 +111,15 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
         case 3:
                 result.push_back(std::make_unique<AmmoPresent>(
                     ResourceManager::getInstance().getTexture("Ammo"), pos));
+            break;
         case 4:
             result.push_back(std::make_unique<Rifle>(
                 ResourceManager::getInstance().getTexture("Rifle"), pos));
+            break;
         case 5:
             result.push_back(std::make_unique<Minigan>(
                 ResourceManager::getInstance().getTexture("Minigan"), sf::Vector2f(50.f, 50.f)));
+            break;
         case 6:
             result.push_back(std::make_unique<Bazooka>(
                 ResourceManager::getInstance().getTexture("Bazooka"), sf::Vector2f(50.f, 50.f)));

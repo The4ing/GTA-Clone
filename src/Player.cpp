@@ -1,15 +1,17 @@
 #include "Player.h"
+#include "GameManager.h" // פה כן כוללים את ההגדרה המלאה של GameManager
 #include <SFML/Window/Keyboard.hpp>
 #include "ResourceManager.h"
 #include <cmath>
-#include <algorithm> // for std::clamp
+#include <algorithm>
 #include "CollisionUtils.h"
 #include <iostream>
 #include "Present.h"
-#include "Vehicle.h" 
+#include "Vehicle.h"
 
-Player::Player()
-    : m_currentVehicle(nullptr), frameWidth(0), frameHeight(0), currentFrame(0),
+Player::Player(GameManager& gameManager) // Modified constructor
+    : m_gameManager(gameManager), // Store GameManager reference
+    m_currentVehicle(nullptr), frameWidth(0), frameHeight(0), currentFrame(0),
     sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
     m_money(0), m_health(MaxHealth), m_armor(100),
     m_currentWeaponName("Fists"), m_currentWeaponAmmo(W_Fists), m_maxWeaponAmmo(0),
@@ -33,7 +35,7 @@ Player::Player()
 
     animationManager = std::make_unique<AnimationManager>(sprite, frameWidth, frameHeight, sheetCols, sheetRows);
     animationManager->initAnimations();
-    
+
     WeaponsAmmo = {
      {"Fists",   AmmoSetting{}},
      {"Pistol",  AmmoSetting{}},
@@ -57,9 +59,25 @@ sf::Vector2f Player::getPosition() const {
 
 void Player::takeDamage(int amount)
 {
+    if (m_armor > 0) {
+        int armorDamage = std::min(m_armor, amount);
+        m_armor -= armorDamage;
+        amount -= armorDamage;
+    }
+    if (amount > 0) {
+        m_health -= amount;
+        if (m_health < 0) m_health = 0;
+    }
 }
 
 
+
+int Player::getCurrentAmmo(const std::string& name) const {
+    auto it = WeaponsAmmo.find(name);
+    if (it != WeaponsAmmo.end())
+        return it->second.Ammo;
+    return 0; // או ערך ברירת מחדל מתאים
+}
 
 
 void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
@@ -145,18 +163,32 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
                 else if (m_currentWeaponName == "Pistol") {
                     playAnimation("PistolShoot", false);
                     SoundManager::getInstance().playSound("gunshot");
+                    // Create and add bulletAdd commentMore actions
+                    float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f); // Convert angle to radians, adjust for sprite orientation
+                    sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad));
+                    m_gameManager.addBullet(getCenter(), bulletDir);
                 }
                 else if (m_currentWeaponName == "Rifle") {
                     playAnimation("RifleShoot", false);
                     SoundManager::getInstance().playSound("rifleShot");
+                    float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f); 
+                    sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad));
+                    m_gameManager.addBullet(getCenter(), bulletDir);
+
                 }
                 else if (m_currentWeaponName == "Minigun") {
                     playAnimation("MinigunShoot", false);
                     SoundManager::getInstance().playSound("minigunShot");
+                    float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f);
+                    sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad));
+                    m_gameManager.addBullet(getCenter(), bulletDir);
                 }
                 else if (m_currentWeaponName == "Bazooka") {
                     playAnimation("BazookaShoot", false);
                     SoundManager::getInstance().playSound("RPGshot");
+                    float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f);
+                        sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad));
+                        m_gameManager.addBullet(getCenter(), bulletDir); // Consider a different bullet type for RPG later
                 }
                 else if (m_currentWeaponName == "Knife") {
                     playAnimation("KnifeAttack", false);
