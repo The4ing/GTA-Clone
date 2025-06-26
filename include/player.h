@@ -4,6 +4,7 @@
 #include "Constants.h"
 #include "Inventory.h"
 #include "AnimationManager.h"
+class Vehicle;
 
 class Player : public Character {
 public:
@@ -51,9 +52,19 @@ public:
     void heal(int amount);
     void increaseSpeed(); 
     void AddAmmo();
-    void AddPistol();
+    void AddWeapon(const std::string name);
     
+
+
+
+    // Vehicle interactionAdd commentMore actionsAdd commentMore actions
+    void enterVehicle(Vehicle* vehicle);
+    void exitVehicle();
+    Vehicle* getCurrentVehicle() const;
+    bool isInVehicle() const;
+
 private:
+    Vehicle* m_currentVehicle;
     void setSpecificFrame(int row, int col);
     void playAnimation(const std::string& animName, bool loop = true, bool pingpong = false);
     sf::Sprite  sprite;

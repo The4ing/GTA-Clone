@@ -2,6 +2,8 @@
 #include "MovingObject.h"
 #include "RoadSegment.h"
 
+class Player;
+
 class Vehicle : public MovingObject {
 public:
     Vehicle();
@@ -17,7 +19,7 @@ public:
     void setDirectionVec(const std::string& dir);
     void setScale(float scaleX, float scaleY);
     void startTurn(sf::Vector2f from, sf::Vector2f control, sf::Vector2f to);
-   //bool shouldTurnTo(const RoadSegment& nextRoad) const;
+    //bool shouldTurnTo(const RoadSegment& nextRoad) const;
     void setCurrentRoad(const RoadSegment* road);
     bool isInTurn() const;
     std::string getDirection() const;
@@ -40,15 +42,40 @@ public:
 
     void onCollision(GameObject& other) {};
     void collideWithPresent(Present& present) {};
-    void collideWithPlayer(Player& /*player*/) {}
+    void collideWithPlayer(Player& /*player*/) {} // This might need actual implementation laterAdd commentMore actions
+
+    // Player control methods
+    void accelerate(float dt);
+    void brake(float dt);
+    void steerLeft(float dt);
+    void steerRight(float dt);
+
+    void setDriver(Player* driver);
+    Player* getDriver() const;
+    bool hasDriver() const;
+
+    const sf::Sprite& getSprite() const; // Accessor for the sprite
 
 private:
-    std::string currentDirectionStr;
+    bool parking;
+    Player* m_driver; // Pointer to the player driving this vehicleAdd commentMore actions
+
+    std::string currentDirectionStr; // Used by AI
     sf::Sprite sprite;
     sf::Vector2f position;
     float speed = 70.f;
-    sf::Vector2f directionVec;
-    bool inTurn = false;
+    float angle = 0.f; // Current angle in degrees, for player steering
+    sf::Vector2f directionVec; // Used by AI, and potentially for player if not using angle-based steering
+
+    // Player control parameters
+    float accelerationRate = 50.f;
+    float decelerationRate = 80.f;
+    float maxSpeed = 200.f;
+    float reverseSpeed = -50.f; // Max reverse speed
+    float turnRate = 90.f; // Degrees per second
+
+    // AI specific members
+    bool inTurn = false; // AI Bezier turn
     float bezierT = 0.f;
     float bezierSpeed = 0.0004f;
     const RoadSegment* previousRoad = nullptr;
@@ -57,4 +84,3 @@ private:
 
 
 };
-

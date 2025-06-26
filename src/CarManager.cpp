@@ -50,28 +50,39 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
     }
 
     for (auto& vehicle : vehicles) {
+        // First, call the vehicle's own update method.
+        // This handles player input if present, or basic AI movement (like Bezier curve execution if inTurn is true for AI).
+        vehicle.update(dt, blockedPolygons);
+        // If a player is driving this vehicle, skip all AI decision-making and pathfinding logic.
+        if (vehicle.hasDriver()) {
+            continue;
+        }
         sf::Vector2f pos = vehicle.getPosition();
-        sf::FloatRect area(pos.x - 30.f, pos.y - 30.f, 60.f, 60.f);
-        std::vector<Vehicle*> nearby;
+        sf::FloatRect area(pos.x - 30.f, pos.y - 30.f, 60.f, 60.f); // Consider making this radius based on vehicle size/speedAdd commentMore actions
+        std::vector<Vehicle*> nearby; // This was Vehicle* but vehicleTree stores Vehicle*
         vehicleTree.query(area, nearby);
 
         bool hasCollision = false;
         for (auto* other : nearby) {
-            if (other == &vehicle) continue;
+            if (other == &vehicle) continue; // Don't check collision with selfAdd commentMore actions
+            // Ensure 'other' is also an AI vehicle or handle player vehicle collision differently if needed
+            if (other->hasDriver()) continue; // Simple: AI doesn't collide with player-driven cars for now (or player handles it)
             float dist = length(vehicle.getPosition(), other->getPosition());
-            if (dist < 30.f) {
-                vehicle.stop();
+            if (dist < 30.f) { // 30.f is a magic number, consider vehicle sizesAdd commentMore actions
+                vehicle.stop(); // AI vehicle stops
                 hasCollision = true;
                 break;
             }
         }
-        if (hasCollision)
+        if (hasCollision) { // If AI vehicle stopped due to collision, skip pathfinding for this frame
             continue;
+        }
 
-        vehicle.update(dt, blockedPolygons);
+        // vehicle.update(dt, blockedPolygons);
 
-        if (vehicle.isInTurn())
-            continue;
+        if (vehicle.isInTurn()) { // If AI vehicle is executing a Bezier turn set by previous AI logicAdd commentMore actions
+            continue; // Let the turn complete (handled by vehicle.update() if AI and inTurn)
+        }
 
         int laneIndex = vehicle.getCurrentLaneIndex();
         sf::Vector2f endPoint = vehicle.getCurrentRoad()->getLaneEdge(laneIndex, false);

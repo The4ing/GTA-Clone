@@ -8,8 +8,17 @@
 #include <ctime>
 #include <algorithm>
 #include "GameFactory.h"
+#include "Vehicle.h"
+#include <limits>
 
 using json = nlohmann::json;
+
+// Helper function to calculate distance between two points (squared, to avoid sqrt initially)Add commentMore actions
+float distanceSquared(const sf::Vector2f& p1, const sf::Vector2f& p2) {
+    float dx = p1.x - p2.x;
+    float dy = p1.y - p2.y;
+    return dx * dx + dy * dy;
+}
 
 GameManager::GameManager()
     : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top-Down GTA Clone"), m_gameTime(sf::Time::Zero)
@@ -95,6 +104,43 @@ void GameManager::processEvents() {
             else if (currentState == GameState::Inventory && event.key.code == sf::Keyboard::Escape) {
                 currentState = GameState::Playing;
             }
+            // Enter/Exit Vehicle LogicAdd commentMore actionsAdd commentMore actions
+            if (currentState == GameState::Playing && event.key.code == sf::Keyboard::F) {
+                if (player && carManager) { // Ensure player and carManager exist
+                    if (player->isInVehicle()) {
+                        // Player is in a vehicle, so exit
+                        Vehicle* currentVehicle = player->getCurrentVehicle();
+                        player->exitVehicle(); // Player handles its state change
+                        if (currentVehicle) {
+                            currentVehicle->setDriver(nullptr); // Vehicle no longer has a driver
+                        }
+                    }
+                    else {
+                        // Player is on foot, try to enter a nearby vehicle
+                        Vehicle* closestVehicle = nullptr;
+                        float minDistanceSq = std::numeric_limits<float>::max();
+                        const float enterRadius = 75.f; // Max distance to enter a vehicle
+                        const float enterRadiusSq = enterRadius * enterRadius;
+
+                        sf::Vector2f playerPos = player->getPosition();
+
+                        for (auto& vehicle : carManager->getVehicles()) {
+                            if (!vehicle.hasDriver()) { // Check if vehicle is empty
+                                float distSq = distanceSquared(playerPos, vehicle.getPosition());
+                                if (distSq < enterRadiusSq && distSq < minDistanceSq) {
+                                    minDistanceSq = distSq;
+                                    closestVehicle = &vehicle;
+                                }
+                            }
+                        }
+
+                        if (closestVehicle) {
+                            player->enterVehicle(closestVehicle);
+                            closestVehicle->setDriver(player.get());
+                        }
+                    }
+                }
+            }
         }
 
         if (currentState == GameState::Menu) {
@@ -141,9 +187,17 @@ void GameManager::update(float dt) {
         carManager->update(dt, blockedPolygons);
 
     
-    sf::Vector2f playerPos = player->getPosition();
-    sf::Vector2f newCenter = playerPos;
+    //  sf::Vector2f playerPos = player->getPosition();Add commentMore actions
+  //  sf::Vector2f newCenter = playerPos;
 
+    sf::Vector2f focusPosition;
+    if (player->isInVehicle() && player->getCurrentVehicle()) {
+        focusPosition = player->getCurrentVehicle()->getPosition();
+    }
+    else {
+        focusPosition = player->getPosition();
+    }
+        sf::Vector2f newCenter = focusPosition;
     sf::Vector2f viewSize = gameView.getSize();
     float halfW = viewSize.x * 0.5f;
     float halfH = viewSize.y * 0.5f;
@@ -188,7 +242,28 @@ void GameManager::update(float dt) {
         int wantedLevel = player->getWantedLevel();
         m_hud->update(playerData, wantedLevel, m_gameTime);
     }
+    // Vehicle-to-Vehicle collision (Player-driven vs AI)Add commentMore actionsAdd commentMore actions
+    if (player && player->isInVehicle() && carManager) {
+        Vehicle* playerVehicle = player->getCurrentVehicle();
+        if (playerVehicle) { // Should always be true if isInVehicle is true
+            sf::FloatRect playerVehicleBounds = playerVehicle->getSprite().getGlobalBounds();
 
+            for (auto& aiVehicle : carManager->getVehicles()) {
+                if (&aiVehicle == playerVehicle || aiVehicle.hasDriver()) { // Don't check against self or other player-driven cars (if multiplayer later)
+                    continue;
+                }
+                sf::FloatRect aiVehicleBounds = aiVehicle.getSprite().getGlobalBounds();
+                if (playerVehicleBounds.intersects(aiVehicleBounds)) {
+                    // Collision detected!
+                    // Simple response: stop both vehicles for now.
+                    playerVehicle->stop(); // stop() method sets speed to 0
+                    aiVehicle.stop();
+                    // Could add sound, visual effect, damage later
+                    std::cout << "Player vehicle collided with AI vehicle!" << std::endl;
+                }
+            }
+        }
+    }
 
 }
 
