@@ -7,7 +7,7 @@
 int main() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
     try {
-        ResourceInitializer::loadAll();
+        ResourceInitializer::loadInitialResources(); // Changed from loadAll()
        // SoundManager::getInstance().playSound("gunshot"); // Example: Play startup sound
         // sf::sleep(sf::seconds(1)); //  for testing
         GameManager game;

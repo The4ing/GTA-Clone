@@ -1,8 +1,10 @@
 ﻿#include "GameManager.h"
-#include <iostream>
+#include <iostream> // For std::cerr
 #include "ResourceManager.h"
+#include "ResourceInitializer.h" // For loadGameResources
 #include "Slideshow.h"
 #include <nlohmann/json.hpp>
+#include <SFML/System/Sleep.hpp> // For sf::sleep (optional, for testing loading screen)
 #include <fstream>
 #include <cstdlib>
 #include <ctime>
@@ -42,15 +44,86 @@ void GameManager::run() {
         if (currentState == GameState::Menu) {
             if (menu->isOptionChosen()) {
                 std::string selected = menu->getSelectedOption();
-                if (selected == "Start Game")
+                if (selected == "Start Game") {
+                    // --- Enhanced Loading Screen ---
+                    window.clear();
+
+                    // Background
+                    sf::Sprite loadingBgSprite;
+                    try {
+                        loadingBgSprite.setTexture(ResourceManager::getInstance().getTexture("loading_background"));
+                        // Scale background to fit window
+                        sf::Vector2u texSize = loadingBgSprite.getTexture()->getSize();
+                        sf::Vector2u winSize = window.getSize();
+                        loadingBgSprite.setScale(
+                            static_cast<float>(winSize.x) / texSize.x,
+                            static_cast<float>(winSize.y) / texSize.y
+                        );
+                    } catch (const std::runtime_error& e) {
+                        std::cerr << "Error loading loading_background: " << e.what() << std::endl;
+                        // Fallback: simple black background
+                    }
+                    window.draw(loadingBgSprite);
+
+                    // Loading Text
+                    sf::Text loadingText;
+                    try {
+                        loadingText.setFont(ResourceManager::getInstance().getFont("main"));
+                        loadingText.setString("Loading Game...");
+                        loadingText.setCharacterSize(50); // Increased size
+                        loadingText.setFillColor(sf::Color::White);
+                        // Center text
+                        sf::FloatRect textRect = loadingText.getLocalBounds();
+                        loadingText.setOrigin(textRect.left + textRect.width / 2.0f,
+                                              textRect.top + textRect.height / 2.0f);
+                        loadingText.setPosition(window.getSize().x / 2.0f, window.getSize().y / 2.0f - 50.f); // Position above loading bar
+                    } catch (const std::runtime_error& e) {
+                        std::cerr << "Error loading main font for loading text: " << e.what() << std::endl;
+                    }
+                    window.draw(loadingText);
+
+                    // Loading Bar
+                    float barWidth = 400.f;
+                    float barHeight = 30.f;
+                    sf::RectangleShape loadingBarBackground(sf::Vector2f(barWidth, barHeight));
+                    loadingBarBackground.setFillColor(sf::Color(50, 50, 50)); // Dark gray
+                    loadingBarBackground.setPosition(window.getSize().x / 2.0f - barWidth / 2.0f,
+                                                 window.getSize().y / 2.0f + 20.f); // Position below text
+
+                    sf::RectangleShape loadingBarFill(sf::Vector2f(0, barHeight)); // Start with 0 width
+                    loadingBarFill.setFillColor(sf::Color(100, 200, 50)); // Light green
+                    loadingBarFill.setPosition(loadingBarBackground.getPosition());
+
+                    window.draw(loadingBarBackground);
+                    window.draw(loadingBarFill);
+                    window.display();
+
+                    // Actually load resources
+                    ResourceInitializer::loadGameResources();
+
+                    // Simulate loading bar fill (for Option A)
+                    // For a quick visual, just fill it after loading.
+                    // An animation loop here would be more complex.
+                    loadingBarFill.setSize(sf::Vector2f(barWidth, barHeight));
+                    window.clear(); // Clear again before drawing the full bar
+                    window.draw(loadingBgSprite);
+                    window.draw(loadingText);
+                    window.draw(loadingBarBackground);
+                    window.draw(loadingBarFill);
+                    window.display();
+                    // sf::sleep(sf::seconds(0.5f)); // Optional: show full bar for a moment
+
                     startGameFullscreen();
-                else if (selected == "Exit")
+                } else if (selected == "Exit") {
                     window.close();
+                }
             }   
 
-            window.clear();
-            menu->draw();
-            window.display();
+            if (currentState == GameState::Menu) { // Check if still in Menu state before drawing menu
+                window.clear();
+                menu->draw();
+                window.display();
+            }
 
         }
         else if (currentState == GameState::Playing) {
