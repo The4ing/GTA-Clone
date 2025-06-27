@@ -12,6 +12,9 @@
 #include <limits>
 #include "player.h"
 #include "InventoryUI.h"
+#include "PathfindingGrid.h" // Required for PathfindingGrid
+#include "Constants.h"       // Required for MAP_BOUNDS
+#include "Police.h"          // Required for Police::PATHFINDING_GRID_SIZE
 
 using json = nlohmann::json;
 
@@ -439,6 +442,13 @@ void GameManager::startGameFullscreen() {
 
     loadCollisionRectsFromJSON("resources/map.tmj");
     buildBlockedPolyTree();
+
+    // Initialize Pathfinding Grid
+    std::cout << "Initializing PathfindingGrid..." << std::endl;
+    pathfindingGrid = std::make_unique<PathfindingGrid>(MAP_BOUNDS, Police::PATHFINDING_GRID_SIZE);
+    pathfindingGrid->preprocess(blockedPolygons);
+    std::cout << "PathfindingGrid preprocessing completed." << std::endl;
+
     mapTexture = &ResourceManager::getInstance().getTexture("map");
     mapSprite.setTexture(*mapTexture);
     pedestrianManager = GameFactory::createPedestrianManager(blockedPolygons);

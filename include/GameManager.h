@@ -13,7 +13,7 @@
 #include "InventoryUI.h"
 #include <vector> // Added for std::vector
 #include "BulletPool.h"
-
+#include "PathfindingGrid.h" // Added for PathfindingGrid
 
 enum class GameState {
     Menu,
@@ -58,6 +58,7 @@ private:
     std::unique_ptr<CarManager> carManager;
     std::unique_ptr<PoliceManager> policeManager;
     std::unique_ptr<PedestrianManager> pedestrianManager;
+    std::unique_ptr<PathfindingGrid> pathfindingGrid; // Added PathfindingGrid member
     std::vector<std::unique_ptr<Present>> presents;
     GameState                   currentState;
     sf::Clock                   clock;

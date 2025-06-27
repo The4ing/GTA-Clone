@@ -5,9 +5,11 @@
 #include <SFML/Graphics/Rect.hpp> 
 #include "Constants.h"
 //#include "PathPlanner.h" 
-#include "Pathfinder.h"  
-#include  "QuadTree.h"
+#include "Pathfinder.h"
 #include "AnimationManager.h"
+// Forward declare PathfindingGrid if Police constructor is moved to .cpp
+// For now, including GameManager which includes PathfindingGrid indirectly or directly
+#include "GameManager.h" // For getPathfindingGrid()
 
 enum class PoliceState {
     Idle,
@@ -16,15 +18,15 @@ enum class PoliceState {
     BackingUp
 };
 
-class GameManager;
+// class GameManager; // Already included above
 
 class Police : public Character {
 public:
-    Police(GameManager& gameManager, sf::Vector2f initialTarget); 
-    Police(GameManager& gameManager); 
+    // Police(GameManager& gameManager, sf::Vector2f initialTarget); // Assuming this constructor is not primary or will be updated similarly
+    Police(GameManager& gameManager);
 
-    void update(float dt, const sf::Vector2f& playerPosition, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
-    bool moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
+    void update(float dt, const sf::Vector2f& playerPosition, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons); // blockedPolygons might be removable if not used elsewhere
+    bool moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons); // Same for this
     void draw(sf::RenderTarget& window);
 
     void takeDamage(int amount);
@@ -72,10 +74,11 @@ private:
     int currentFrame = 0;
     float animationTimer = 0.f;
     float animationSpeed;
-    Pathfinder pathfinder; // Added Pathfinder member
+    Pathfinder pathfinder; // Pathfinder member, will be initialized with grid
     std::vector<sf::Vector2f> currentPath;
     size_t currentPathIndex = 0;
     float repathTimer = 0.f;
+    sf::Vector2f pathTargetPosition; // Player's position when the current path was calculated
 
     GameManager& m_gameManager; // Reference to GameManager for shootingAdd commentMore actions
     float fireCooldownTimer = 0.f;
