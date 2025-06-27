@@ -21,6 +21,8 @@ enum CurrentWepapon {
     W_Rifle,
     W_Minigun,
     W_Bazooka,
+    W_Knife,
+    W_Grenade,
 };
 
 struct AmmoSetting {

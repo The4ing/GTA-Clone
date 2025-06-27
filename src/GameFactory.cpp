@@ -11,6 +11,8 @@
 #include "Bazooka.h"
 #include <iostream>
 #include "GameManager.h" 
+#include "Knife.h"
+#include "Grenade.h"
 
 std::unique_ptr<Player> GameFactory::createPlayer(GameManager& gameManager, const sf::Vector2f& pos) { 
     auto player = std::make_unique<Player>(gameManager); // Pass gameManager to constructor
@@ -86,7 +88,7 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
     while (result.size() < count && attempts < maxAttempts) {
         ++attempts;
 
-        int type = rand() % 7;
+        int type = rand() % 8;
         float x = static_cast<float>(rand() % MAP_WIDTH);
         float y = static_cast<float>(rand() % MAP_HEIGHT);
         sf::Vector2f pos(x, y);
@@ -95,7 +97,7 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
             continue;
 
       //  switch (type) {
-    switch (5) {
+    switch (8) {
         case 0:
                 result.push_back(std::make_unique<HealthPresent>(
                     ResourceManager::getInstance().getTexture("Health"), pos));
@@ -125,6 +127,17 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
                 ResourceManager::getInstance().getTexture("Bazooka"), sf::Vector2f(50.f, 50.f)));
                 
             break;
+        case 7:
+            result.push_back(std::make_unique<Knife>(
+                ResourceManager::getInstance().getTexture("Knife"), sf::Vector2f(50.f, 50.f)));
+
+            break;
+        case 8:
+            result.push_back(std::make_unique<Grenade>(
+                ResourceManager::getInstance().getTexture("Grenade"), sf::Vector2f(50.f, 50.f)));
+
+            break;
+
         }
     }
 

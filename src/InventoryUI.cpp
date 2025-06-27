@@ -102,6 +102,8 @@ void InventoryUI::handleInput(Player& player, Inventory& inventory, sf::RenderWi
     { "Rifle",  [&player]() { player.setCurrentWeapon("Rifle", W_Rifle, player.getCurrentAmmo("Rifle")); } },
     { "Minigun",  [&player]() { player.setCurrentWeapon("Minigun", W_Minigun, player.getCurrentAmmo("Minigun")); } },
     { "Bazooka",  [&player]() { player.setCurrentWeapon("Bazooka", W_Bazooka, player.getCurrentAmmo("Bazooka")); } },
+     { "Knife",  [&player]() { player.setCurrentWeapon("Knife", W_Knife, player.getCurrentAmmo("Knife")); } },
+     { "Grenade",  [&player]() { player.setCurrentWeapon("Grenade", W_Grenade, player.getCurrentAmmo("Grenade")); } },
     };
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
