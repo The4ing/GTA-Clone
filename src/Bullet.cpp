@@ -110,7 +110,7 @@ void Bullet::collideWithPresent(Present& present) {
 
 void Player::setCurrentWeapon(const std::string& name, CurrentWepapon Weapon, int maxAmmo) {
     m_currentWeaponName = name;
-    m_currentWeaponAmmo = Weapon;
+  //  m_currentWeaponAmmo = Weapon;
     m_maxWeaponAmmo = maxAmmo;
 }
 
