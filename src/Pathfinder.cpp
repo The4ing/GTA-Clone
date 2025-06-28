@@ -14,8 +14,8 @@ struct CompareNodeFScore {
     }
 };
 
-Pathfinder::Pathfinder() {
-    // Constructor implementation (if needed)
+Pathfinder::Pathfinder(const PathfindingGrid& grid) : grid(grid) {
+        // Constructor now takes and stores a reference to the PathfindingGrid
 }
 
 Pathfinder::~Pathfinder() {
@@ -30,89 +30,48 @@ int Pathfinder::calculateHCost(const sf::Vector2i& current, const sf::Vector2i& 
     return static_cast<int>(std::sqrt(dx * dx + dy * dy) * 10.0f);
 }
 
-bool Pathfinder::isWalkable(
-    int x,
-    int y,
-    int gridWidth,
-    int gridHeight,
-    const std::vector<std::vector<sf::Vector2f>>& obstacles,
-    float gridSize,
-    const sf::Vector2f& mapOrigin) {
-
-    // Check bounds: Ensure the grid cell (x, y) is within the map's grid dimensions.
-    if (x < 0 || x >= gridWidth || y < 0 || y >= gridHeight) {
-        return false;
-    }
-
-    // Convert grid coordinates to world coordinates (center of the cell)
-    // This is necessary to check against world-space obstacles.
-    sf::Vector2f worldPos(
-        mapOrigin.x + (static_cast<float>(x) + 0.5f) * gridSize,
-        mapOrigin.y + (static_cast<float>(y) + 0.5f) * gridSize
-    );
-
-    // Check for collisions with obstacles
-    for (const auto& obstacle : obstacles) {
-        if (CollisionUtils::pointInPolygon(worldPos, obstacle)) {
-            return false; // Point is inside an obstacle
-        }
-    }
-
-    return true; // Walkable if not out of bounds and not in an obstacle
+// Updated isWalkable to use the PathfindingGrid
+bool Pathfinder::isWalkable(int x, int y) {
+    return grid.isCellWalkable(x, y);
 }
 
-std::vector<sf::Vector2f> Pathfinder::reconstructPath(Node* goalNode, float gridSize, const sf::Vector2f& mapOrigin) {
+// Updated reconstructPath to use the PathfindingGrid
+std::vector<sf::Vector2f> Pathfinder::reconstructPath(Node* goalNode) {
     std::vector<sf::Vector2f> path;
     Node* current = goalNode;
     while (current != nullptr) {
-        // Convert grid coordinates back to world coordinates (center of the cell)
-        sf::Vector2f worldPos(
-            mapOrigin.x + (static_cast<float>(current->position.x) + 0.5f) * gridSize,
-            mapOrigin.y + (static_cast<float>(current->position.y) + 0.5f) * gridSize
-        );
-        path.push_back(worldPos);
+        path.push_back(grid.gridToWorld(current->position)); // Use grid to convert
         current = current->parent; // Move to the parent node
     }
-    // The path is constructed backwards from goal to start, so it needs to be reversed.
     std::reverse(path.begin(), path.end());
     return path;
 }
 
 std::vector<sf::Vector2f> Pathfinder::findPath(
     const sf::Vector2f& startPos,
-    const sf::Vector2f& goalPos,
-    const std::vector<std::vector<sf::Vector2f>>& obstacles,
-    const sf::FloatRect& mapBounds,
-    float gridSize) {
+    const sf::Vector2f& goalPos) {
 
     std::vector<sf::Vector2f> worldPath; // The final path in world coordinates
 
-    // --- Grid Setup ---
-    sf::Vector2f mapOrigin(mapBounds.left, mapBounds.top);
-    int gridWidth = static_cast<int>(mapBounds.width / gridSize);
-    int gridHeight = static_cast<int>(mapBounds.height / gridSize);
+    // --- Grid Setup from PathfindingGrid ---
+    // No longer need to calculate gridWidth, gridHeight, mapOrigin, gridSize here.
+    // They are available from the 'grid' member.
 
-    // Convert start and goal positions from world coordinates to grid coordinates
-    sf::Vector2i startNodePos(
-        static_cast<int>((startPos.x - mapOrigin.x) / gridSize),
-        static_cast<int>((startPos.y - mapOrigin.y) / gridSize)
-    );
-    sf::Vector2i goalNodePos(
-        static_cast<int>((goalPos.x - mapOrigin.x) / gridSize),
-        static_cast<int>((goalPos.y - mapOrigin.y) / gridSize)
-    );
+    // Convert start and goal positions from world coordinates to grid coordinates using the grid
+    sf::Vector2i startNodePos = grid.worldToGrid(startPos);
+    sf::Vector2i goalNodePos = grid.worldToGrid(goalPos);
 
-    // Basic validation for start/goal positions
-    if (!isWalkable(startNodePos.x, startNodePos.y, gridWidth, gridHeight, obstacles, gridSize, mapOrigin)) {
-      //  std::cerr << "Pathfinder Error: Start position (" << startPos.x << "," << startPos.y << ") mapped to grid (" << startNodePos.x << "," << startNodePos.y << ") is not walkable or out of bounds." << std::endl;
+    // Basic validation for start/goal positions using the new isWalkable
+    if (!isWalkable(startNodePos.x, startNodePos.y)) {
+        // std::cerr << "Pathfinder Error: Start position is not walkable or out of bounds." << std::endl;
         return worldPath; // Return empty path
     }
-    if (!isWalkable(goalNodePos.x, goalNodePos.y, gridWidth, gridHeight, obstacles, gridSize, mapOrigin)) {
-    //    std::cerr << "Pathfinder Error: Goal position (" << goalPos.x << "," << goalPos.y << ") mapped to grid (" << goalNodePos.x << "," << goalNodePos.y << ") is not walkable or out of bounds." << std::endl;
+    if (!isWalkable(goalNodePos.x, goalNodePos.y)) {
+        // std::cerr << "Pathfinder Error: Goal position is not walkable or out of bounds." << std::endl;
         return worldPath; // Return empty path
     }
     if (startNodePos == goalNodePos) {
-        worldPath.push_back(goalPos); // Path is just the goal itself if start and goal are the same
+        worldPath.push_back(grid.gridToWorld(goalNodePos)); // Use grid to convert back
         return worldPath;
     }
 
@@ -151,7 +110,7 @@ std::vector<sf::Vector2f> Pathfinder::findPath(
 
         // Check if we reached the goal
         if (currentNode->position == goalNodePos) {
-            worldPath = reconstructPath(currentNode, gridSize, mapOrigin);
+            worldPath = reconstructPath(currentNode);
             break; // Path found
         }
 
@@ -165,8 +124,8 @@ std::vector<sf::Vector2f> Pathfinder::findPath(
 
                 sf::Vector2i neighborPos(currentNode->position.x + dx, currentNode->position.y + dy);
 
-                // Check if neighbor is walkable
-                if (!isWalkable(neighborPos.x, neighborPos.y, gridWidth, gridHeight, obstacles, gridSize, mapOrigin)) {
+                // Check if neighbor is walkable using the new isWalkable
+                if (!isWalkable(neighborPos.x, neighborPos.y)) {
                     continue; // Skip unwalkable neighbors
                 }
 

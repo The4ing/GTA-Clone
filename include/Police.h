@@ -4,9 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Rect.hpp> 
 #include "Constants.h"
-//#include "PathPlanner.h" 
-#include "Pathfinder.h"  
-#include  "QuadTree.h"
+#include "Pathfinder.h"
 #include "AnimationManager.h"
 
 enum class PoliceState {
@@ -20,11 +18,10 @@ class GameManager;
 
 class Police : public Character {
 public:
-    Police(GameManager& gameManager, sf::Vector2f initialTarget); 
-    Police(GameManager& gameManager); 
+    Police(GameManager& gameManager);
 
-    void update(float dt, const sf::Vector2f& playerPosition, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
-    bool moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
+    void update(float dt, const sf::Vector2f& playerPosition, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons); 
+    bool moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons); 
     void draw(sf::RenderTarget& window);
 
     void takeDamage(int amount);
@@ -76,6 +73,7 @@ private:
     std::vector<sf::Vector2f> currentPath;
     size_t currentPathIndex = 0;
     float repathTimer = 0.f;
+    sf::Vector2f pathTargetPosition;
 
     GameManager& m_gameManager; // Reference to GameManager for shootingAdd commentMore actions
     float fireCooldownTimer = 0.f;

@@ -2,5 +2,6 @@
 
 class ResourceInitializer {
 public:
-    static void loadAll();
+    static void loadInitialResources();
+    static void loadGameResources();
 };

@@ -3,8 +3,23 @@
 #include <cmath>
 #include <iostream>
 #include "GameManager.h" // Required for GameManager type
+// Initialize static members for pathfinding throttling
+int s_pathfindingCallsThisFrame = 0;
+const int S_MAX_PATHFINDING_CALLS_PER_FRAME = 4; // Example: Max 4 calls per frame
 
 PoliceManager::PoliceManager(GameManager& gameManager) : m_gameManager(gameManager) {} // Initialize GameManager reference
+
+bool PoliceManager::canRequestPath() {
+    return s_pathfindingCallsThisFrame < S_MAX_PATHFINDING_CALLS_PER_FRAME;
+}
+
+void PoliceManager::recordPathfindingCall() {
+    s_pathfindingCallsThisFrame++;
+}
+
+void PoliceManager::resetPathfindingCounter() {
+    s_pathfindingCallsThisFrame = 0;
+}
 
 void PoliceManager::spawnPolice(const sf::Vector2f& position) {
     // Pass the GameManager reference to the Police constructor
@@ -24,6 +39,7 @@ void PoliceManager::spawnPolice(const sf::Vector2f& position) {
 void PoliceManager::update(float dt, const sf::Vector2f& playerPos,
     const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     spawnCooldown -= dt;
+    resetPathfindingCounter(); // Reset counter at the beginning of each frame's update
 
     // ... (rest of the spawning logic if any) ...
 
@@ -94,6 +110,3 @@ void PoliceManager::trySpawnRandomPoliceNear(const std::vector<sf::Vector2i>& ac
 
     spawnPolice(pos);
 }
-
-
-

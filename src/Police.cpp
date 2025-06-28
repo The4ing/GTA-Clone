@@ -7,13 +7,19 @@
 #include "GameManager.h" // Required for GameManager reference and addBulletAdd commentMore actions
 #include <cmath> // For std::atan2, std::cos, std::sin
 
-Police::Police(GameManager& gameManager) : // Updated constructor
-    m_gameManager(gameManager), // Store GameManager reference
+Police::Police(GameManager& gameManager) :
+    m_gameManager(gameManager),
+    pathfinder(*gameManager.getPathfindingGrid()), // Initialize Pathfinder with the grid
     state(PoliceState::Idle),
     currentPathIndex(0), repathTimer(0.f), pathFailCooldown(0.f),
     animationTimer(0.f), animationSpeed(0.005f), currentFrame(0),
     framesPerRow(10), fireCooldownTimer(0.f)
 {
+    if (!gameManager.getPathfindingGrid()) {
+        // This should not happen if GameManager initializes PathfindingGrid correctly
+        std::cerr << "CRITICAL: PathfindingGrid is null in Police constructor!" << std::endl;
+        // Potentially throw an exception or handle error to prevent crash
+    }
     // targetPos will be updated by setTargetPosition called from PoliceManager/GameManager
     sprite.setTexture(ResourceManager::getInstance().getTexture("police"));
     sheetCols = 10;
@@ -26,6 +32,7 @@ Police::Police(GameManager& gameManager) : // Updated constructor
     sprite.setPosition(100, 100);
     sprite.setScale(0.15f, 0.15f);
     speed = 40.f;
+    pathTargetPosition = sf::Vector2f(-1, -1); // Initialize to an invalid position
 
     nextPauseTime = 30.f + static_cast<float>(rand()) / RAND_MAX * 30.f;  // בין 30 ל-60 שניות
 
@@ -36,7 +43,6 @@ Police::Police(GameManager& gameManager) : // Updated constructor
     setRandomWanderDestination(MAP_BOUNDS);
 
 }
-
 
 void Police::handleShooting(const sf::Vector2f& playerPosition, float dt) {
     // Aim at player
@@ -106,6 +112,7 @@ void Police::update(float dt, const sf::Vector2f& playerPosition, const std::vec
             state = PoliceState::Chasing; // Lost sight or too far, go back to chasing
             currentPath.clear(); // Force repath
             currentPathIndex = 0;
+            pathTargetPosition = sf::Vector2f(-1, -1);
         }
         else {
             handleShooting(playerPosition, dt);
@@ -130,6 +137,7 @@ void Police::update(float dt, const sf::Vector2f& playerPosition, const std::vec
             state = PoliceState::Chasing;
             currentPath.clear();
             currentPathIndex = 0;
+            pathTargetPosition = sf::Vector2f(-1, -1); // Invalidate path target pos
             repathTimer = 1.0f; // Force repath soon
         }
     }
@@ -175,26 +183,70 @@ void Police::update(float dt, const sf::Vector2f& playerPosition, const std::vec
         }
     }
 
+    const float SIGNIFICANT_PLAYER_MOVE_THRESHOLD_SQ = (PATHFINDING_GRID_SIZE * 3.5f) * (PATHFINDING_GRID_SIZE * 3.5f); // Approx 3.5 grid cells
 
     if (state == PoliceState::Chasing) {
-        if (pathFailCooldown <= 0.f && (currentPath.empty() || currentPathIndex >= currentPath.size() || repathTimer > 1.0f)) {
-            currentPath = pathfinder.findPath(getPosition(), targetPos, blockedPolygons, MAP_BOUNDS, PATHFINDING_GRID_SIZE);
-            currentPathIndex = 0;
-            repathTimer = 0.f;
-            if (currentPath.empty()) {
-                pathFailCooldown = 3.0f;
+        bool needsNewPathReasonEmpty = currentPath.empty() || currentPathIndex >= currentPath.size();
+        bool playerMovedSignificantly = false;
+
+        if (!needsNewPathReasonEmpty && pathTargetPosition.x != -1.f) { // Check only if there's a valid existing path target
+            float dx = targetPos.x - pathTargetPosition.x;
+            float dy = targetPos.y - pathTargetPosition.y;
+            if ((dx * dx + dy * dy) > SIGNIFICANT_PLAYER_MOVE_THRESHOLD_SQ) {
+                playerMovedSignificantly = true;
+            }
+        }
+
+        // Determine if a repath is needed:
+        // 1. Path is empty/finished.
+        // 2. Or, repath timer is up AND (player moved significantly OR current path is for an old/invalid target because pathTargetPosition.x is -1.f).
+        bool shouldRepath = needsNewPathReasonEmpty ||
+            (repathTimer > 1.0f && (playerMovedSignificantly || pathTargetPosition.x == -1.f));
+
+        if (pathFailCooldown <= 0.f && shouldRepath) {
+            if (PoliceManager::canRequestPath()) {
+                PoliceManager::recordPathfindingCall();
+                // std::cout << "Police " << this << " requesting path to " << targetPos.x << "," << targetPos.y << std::endl;
+                currentPath = pathfinder.findPath(getPosition(), targetPos);
+                currentPathIndex = 0;
+                repathTimer = 0.f;
+                if (!currentPath.empty()) {
+                    pathTargetPosition = targetPos; // Store player's position for this new path
+                    // std::cout << "Police " << this << " found path. New pathTargetPosition: " << pathTargetPosition.x << "," << pathTargetPosition.y << std::endl;
+                }
+                else {
+                    pathFailCooldown = 3.0f;
+                    pathTargetPosition = sf::Vector2f(-1.f, -1.f); // Invalidate on failure
+                    // std::cout << "Police " << this << " FAILED to find path." << std::endl;
+                }
+            }
+            else {
+                // Pathfinding throttled for this frame.
+                // Reset repathTimer so it attempts again soon, e.g., next frame if slot available.
+                repathTimer = 0.f;
             }
         }
     }
+
     else if (state == PoliceState::Idle) {
+        // Idle state pathfinding logic (less critical for move threshold, simpler timer)
         if (currentPath.empty() || currentPathIndex >= currentPath.size()) {
-            if (pathFailCooldown <= 0.f) {
-                currentPath = pathfinder.findPath(getPosition(), wanderDestination, blockedPolygons, MAP_BOUNDS, PATHFINDING_GRID_SIZE);
-                currentPathIndex = 0;
-                repathTimer = 0.f;
-                if (currentPath.empty()) {
-                    pathFailCooldown = 1.0f;
-                    setRandomWanderDestination(MAP_BOUNDS);
+            // Allow idle repath more frequently if path is empty, e.g. every 0.5s, or if path failed (pathFailCooldown)
+            if (pathFailCooldown <= 0.f && repathTimer > 0.5f) { // Idle can wait a bit, or use a simple timer
+                if (PoliceManager::canRequestPath()) {
+                    PoliceManager::recordPathfindingCall();
+                    currentPath = pathfinder.findPath(getPosition(), wanderDestination);
+                    currentPathIndex = 0;
+                    repathTimer = 0.f;
+                    if (currentPath.empty()) {
+                        pathFailCooldown = 1.0f;
+                        setRandomWanderDestination(MAP_BOUNDS); // Find a new wander spot if current one is unreachable
+                    }
+                    // No need to set pathTargetPosition for idle wandering
+                }
+                else {
+                    // Pathfinding throttled.
+                    repathTimer = 0.f; // Try again soon
                 }
             }
         }
@@ -266,7 +318,7 @@ bool Police::moveToward(const sf::Vector2f& target, float dt, const std::vector<
         sf::Vector2f nextPos = currentPos + dir * (traveled + segment);
 
         if (checkCollision(currentPos, nextPos, blockedPolygons, getCollisionRadius())) {
-          //  std::cout << "Police: Collision detected, stopping movement at segment " << traveled << std::endl;
+            //  std::cout << "Police: Collision detected, stopping movement at segment " << traveled << std::endl;
             return true; // collision detected
         }
 
