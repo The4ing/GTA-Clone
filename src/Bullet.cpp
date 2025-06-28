@@ -1,30 +1,41 @@
 #include "Bullet.h"
 #include "ResourceManager.h"
 #include "CollisionUtils.h"
+#include "iostream"
 
-Bullet::Bullet() : active(false) {
-    sprite.setTexture(ResourceManager::getInstance().getTexture("bullet"));
-   // sprite.setPosition(position);
-    sf::FloatRect bounds = sprite.getLocalBounds();
-    sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
-    sprite.setScale(0.1, 0.1);
+Bullet::Bullet() : active(false), speed(0.f) {
 }
 
 void Bullet::init(const sf::Vector2f& startPos, const sf::Vector2f& dir, float initialSpeed) {
     position = startPos;
-    direction = dir; // Store the normalized direction
+    direction = dir;
     speed = initialSpeed;
+
+    if (!sprite.getTexture()) {
+        try {
+            sf::Texture& tex = ResourceManager::getInstance().getTexture("bullet");
+            sprite.setTexture(tex);
+        }
+        catch (const std::exception& e) {
+            std::cerr << "[Bullet] Failed to load texture 'bullet': " << e.what() << std::endl;
+            active = false; 
+            return;
+        }
+
+        sf::FloatRect bounds = sprite.getLocalBounds();
+        sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
+        sprite.setScale(0.1f, 0.1f);
+    }
+
     sprite.setPosition(position);
 
     float angleRad = std::atan2(direction.y, direction.x);
     float angleDeg = angleRad * 180.f / 3.14159f;
     sprite.setRotation(angleDeg);
-    // Sprite rotation could also be set here if bullets have a visual orientation based on direction
-    // For a simple point bullet, rotation might not be visually necessary unless the sprite itself is directional
-    // float angle = std::atan2(direction.y, direction.x) * 180.f / 3.14159f;
-    // sprite.setRotation(angle);
+
     active = true;
 }
+
 
 
 void Bullet::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {

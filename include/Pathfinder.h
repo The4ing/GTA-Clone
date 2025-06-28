@@ -8,6 +8,7 @@
 #include <map>
 #include <cmath>
 #include <limits>
+#include "PathfindingGrid.h" 
 
 struct Node {
     int gCost;
@@ -29,34 +30,25 @@ struct Node {
 
 class Pathfinder {
 public:
-    Pathfinder();
+    Pathfinder(const PathfindingGrid& grid); // Modified constructor
     ~Pathfinder();
 
     std::vector<sf::Vector2f> findPath(
         const sf::Vector2f& startPos,
-        const sf::Vector2f& goalPos,
-        const std::vector<std::vector<sf::Vector2f>>& obstacles,
-        const sf::FloatRect& mapBounds,
-        float gridSize
+        const sf::Vector2f& goalPos
     );
 
 private:
+    const PathfindingGrid& grid; // Reference to the preprocessed grid
+
     // Helper function for heuristic (Euclidean distance)
     int calculateHCost(const sf::Vector2i& current, const sf::Vector2i& goal);
 
-    // Helper function to check if a cell is walkable
-    bool isWalkable(
-        int x,
-        int y,
-        int gridWidth,
-        int gridHeight,
-        const std::vector<std::vector<sf::Vector2f>>& obstacles,
-        float gridSize,
-        const sf::Vector2f& mapOrigin
-    );
+    // Helper function to check if a cell is walkable (uses the grid)
+    bool isWalkable(int x, int y);
 
-    // Helper function to reconstruct the path
-    std::vector<sf::Vector2f> reconstructPath(Node* goalNode, float gridSize, const sf::Vector2f& mapOrigin);
+    // Helper function to reconstruct the path (uses the grid)
+    std::vector<sf::Vector2f> reconstructPath(Node* goalNode);
 };
 
 #endif // PATHFINDER_H

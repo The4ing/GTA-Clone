@@ -21,8 +21,10 @@ public:
 
 
     void trySpawnRandomPoliceNear(const std::vector<sf::Vector2i>& activeChunks, const sf::Vector2f& playerPos);
-    //void addActiveChunk(const sf::Vector2i& chunkCoord);
-    //new
+    // Pathfinding ThrottlingAdd commentMore actions
+    static bool canRequestPath();
+    static void recordPathfindingCall();
+    static void resetPathfindingCounter();
 
 private:
     void spawnPoliceNearChunk(const sf::Vector2i& chunkCoord); // NEW
