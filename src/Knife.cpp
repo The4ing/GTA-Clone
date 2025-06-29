@@ -9,3 +9,8 @@ std::string Knife::getType() const {
     return "Knife";
 }
 
+int Knife::getPrice() const
+{
+    return 0;
+}
+

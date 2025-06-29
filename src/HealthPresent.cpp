@@ -13,3 +13,8 @@ void HealthPresent::applyEffect(Player& player) {
     player.heal(25);
     collect();
 }
+
+int HealthPresent::getPrice() const
+{
+    return 150;
+}

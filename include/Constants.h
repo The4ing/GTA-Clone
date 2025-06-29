@@ -14,6 +14,8 @@ const sf::FloatRect MAP_BOUNDS(0.f, 0.f, 4640.f, 4670.f);
 const float BasicSpeed = 250.f;
 const int MaxHealth = 100;
 
+const int MaxMoney = 100;
+const int PlayerMoney = 15;
 
 enum CurrentWepapon {
     W_Fists = -1,
@@ -30,3 +32,5 @@ struct AmmoSetting {
     int MaxAmmo = 0;
 
 };
+
+const float STORE_INTERACT_RADIUS = 60.f;

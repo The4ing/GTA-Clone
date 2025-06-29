@@ -97,13 +97,13 @@ void InventoryUI::handleInput(Player& player, Inventory& inventory, sf::RenderWi
     { "Health", [&player]() { player.heal(25); } },
     { "Radar",  []() { std::cout << "Radar used\n"; } },
     { "Speed",  [&player]() { player.increaseSpeed(); } },
-    { "Pistol", [&player]() { player.setCurrentWeapon("Pistol", W_Pistol, 0); } },
-    { "Fists",  [&player]() { player.setCurrentWeapon("Fists", W_Fists, player.getCurrentAmmo("Fists")); } },
-    { "Rifle",  [&player]() { player.setCurrentWeapon("Rifle", W_Rifle, player.getCurrentAmmo("Rifle")); } },
-    { "Minigun",  [&player]() { player.setCurrentWeapon("Minigun", W_Minigun, player.getCurrentAmmo("Minigun")); } },
-    { "Bazooka",  [&player]() { player.setCurrentWeapon("Bazooka", W_Bazooka, player.getCurrentAmmo("Bazooka")); } },
-     { "Knife",  [&player]() { player.setCurrentWeapon("Knife", W_Knife, player.getCurrentAmmo("Knife")); } },
-     { "Grenade",  [&player]() { player.setCurrentWeapon("Grenade", W_Grenade, player.getCurrentAmmo("Grenade")); } },
+    { "Pistol", [&player]() { player.setCurrentWeapon("Pistol",  0); } },
+    { "Fists",  [&player]() { player.setCurrentWeapon("Fists", player.getCurrentAmmo("Fists")); } },
+    { "Rifle",  [&player]() { player.setCurrentWeapon("Rifle", player.getCurrentAmmo("Rifle")); } },
+    { "Minigun",  [&player]() { player.setCurrentWeapon("Minigun", player.getCurrentAmmo("Minigun")); } },
+    { "Bazooka",  [&player]() { player.setCurrentWeapon("Bazooka",  player.getCurrentAmmo("Bazooka")); } },
+     { "Knife",  [&player]() { player.setCurrentWeapon("Knife",  player.getCurrentAmmo("Knife")); } },
+     { "Grenade",  [&player]() { player.setCurrentWeapon("Grenade",  player.getCurrentAmmo("Grenade")); } },
     };
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
