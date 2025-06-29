@@ -155,6 +155,27 @@ void GameManager::run() {
             inventoryUI.draw(window, player->getInventory()); // האינבנטורי מעל
             window.display();
         }
+        else if (currentState == GameState::Store) {
+            window.clear();
+            // inventoryUI.draw(window, player->getInventory());
+            window.setView(window.getDefaultView());  // הצגה לפי View רגיל של המסך
+            for (auto& storePtr : store) {
+                if (storePtr->getPlayerClose())
+                    storePtr->open(*player);
+                     storePtr->handleInput(*player,window);
+            }
+            window.draw(frozenBackgroundSprite); // הרקע הקפואAdd commentMore actions
+
+         
+            // ואז ציור החנות
+            for (auto& storePtr : store) {
+                storePtr->drawUI(window);
+            }
+
+            window.display();
+         
+        }
+       
 
     }
 }
@@ -175,7 +196,8 @@ void GameManager::processEvents() {
         if (event.type == sf::Event::KeyPressed) {
             if (event.key.code == sf::Keyboard::F11)
                 setFullscreen(!isFullscreen);
-            if (currentState == GameState::Playing && event.key.code == sf::Keyboard::I) {
+            if (currentState == GameState::Playing && (event.key.code == sf::Keyboard::I ||
+                event.key.code == sf::Keyboard::E)) {
                 // שמור את המצב הנוכחי של המשחק לתמונהAdd commentMore actions
                 frozenBackgroundTexture.clear();
                 frozenBackgroundTexture.setView(gameView); // חשוב מאוד!
@@ -188,9 +210,26 @@ void GameManager::processEvents() {
                     float(window.getSize().y) / frozenBackgroundTexture.getSize().y
                 );
                 m_playingFrameCount = 0; // Reset frame count when leaving playing state
-                currentState = GameState::Inventory;
-            }
-            else if (currentState == GameState::Inventory && event.key.code == sf::Keyboard::Escape) {
+                if (event.key.code == sf::Keyboard::I) {
+                    currentState = GameState::Inventory;
+                }
+                else if(event.key.code == sf::Keyboard::E){
+                    for (auto& s : store) {
+                        if (s->getPlayerClose()) {
+                           
+                            currentState = GameState::Store;
+                            break;  
+                        }
+                    }
+                }
+                
+            } 
+            else if ((currentState == GameState::Inventory || currentState == GameState::Store) 
+                && event.key.code == sf::Keyboard::Escape) {
+                for (auto& s : store) {
+                    s->setIsOpen(false);
+                    s->setPlayerClose(false);
+                }
                 currentState = GameState::Playing; // m_playingFrameCount will naturally be 0 or start counting if it was reset
             }
             // Enter/Exit Vehicle LogicAdd commentMore actionsAdd commentMore actions
@@ -230,6 +269,10 @@ void GameManager::processEvents() {
                     }
                 }
             }
+            if (currentState == GameState::Playing && event.key.code == sf::Keyboard::E) {
+                
+            }
+
         }
 
         if (currentState == GameState::Menu) {
@@ -262,6 +305,8 @@ void GameManager::renderFrozenGame(sf::RenderTarget& target) {
         pedestrianManager->draw(target);
     for (auto& present : presents)
         present->draw(target);
+    for (auto& s : store)
+        s->drawUI(target);
     for (const auto& bullet_ptr : bulletPool.getAllBullets()) { // Draw bullets from pool
         if (bullet_ptr->isActive()) {
             bullet_ptr->draw(target);
@@ -278,6 +323,9 @@ void GameManager::update(float dt) {
 
     if (!player) return; // Early exit if player isn't initialized
     player->update(dt, blockedPolygons);
+
+    
+
 
     if (carManager)
         carManager->update(dt, blockedPolygons);
@@ -387,6 +435,10 @@ void GameManager::update(float dt) {
             }
         }
     }
+    for (auto& s : store) {
+        float distSq = distanceSquared(player->getPosition(), s->getPosition());
+        s->setPlayerClose(distSq < STORE_INTERACT_RADIUS * STORE_INTERACT_RADIUS);
+    }
 
     if (timeThisFrame) {
         sf::Time updateTime = frameTimer.getElapsedTime();
@@ -429,8 +481,26 @@ void GameManager::render() {
         }
     }
 
-    window.setView(m_hudView);
-    if (m_hud) m_hud->draw(window);
+    for (auto& s : store) {
+        s->drawUI(window);
+        
+    }
+       
+    
+    
+
+    for (auto& s : store) {
+        if (s->getPlayerClose())
+            window.draw(*s->getHintTextIfClose());
+    }
+
+    window.setView(window.getDefaultView());
+    if (m_hud)
+        m_hud->draw(window);
+
+    
+   
+    
 
     window.display();
 
@@ -438,6 +508,8 @@ void GameManager::render() {
         sf::Time renderTime = frameTimer.getElapsedTime();
         std::cout << "Frame " << m_playingFrameCount << " render time: " << renderTime.asSeconds() << "s\n";
     }
+
+
 }
 
 void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
@@ -551,7 +623,7 @@ void GameManager::startGameFullscreen() {
     mapSprite.setTexture(*mapTexture);
     pedestrianManager = GameFactory::createPedestrianManager(blockedPolygons);
     policeManager = GameFactory::createPoliceManager(*this, blockedPolygons);
-
+    store = GameFactory::createStores(blockedPolygons);
 
     carManager = GameFactory::createCarManager(roads);
 

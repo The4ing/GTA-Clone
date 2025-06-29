@@ -3,7 +3,6 @@
 #include "HealthPresent.h"
 #include "Pistol.h"
 #include "SpeedBoost.h"
-#include "AmmoPresent.h"
 #include "CollisionUtils.h"
 #include "ResourceManager.h"
 #include "Rifle.h"
@@ -13,6 +12,8 @@
 #include "GameManager.h" 
 #include "Knife.h"
 #include "Grenade.h"
+#include "Store.h"
+
 
 std::unique_ptr<Player> GameFactory::createPlayer(GameManager& gameManager, const sf::Vector2f& pos) { 
     auto player = std::make_unique<Player>(gameManager); // Pass gameManager to constructor
@@ -88,7 +89,7 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
     while (result.size() < count && attempts < maxAttempts) {
         ++attempts;
 
-        int type = rand() % 8;
+        int type = rand() % 7;
         float x = static_cast<float>(rand() % MAP_WIDTH);
         float y = static_cast<float>(rand() % MAP_HEIGHT);
         sf::Vector2f pos(x, y);
@@ -97,7 +98,7 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
             continue;
 
       //  switch (type) {
-    switch (8) {
+    switch (type) {
         case 0:
                 result.push_back(std::make_unique<HealthPresent>(
                     ResourceManager::getInstance().getTexture("Health"), pos));
@@ -110,31 +111,28 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
                result.push_back(std::make_unique<SpeedBoost>(
                    ResourceManager::getInstance().getTexture("Speed"), pos));
             break;
+        
         case 3:
-                result.push_back(std::make_unique<AmmoPresent>(
-                    ResourceManager::getInstance().getTexture("Ammo"), pos));
-            break;
-        case 4:
             result.push_back(std::make_unique<Rifle>(
                 ResourceManager::getInstance().getTexture("Rifle"), pos));
             break;
-        case 5:
+        case 4:
             result.push_back(std::make_unique<Minigun>(
-                ResourceManager::getInstance().getTexture("Minigun"), sf::Vector2f(50.f, 50.f)));
+                ResourceManager::getInstance().getTexture("Minigun"), pos));
             break;
-        case 6:
+        case 5:
             result.push_back(std::make_unique<Bazooka>(
-                ResourceManager::getInstance().getTexture("Bazooka"), sf::Vector2f(50.f, 50.f)));
+                ResourceManager::getInstance().getTexture("Bazooka"), pos));
                 
             break;
-        case 7:
+        case 6:
             result.push_back(std::make_unique<Knife>(
-                ResourceManager::getInstance().getTexture("Knife"), sf::Vector2f(50.f, 50.f)));
+                ResourceManager::getInstance().getTexture("Knife"), pos));
 
             break;
-        case 8:
+        case 7:
             result.push_back(std::make_unique<Grenade>(
-                ResourceManager::getInstance().getTexture("Grenade"), sf::Vector2f(50.f, 50.f)));
+                ResourceManager::getInstance().getTexture("Grenade"), pos));
 
             break;
 
@@ -143,6 +141,37 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
 
     return result;
 }
+
+std::vector<std::unique_ptr<Store>> GameFactory::createStores(const std::vector<std::vector<sf::Vector2f>>& blockedPolygons)
+{
+    std::vector<std::unique_ptr<Store>> tempStores;
+
+    const int maxAttempts = 1000;
+    int attempts = 0;
+
+    while (attempts < maxAttempts) {
+        ++attempts;
+
+        float x = static_cast<float>(rand() % MAP_WIDTH);
+        float y = static_cast<float>(rand() % MAP_HEIGHT);
+        sf::Vector2f storePos(x, y);
+
+        if (!isBlocked(storePos, blockedPolygons)) {
+            tempStores.push_back(std::make_unique<Store>(sf::Vector2f(50.f, 50.f)));
+            break; // found a valid location
+        }
+    }
+
+    if (tempStores.empty()) {
+        std::cout << "Could not place a store after " << maxAttempts << " attempts.\n";
+    }
+
+    return tempStores;
+}
+
+
+
+
 
 
 bool GameFactory::isBlocked(const sf::Vector2f& pos, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {

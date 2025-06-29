@@ -8,3 +8,8 @@ Bazooka::Bazooka(const sf::Texture& texture, const sf::Vector2f& pos)
 std::string Bazooka::getType() const {
     return "Bazooka";
 }
+
+int Bazooka::getPrice() const
+{
+    return 0;
+}

@@ -45,7 +45,7 @@ void AnimationManager::setAnimation(const std::string& name, bool shouldLoop, bo
 
 void AnimationManager::update(float dt) {
     if (currentAnim.empty()) return;
-
+  
     animTimer += dt;
     if (animTimer >= animDelay) {
         animTimer -= animDelay;

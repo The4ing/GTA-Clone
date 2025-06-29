@@ -5,11 +5,7 @@
 #include <string>
 
 class Present : public GameObject {
-private:
-    sf::Sprite sprite;
-    sf::Vector2f position;
-    bool collected = false;
-    float respawnTimer = 0.f;
+
 
 public:
     Present(const sf::Texture& texture, const sf::Vector2f& pos);
@@ -29,6 +25,7 @@ public:
 // לוגיקה שקשורה ל־Present
     void collect();
     bool isCollected() const;
+    virtual int getPrice() const = 0;
 
     // פונקציות גישה ל־sprite
     sf::Sprite& getSprite();
@@ -38,4 +35,9 @@ public:
     // פונקציות וירטואליות שימומשו במחלקות יורשות
     virtual std::string getType() const = 0;
     virtual void applyEffect(class Player& player) = 0;
+private:
+    sf::Sprite sprite;
+    sf::Vector2f position;
+    bool collected = false;
+    float respawnTimer = 0.f;
 };

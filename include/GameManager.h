@@ -14,11 +14,14 @@
 #include <vector> // Added for std::vector
 #include "BulletPool.h"
 #include "PathfindingGrid.h" // Added for PathfindingGrid
+#include "Store.h"
+
 
 enum class GameState {
     Menu,
     Playing,
     Inventory,
+    Store,
     Exiting
 };
 
@@ -55,6 +58,7 @@ private:
     sf::Sprite mapSprite;
     sf::Texture* mapTexture = nullptr;
     //    std::unique_ptr<ChunkManager> chunkManager;
+    std::vector<std::unique_ptr<Store>> store;
     std::unique_ptr<Player>     player;
     std::unique_ptr<CarManager> carManager;
     std::unique_ptr<PoliceManager> policeManager;

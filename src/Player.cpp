@@ -13,8 +13,8 @@ Player::Player(GameManager& gameManager) // Modified constructor
     : m_gameManager(gameManager), // Store GameManager reference
     m_currentVehicle(nullptr), frameWidth(0), frameHeight(0), currentFrame(0),
     sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
-    m_money(0), m_health(MaxHealth), m_armor(100),
-    m_currentWeaponName("Fists"), m_currentWeaponAmmo(W_Fists), m_maxWeaponAmmo(0),
+    m_money(PlayerMoney), m_health(MaxHealth), m_armor(100),
+    m_currentWeaponName("Fists"), m_maxWeaponAmmo(0),
     m_wantedLevel(6)
 {
     sf::Texture& texture = ResourceManager::getInstance().getTexture("player");
@@ -37,13 +37,13 @@ Player::Player(GameManager& gameManager) // Modified constructor
     animationManager->initAnimations();
 
     WeaponsAmmo = {
-     {"Fists",   AmmoSetting{}},
-     {"Pistol",  AmmoSetting{}},
-     {"Rifle",   AmmoSetting{}},
-     {"Minigun", AmmoSetting{}},
-     {"Bazooka", AmmoSetting{}},
-     {"Knife",   AmmoSetting{}},
-     {"Grenade", AmmoSetting{}}
+    { "Fists",   AmmoSetting{0, 0} },        
+    { "Pistol",  AmmoSetting{12, 60} },      
+    { "Rifle",   AmmoSetting{30, 180} },     
+    { "Minigun", AmmoSetting{100, 1000} },   
+    { "Bazooka", AmmoSetting{1, 5} },        
+    { "Knife",   AmmoSetting{0, 0} },        
+    { "Grenade", AmmoSetting{3, 10} }        
     };
 }
 
@@ -325,7 +325,7 @@ void Player::collideWithPresent(Present& present) {
 
 Inventory& Player::getInventory()
 {
-    return inventory; // ← מחזיר הפניה!
+    return inventory; 
 }
 
 const Inventory& Player::getInventory() const
@@ -359,6 +359,43 @@ void Player::increaseSpeed() {
 void Player::AddAmmo() {
     
 }
+
+bool Player::tryBuyAmmo(const std::string& weaponName, int amountToAdd, int price) {
+    
+    auto it = WeaponsAmmo.find(weaponName);
+    if (it == WeaponsAmmo.end()) {
+        std::cout << "Weapon not found: " << weaponName << "\n";
+        return false;
+    }
+
+    AmmoSetting& ammo = it->second;
+
+    if (ammo.Ammo >= ammo.MaxAmmo) {
+        std::cout << "Ammo already full for: " << weaponName << "\n";
+        return false;
+    }
+
+    if (m_money < price) {
+        std::cout << "Not enough money for: " << weaponName << " ammo\n";
+        return false;
+    }
+
+    
+    int amountCanAdd = std::min(amountToAdd, ammo.MaxAmmo - ammo.Ammo);
+
+    ammo.Ammo += amountCanAdd;
+    m_money -= price;
+
+    std::cout << "Bought " << amountCanAdd << " ammo for " << weaponName << "\n";
+    return true;
+}
+
+void Player::decreaseMoney(int priceItem)
+{
+    m_money = std::max(0, m_money - priceItem);
+}
+
+
 
 void Player::AddWeapon(const std::string name) {
     inventory.addItem(name, ResourceManager::getInstance().getTexture(name));

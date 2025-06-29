@@ -36,7 +36,7 @@ public:
     void setHealth(int health);
     void setArmor(int armor);
     void setWantedLevel(int level);
-    void setCurrentWeapon(const std::string& name, CurrentWepapon Weapon, int maxAmmo);
+    void setCurrentWeapon(const std::string& name, int maxAmmo);
 
     void onCollision(GameObject& other);
     void collideWithPresent(Present& present);
@@ -48,6 +48,8 @@ public:
     void heal(int amount);
     void increaseSpeed();
     void AddAmmo();
+    bool tryBuyAmmo(const std::string& weaponName, int amountToAdd, int price);
+    void decreaseMoney(int priceItem);
     void AddWeapon(const std::string name);
 
     void enterVehicle(Vehicle* vehicle);
