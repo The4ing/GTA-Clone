@@ -98,83 +98,99 @@ void HUD::setupTextElement(sf::Text& text, unsigned int charSize, sf::Color colo
 
 
 void HUD::updateElementPositions(float viewWidth, float viewHeight) {
-    std::cout << "entered here\n";
+    std::cout << "\n[HUD::updateElementPositions] View Size: " << viewWidth << "x" << viewHeight << "\n";
+
     m_viewWidth = viewWidth;
     m_viewHeight = viewHeight;
 
-    const float rightMargin = m_padding;  // Padding from the right edge
-    float startX = viewWidth - rightMargin;  // Starting X position near right edge
-    float startY = m_padding;                 // Starting Y position near top edge
+    const float rightMargin = m_padding;
+    float startX = viewWidth - rightMargin;
+    float startY = m_padding;
 
-    // First, position the weapon icon at the top right, aligned to the right edge
+    // Weapon Icon
     {
-        // Position weapon icon so its right edge aligns with 'startX', Y at top padding
-        m_weaponIcon.setPosition(startX - m_weaponIcon.getGlobalBounds().width, 0);
-        // Move startY down by the icon height for the next element (weapon name)
+        sf::Vector2f pos(startX - m_weaponIcon.getGlobalBounds().width, 0);
+        m_weaponIcon.setPosition(pos);
+        std::cout << "Weapon Icon position: (" << pos.x << ", " << pos.y << ")\n";
         startY += m_weaponIcon.getGlobalBounds().height;
     }
 
-    // Position the weapon name text below the weapon icon
+    // Weapon Name
     {
         sf::FloatRect bounds = m_weaponNameText.getLocalBounds();
-        // Set origin to the right edge so the text aligns right
         m_weaponNameText.setOrigin(bounds.left + bounds.width, bounds.top);
-        // Position the weapon name near the right, slightly adjusted vertically
-        m_weaponNameText.setPosition(startX - 50, startY - 30);
-        // Move startY down by the weapon name text height + padding for next element
+        sf::Vector2f pos(startX - 50, startY - 30);
+        m_weaponNameText.setPosition(pos);
+        std::cout << "Weapon Name position: (" << pos.x << ", " << pos.y << ")\n";
         startY += m_weaponNameText.getCharacterSize() + 4.f;
     }
 
-    // Now position the rest of the HUD elements (money, health, armor, ammo, time, stars)
-    // to the left of the weapon icon and weapon name text
+    float leftStartX = startX - m_weaponIcon.getGlobalBounds().width - 20.f;
+    std::cout << "Left Start X for stats: " << leftStartX << "\n";
+    float currentY = m_padding;
 
-    // Calculate the starting X coordinate for these elements, offset left from weapon icon
-    float leftStartX = startX - m_weaponIcon.getGlobalBounds().width - 20.f; // 20 pixels gap
-
-    float currentY = m_padding; // Reset Y to start from top for these elements
-
-    // Money text (right aligned)
+    // Money
     {
         sf::FloatRect bounds = m_moneyText.getLocalBounds();
         m_moneyText.setOrigin(bounds.left + bounds.width, bounds.top);
-        m_moneyText.setPosition(leftStartX, currentY);
-        currentY += m_moneyText.getCharacterSize() + 8.f; // Add vertical spacing
+        sf::Vector2f pos(leftStartX, currentY);
+        m_moneyText.setPosition(pos);
+        std::cout << "Money position: (" << pos.x << ", " << pos.y << ")\n";
+        currentY += m_moneyText.getCharacterSize() + 8.f;
     }
 
-    // Health text (right aligned)
+    // Health
     {
         sf::FloatRect bounds = m_healthText.getLocalBounds();
         m_healthText.setOrigin(bounds.left + bounds.width, bounds.top);
-        m_healthText.setPosition(leftStartX, currentY);
-        currentY += m_healthText.getCharacterSize() + 4.f;
+        sf::Vector2f pos(leftStartX, currentY);
+        m_healthText.setPosition(pos);
+        std::cout << "Health Text position: (" << pos.x << ", " << pos.y << ")\n";
+
         m_heartSprite.setScale(0.2, 0.2);
-        m_heartSprite.setPosition(leftStartX-140, currentY - 75);
+        sf::Vector2f heartPos(leftStartX - 140, currentY - 5);
+        m_heartSprite.setPosition(heartPos);
+        std::cout << "Heart Icon position: (" << heartPos.x << ", " << heartPos.y << ")\n";
+
+        currentY += m_healthText.getCharacterSize() + 4.f;
     }
 
-    // Armor text (right aligned)
+    // Armor
     {
         sf::FloatRect bounds = m_armorText.getLocalBounds();
         m_armorText.setOrigin(bounds.left + bounds.width, bounds.top);
-        m_armorText.setPosition(leftStartX, currentY);
-        currentY += m_armorText.getCharacterSize() + 12.f;
+        sf::Vector2f pos(leftStartX, currentY);
+        m_armorText.setPosition(pos);
+        std::cout << "Armor Text position: (" << pos.x << ", " << pos.y << ")\n";
+
         m_armorSprite.setScale(0.1, 0.1);
-        m_armorSprite.setPosition(leftStartX - 140, currentY - 80);
+        sf::Vector2f armorPos(leftStartX - 140, currentY - 5);
+        m_armorSprite.setPosition(armorPos);
+        std::cout << "Armor Icon position: (" << armorPos.x << ", " << armorPos.y << ")\n";
+
+        currentY += m_armorText.getCharacterSize() + 12.f;
     }
 
-    // Ammo text (right aligned)
+    // Ammo
     {
         sf::FloatRect bounds = m_ammoText.getLocalBounds();
         m_ammoText.setOrigin(bounds.left + bounds.width, bounds.top);
-        m_ammoText.setPosition(leftStartX, currentY);
+        sf::Vector2f pos(leftStartX, currentY);
+        m_ammoText.setPosition(pos);
+        std::cout << "Ammo Text position: (" << pos.x << ", " << pos.y << ")\n";
         currentY += m_ammoText.getCharacterSize() + 4.f;
     }
 
-    // Time text (centered horizontally at the top)
+    // Time
     {
         sf::FloatRect bounds = m_timeText.getLocalBounds();
         m_timeText.setOrigin(bounds.left + bounds.width / 2.f, bounds.top);
-        m_timeText.setPosition(viewWidth / 2.f, m_padding);
+        sf::Vector2f pos(viewWidth / 2.f, m_padding);
+        m_timeText.setPosition(pos);
+        std::cout << "Time Text position (centered): (" << pos.x << ", " << pos.y << ")\n";
     }
+
+    std::cout << "----------------------------------------\n";
 }
 
 

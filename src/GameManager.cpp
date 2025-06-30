@@ -188,10 +188,14 @@ void GameManager::processEvents() {
         if (event.type == sf::Event::Resized) {
             float w = static_cast<float>(event.size.width);
             float h = static_cast<float>(event.size.height);
+
+            window.setView(sf::View(sf::FloatRect(0.f, 0.f, w, h))); // חובה לעדכן גם את ה-View!
+
             if (m_hud) {
-                m_hud->updateElementPositions(w, h);
+                m_hud->updateElementPositions(w, h);  // ← חשוב!
             }
         }
+
 
         if (event.type == sf::Event::KeyPressed) {
             if (m_isAwaitingFirstPlayerMove && currentState == GameState::Playing) {
@@ -760,6 +764,14 @@ void GameManager::setFullscreen(bool fullscreen) {
     float winH = static_cast<float>(window.getSize().y);
     gameView.setSize(winW, winH);
     gameView.zoom(0.25f);
+    // Update HUD view size and center
+    m_hudView.setSize(winW, winH);
+    m_hudView.setCenter(winW / 2.f, winH / 2.f);
+
+    // Update HUD element positions based on new window size
+    if (m_hud)
+        m_hud->updateElementPositions(winW, winH);
+
 
 
 
