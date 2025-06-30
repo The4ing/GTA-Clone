@@ -98,6 +98,7 @@ void HUD::setupTextElement(sf::Text& text, unsigned int charSize, sf::Color colo
 
 
 void HUD::updateElementPositions(float viewWidth, float viewHeight) {
+    std::cout << "entered here\n";
     m_viewWidth = viewWidth;
     m_viewHeight = viewHeight;
 

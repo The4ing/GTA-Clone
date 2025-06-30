@@ -78,4 +78,5 @@ private:
     sf::Sprite frozenBackgroundSprite;
 
     int m_playingFrameCount = 0; // Counter for initial playing frames diagnostics
+    bool m_isAwaitingFirstPlayerMove; // Added for the new feature
 };

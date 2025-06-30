@@ -53,6 +53,7 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
         // First, call the vehicle's own update method.
         // This handles player input if present, or basic AI movement (like Bezier curve execution if inTurn is true for AI).
         vehicle.update(dt, blockedPolygons);
+        std::cout << "check if entered here\n";
         // If a player is driving this vehicle, skip all AI decision-making and pathfinding logic.
         if (vehicle.hasDriver()) {
             continue;
@@ -87,6 +88,9 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
         int laneIndex = vehicle.getCurrentLaneIndex();
         sf::Vector2f endPoint = vehicle.getCurrentRoad()->getLaneEdge(laneIndex, false);
         float distanceToEnd = length(vehicle.getPosition(), endPoint);
+        std::cout << "podition:" << vehicle.getPosition().x <<" , " << vehicle.getPosition().y << "\n";
+        std::cout << "podition:" << endPoint.x << " , " << endPoint.y << "\n";
+        std::cout << "distanceToEnd" << distanceToEnd << "\n";
         if (distanceToEnd > 10.f)
             continue;
 
