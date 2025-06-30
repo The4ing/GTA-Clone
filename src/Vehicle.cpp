@@ -27,6 +27,7 @@ Vehicle::Vehicle() : m_driver(nullptr), parking(false) { // Initialize m_driver
 }
 
 void Vehicle::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+    std::cout << "car is moving\n";
     if (inTurn) {
         // U-turn / Bezier curve logic from first function
         bezierT += dt * 0.7f;

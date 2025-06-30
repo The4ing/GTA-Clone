@@ -27,7 +27,7 @@ float distanceSquared(const sf::Vector2f& p1, const sf::Vector2f& p2) {
 }
 
 GameManager::GameManager()
-    : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top-Down GTA Clone"), m_gameTime(sf::Time::Zero)
+    : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top-Down GTA Clone"), m_gameTime(sf::Time::Zero), m_isAwaitingFirstPlayerMove(false)
 {
     frozenBackgroundTexture.create(window.getSize().x, window.getSize().y);
     window.setFramerateLimit(60);
@@ -162,20 +162,20 @@ void GameManager::run() {
             for (auto& storePtr : store) {
                 if (storePtr->getPlayerClose())
                     storePtr->open(*player);
-                     storePtr->handleInput(*player,window);
+                storePtr->handleInput(*player, window);
             }
             window.draw(frozenBackgroundSprite); // הרקע הקפואAdd commentMore actions
 
-         
+
             // ואז ציור החנות
             for (auto& storePtr : store) {
                 storePtr->drawUI(window);
             }
 
             window.display();
-         
+
         }
-       
+
 
     }
 }
@@ -194,11 +194,27 @@ void GameManager::processEvents() {
         }
 
         if (event.type == sf::Event::KeyPressed) {
+            if (m_isAwaitingFirstPlayerMove && currentState == GameState::Playing) {
+                // Check for movement keys or any action key that should start the game
+                if (event.key.code == sf::Keyboard::W ||
+                    event.key.code == sf::Keyboard::A ||
+                    event.key.code == sf::Keyboard::S ||
+                    event.key.code == sf::Keyboard::D ||
+                    event.key.code == sf::Keyboard::Up ||
+                    event.key.code == sf::Keyboard::Down ||
+                    event.key.code == sf::Keyboard::Left ||
+                    event.key.code == sf::Keyboard::Right ||
+                    event.key.code == sf::Keyboard::Space) { // Assuming space might be jump or action
+                    m_isAwaitingFirstPlayerMove = false;
+                    std::cout << "First player move detected, game is now active." << std::endl; // For debugging
+                }
+            }
+
             if (event.key.code == sf::Keyboard::F11)
                 setFullscreen(!isFullscreen);
             if (currentState == GameState::Playing && (event.key.code == sf::Keyboard::I ||
                 event.key.code == sf::Keyboard::E)) {
-                // שמור את המצב הנוכחי של המשחק לתמונהAdd commentMore actions
+                // שמור את המצב הנוכחי של המשחק לתמונה
                 frozenBackgroundTexture.clear();
                 frozenBackgroundTexture.setView(gameView); // חשוב מאוד!
                 renderFrozenGame(frozenBackgroundTexture);
@@ -213,18 +229,18 @@ void GameManager::processEvents() {
                 if (event.key.code == sf::Keyboard::I) {
                     currentState = GameState::Inventory;
                 }
-                else if(event.key.code == sf::Keyboard::E){
+                else if (event.key.code == sf::Keyboard::E) {
                     for (auto& s : store) {
                         if (s->getPlayerClose()) {
-                           
+
                             currentState = GameState::Store;
-                            break;  
+                            break;
                         }
                     }
                 }
-                
-            } 
-            else if ((currentState == GameState::Inventory || currentState == GameState::Store) 
+
+            }
+            else if ((currentState == GameState::Inventory || currentState == GameState::Store)
                 && event.key.code == sf::Keyboard::Escape) {
                 for (auto& s : store) {
                     s->setIsOpen(false);
@@ -270,7 +286,7 @@ void GameManager::processEvents() {
                 }
             }
             if (currentState == GameState::Playing && event.key.code == sf::Keyboard::E) {
-                
+
             }
 
         }
@@ -318,20 +334,71 @@ void GameManager::update(float dt) {
     sf::Clock frameTimer;
     bool timeThisFrame = (currentState == GameState::Playing && m_playingFrameCount < 10);
 
-    // Update game time
-    m_gameTime += sf::seconds(dt * GAME_TIME_SCALE);
+    // Player update always happens to catch the first input
+    if (player) {
+        player->update(dt, blockedPolygons);
+    }
+    else {
+        return; // Early exit if player isn't initialized
+    }
 
-    if (!player) return; // Early exit if player isn't initialized
-    player->update(dt, blockedPolygons);
+    if (!m_isAwaitingFirstPlayerMove) {
+        // Update game time only if game has started
+        m_gameTime += sf::seconds(dt * GAME_TIME_SCALE);
 
-    
+        if (carManager)
+            carManager->update(dt, blockedPolygons);
 
+        if (policeManager)
+            policeManager->update(dt, player->getPosition(), blockedPolygons);
 
-    if (carManager)
-        carManager->update(dt, blockedPolygons);
+        if (pedestrianManager)
+            pedestrianManager->update(dt, blockedPolygons);
 
+        for (auto& present : presents) // Assuming presents might have timed behavior or animations
+            present->update(dt, blockedPolygons);
 
-    //  sf::Vector2f playerPos = player->getPosition();Add commentMore actions
+        // Update bullets from the pool
+        for (auto& bullet_ptr : bulletPool.getAllBullets()) {
+            if (bullet_ptr->isActive()) {
+                bullet_ptr->update(dt, blockedPolygons);
+
+                std::vector<Pedestrian> current_npcs;
+                if (pedestrianManager) {
+                    for (const auto& p_ptr : pedestrianManager->getPedestrians()) {
+                        if (p_ptr) current_npcs.push_back(*p_ptr);
+                    }
+                }
+                std::vector<Vehicle> current_cars;
+                if (carManager) {
+                    current_cars = carManager->getVehicles();
+                }
+
+                if (bullet_ptr->checkCollision(blockedPolygons, current_npcs, current_cars)) {
+                    // Collision handled by checkCollision
+                }
+            }
+        }
+        // Vehicle-to-Vehicle collision (Player-driven vs AI)
+        if (player && player->isInVehicle() && carManager) {
+            Vehicle* playerVehicle = player->getCurrentVehicle();
+            if (playerVehicle) {
+                sf::FloatRect playerVehicleBounds = playerVehicle->getSprite().getGlobalBounds();
+                for (auto& aiVehicle : carManager->getVehicles()) {
+                    if (&aiVehicle == playerVehicle || aiVehicle.hasDriver()) {
+                        continue;
+                    }
+                    sf::FloatRect aiVehicleBounds = aiVehicle.getSprite().getGlobalBounds();
+                    if (playerVehicleBounds.intersects(aiVehicleBounds)) {
+                        playerVehicle->stop();
+                        aiVehicle.stop();
+                    }
+                }
+            }
+        }
+    }
+    // This part handles view centering and should always run if player exists
+    //  sf::Vector2f playerPos = player->getPosition();
   //  sf::Vector2f newCenter = playerPos;
 
     sf::Vector2f focusPosition;
@@ -483,11 +550,11 @@ void GameManager::render() {
 
     for (auto& s : store) {
         s->drawUI(window);
-        
+
     }
-       
-    
-    
+
+
+
 
     for (auto& s : store) {
         if (s->getPlayerClose())
@@ -498,9 +565,9 @@ void GameManager::render() {
     if (m_hud)
         m_hud->draw(window);
 
-    
-   
-    
+
+
+
 
     window.display();
 
@@ -661,6 +728,7 @@ void GameManager::startGameFullscreen() {
     m_hud->updateElementPositions(window.getSize().x, window.getSize().y);
 
     currentState = GameState::Playing;
+    m_isAwaitingFirstPlayerMove = true; // Start in the 'awaiting input' state
 }
 
 void GameManager::setFullscreen(bool fullscreen) {
