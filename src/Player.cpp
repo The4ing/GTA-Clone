@@ -15,7 +15,7 @@ Player::Player(GameManager& gameManager) // Modified constructor
     sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
     m_money(PlayerMoney), m_health(MaxHealth), m_armor(100),
     m_currentWeaponName("Fists"), m_maxWeaponAmmo(0),
-    m_wantedLevel(6)
+    m_wantedLevel(3)
 {
     sf::Texture& texture = ResourceManager::getInstance().getTexture("player");
     sprite.setTexture(texture);
@@ -444,4 +444,50 @@ Vehicle* Player::getCurrentVehicle() const {
 
 bool Player::isInVehicle() const {
     return m_currentVehicle != nullptr;
+}
+
+void Player::setCurrentWeapon(const std::string& name, int maxAmmo) {
+    m_currentWeaponName = name;
+    m_maxWeaponAmmo = maxAmmo;
+
+    // עדכון כמות תחמושת קיימת אם הנשק כבר במפה שלך
+    auto it = WeaponsAmmo.find(name);
+    if (it != WeaponsAmmo.end()) {
+        it->second.MaxAmmo = maxAmmo;
+    }
+    else {
+        // אם הנשק לא קיים עדיין, הוסף אותו
+        WeaponsAmmo[name] = AmmoSetting{ 0, maxAmmo };
+    }
+
+    std::cout << "Switched weapon to: " << name << " with max ammo: " << maxAmmo << std::endl;
+}
+
+int Player::getMoney() const {
+    return m_money;
+}
+
+int Player::getHealth() const {
+    return m_health;
+}
+
+int Player::getArmor() const {
+    return m_armor;
+}
+
+std::string Player::getCurrentWeaponName() const {
+    return m_currentWeaponName;
+}
+
+int Player::getMaxAmmo() const {
+    return m_maxWeaponAmmo;
+}
+
+int Player::getWantedLevel() const {
+    return m_wantedLevel;
+}
+
+void Player::collideWithPlayer(Player& /*player*/) {
+    // שחקן לא אמור להתנגש בעצמו – לכן אולי לא נדרש טיפול.
+    // אפשר להשאיר ריק או להוסיף לוגיקת PVP בעתיד.
 }

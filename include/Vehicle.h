@@ -55,6 +55,12 @@ public:
     bool hasDriver() const;
 
     const sf::Sprite& getSprite() const; // Accessor for the sprite
+    sf::Sprite& getSprite();
+    bool isDestroyed() const;
+    void setDestroyed(bool value);
+
+protected:
+    bool destroyed = false;
 
 private:
     bool parking;
