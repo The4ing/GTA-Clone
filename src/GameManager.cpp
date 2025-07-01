@@ -273,25 +273,58 @@ void GameManager::processEvents() {
 
                         sf::Vector2f playerPos = player->getPosition();
 
-                        for (auto& vehicle : carManager->getVehicles()) {
-                            if (!vehicle.hasDriver()) {
-                                // אם זה רכב משטרה והשחקן מבוקש – אל תאפשר כניסה
-                                if (dynamic_cast<PoliceCar*>(&vehicle) && player->getWantedLevel() > 0) {
-                                    continue;
-                                }
+                        Vehicle* closestOverallVehicle = nullptr;
+                        float minOverallDistanceSq = std::numeric_limits<float>::max();
 
-                                float distSq = distanceSquared(playerPos, vehicle.getPosition());
-                                if (distSq < enterRadiusSq && distSq < minDistanceSq) {
-                                    minDistanceSq = distSq;
-                                    closestVehicle = &vehicle;
+                        // Check regular cars from CarManager
+                        if (carManager) {
+                            for (auto& car : carManager->getVehicles()) { // car is Vehicle&
+                                if (car.getDriver() == nullptr) {
+                                    float distSq = distanceSquared(playerPos, car.getPosition());
+                                    if (distSq < enterRadiusSq && distSq < minOverallDistanceSq) {
+                                        minOverallDistanceSq = distSq;
+                                        closestOverallVehicle = &car;
+                                    }
                                 }
                             }
                         }
 
+                        // Check police cars from PoliceManager
+                        if (policeManager) {
+                            for (const auto& policeCarUniquePtr : policeManager->getPoliceCars()) {
+                                PoliceCar* policeCarCand = policeCarUniquePtr.get();
+                                if (policeCarCand->getDriver() == nullptr) {
+                                    float distSq = distanceSquared(playerPos, policeCarCand->getPosition());
+                                    if (distSq < enterRadiusSq && distSq < minOverallDistanceSq) {
+                                        if (player->getWantedLevel() >= 3) {
+                                            // Player cannot enter a new police car if wanted level is 3+
+                                            continue;
+                                        }
+                                        minOverallDistanceSq = distSq;
+                                        closestOverallVehicle = policeCarCand;
+                                    }
+                                }
+                            }
+                        }
 
-                        if (closestVehicle) {
-                            player->enterVehicle(closestVehicle);
-                            closestVehicle->setDriver(player.get());
+                        if (closestOverallVehicle) {
+                            PoliceCar* policeCarScript = dynamic_cast<PoliceCar*>(closestOverallVehicle);
+
+                            if (policeCarScript) {
+                                // If it's a police car, and we've selected it,
+                                // it implies player's wanted level was < 3 (due to the check in the loop).
+                                if (player->getWantedLevel() < 3) {
+                                    if (!policeCarScript->m_playerCausedWantedIncrease) {
+                                        player->setWantedLevel(3);
+                                        policeCarScript->m_playerCausedWantedIncrease = true;
+                                    }
+                                    policeCarScript->setIsAmbient(false); // Make it non-ambient
+                                }
+                                // If player's wanted level was already >= 3, this police car wouldn't have been chosen.
+                            }
+
+                            player->enterVehicle(closestOverallVehicle);
+                            closestOverallVehicle->setDriver(player.get());
                         }
                     }
                 }
@@ -696,7 +729,7 @@ void GameManager::startGameFullscreen() {
     policeManager = GameFactory::createPoliceManager(*this, blockedPolygons);
     store = GameFactory::createStores(blockedPolygons);
 
-    carManager = GameFactory::createCarManager(roads);
+    carManager = GameFactory::createCarManager(roads, *policeManager);
 
     //    for (int i = 0; i < 20; ++i) {
     carManager->spawnSingleVehicleOnRoad();

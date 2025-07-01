@@ -487,6 +487,9 @@ int Player::getWantedLevel() const {
     return m_wantedLevel;
 }
 
+void Player::setWantedLevel(int level) {
+    m_wantedLevel = level;
+}
 void Player::collideWithPlayer(Player& /*player*/) {
     // שחקן לא אמור להתנגש בעצמו – לכן אולי לא נדרש טיפול.
     // אפשר להשאיר ריק או להוסיף לוגיקת PVP בעתיד.

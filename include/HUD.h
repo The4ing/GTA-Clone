@@ -11,7 +11,7 @@ struct PlayerData {
     int health = 100;
     int armor = 0;
     std::string weaponName = "Fists";
-    int maxAmmo = 0; // 0 ?? ????? = ??????? / ??? ???
+    int maxAmmo = 0;
 };
 
 class HUD {
@@ -26,10 +26,10 @@ public:
 private:
     void setupTextElement(sf::Text& text, unsigned int charSize, sf::Color color, sf::Vector2f position, bool rightAlign = false);
 
-    sf::Texture m_weaponIconsTexture;   // ???????? ?? ?? ??????? ?????? ?-sprite sheet
-    sf::Sprite m_weaponIcon;             // ??????? ????? ?? ??????? ??????
+    sf::Texture m_weaponIconsTexture;   
+    sf::Sprite m_weaponIcon;           
 
-    std::map<std::string, sf::IntRect> m_weaponIconRects;  // ????? ?? ??? ?-Rect ???? ?-sprite sheet
+    std::map<std::string, sf::IntRect> m_weaponIconRects;  
 
     sf::Font m_font;
     sf::Texture m_starTexture;
@@ -52,7 +52,7 @@ private:
     static const int MAX_STARS = 6;
     int m_currentWantedLevel;
 
-    // ????? ?????? GTA
+
     const sf::Color GTA_MONEY_GREEN = sf::Color(0, 150, 0);
     const sf::Color GTA_HEALTH_PINK = sf::Color(210, 45, 95);
     const sf::Color GTA_ARMOR_BLUE = sf::Color(50, 90, 200);
@@ -62,19 +62,18 @@ private:
     const sf::Color GTA_STAR_YELLOW = sf::Color(255, 180, 0);
     const sf::Color GTA_SHADOW_BLACK = sf::Color(0, 0, 0, 180);
 
-    // ?????
+
     const unsigned int MONEY_CHAR_SIZE = 68;
     const unsigned int DEFAULT_CHAR_SIZE = 66;
     const unsigned int AMMO_CHAR_SIZE = 72;
     const unsigned int WEAPON_CHAR_SIZE = 62;
     const unsigned int TIME_CHAR_SIZE = 88;
 
-    // ????? ??????
     const sf::Vector2f SHADOW_OFFSET = sf::Vector2f(2.f, 2.f);
     float m_padding = 20.f;
     float m_starIconSize = 20.f;
     float m_starSpacing = 4.f;
 
-    float m_viewWidth = 1920.f;  // ???? ????? ????
+    float m_viewWidth = 1920.f;  
     float m_viewHeight = 1080.f;
 };

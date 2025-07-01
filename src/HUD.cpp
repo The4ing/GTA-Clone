@@ -98,8 +98,6 @@ void HUD::setupTextElement(sf::Text& text, unsigned int charSize, sf::Color colo
 
 
 void HUD::updateElementPositions(float viewWidth, float viewHeight) {
-    std::cout << "\n[HUD::updateElementPositions] View Size: " << viewWidth << "x" << viewHeight << "\n";
-
     m_viewWidth = viewWidth;
     m_viewHeight = viewHeight;
 
@@ -111,7 +109,6 @@ void HUD::updateElementPositions(float viewWidth, float viewHeight) {
     {
         sf::Vector2f pos(startX - m_weaponIcon.getGlobalBounds().width, 0);
         m_weaponIcon.setPosition(pos);
-        std::cout << "Weapon Icon position: (" << pos.x << ", " << pos.y << ")\n";
         startY += m_weaponIcon.getGlobalBounds().height;
     }
 
@@ -121,12 +118,10 @@ void HUD::updateElementPositions(float viewWidth, float viewHeight) {
         m_weaponNameText.setOrigin(bounds.left + bounds.width, bounds.top);
         sf::Vector2f pos(startX - 50, startY - 30);
         m_weaponNameText.setPosition(pos);
-        std::cout << "Weapon Name position: (" << pos.x << ", " << pos.y << ")\n";
         startY += m_weaponNameText.getCharacterSize() + 4.f;
     }
 
     float leftStartX = startX - m_weaponIcon.getGlobalBounds().width - 20.f;
-    std::cout << "Left Start X for stats: " << leftStartX << "\n";
     float currentY = m_padding;
 
     // Money
@@ -135,7 +130,6 @@ void HUD::updateElementPositions(float viewWidth, float viewHeight) {
         m_moneyText.setOrigin(bounds.left + bounds.width, bounds.top);
         sf::Vector2f pos(leftStartX, currentY);
         m_moneyText.setPosition(pos);
-        std::cout << "Money position: (" << pos.x << ", " << pos.y << ")\n";
         currentY += m_moneyText.getCharacterSize() + 8.f;
     }
 
@@ -145,12 +139,10 @@ void HUD::updateElementPositions(float viewWidth, float viewHeight) {
         m_healthText.setOrigin(bounds.left + bounds.width, bounds.top);
         sf::Vector2f pos(leftStartX, currentY);
         m_healthText.setPosition(pos);
-        std::cout << "Health Text position: (" << pos.x << ", " << pos.y << ")\n";
 
         m_heartSprite.setScale(0.2, 0.2);
         sf::Vector2f heartPos(leftStartX - 140, currentY - 5);
         m_heartSprite.setPosition(heartPos);
-        std::cout << "Heart Icon position: (" << heartPos.x << ", " << heartPos.y << ")\n";
 
         currentY += m_healthText.getCharacterSize() + 4.f;
     }
@@ -161,12 +153,10 @@ void HUD::updateElementPositions(float viewWidth, float viewHeight) {
         m_armorText.setOrigin(bounds.left + bounds.width, bounds.top);
         sf::Vector2f pos(leftStartX, currentY);
         m_armorText.setPosition(pos);
-        std::cout << "Armor Text position: (" << pos.x << ", " << pos.y << ")\n";
 
         m_armorSprite.setScale(0.1, 0.1);
         sf::Vector2f armorPos(leftStartX - 140, currentY - 5);
         m_armorSprite.setPosition(armorPos);
-        std::cout << "Armor Icon position: (" << armorPos.x << ", " << armorPos.y << ")\n";
 
         currentY += m_armorText.getCharacterSize() + 12.f;
     }
@@ -177,7 +167,6 @@ void HUD::updateElementPositions(float viewWidth, float viewHeight) {
         m_ammoText.setOrigin(bounds.left + bounds.width, bounds.top);
         sf::Vector2f pos(leftStartX, currentY);
         m_ammoText.setPosition(pos);
-        std::cout << "Ammo Text position: (" << pos.x << ", " << pos.y << ")\n";
         currentY += m_ammoText.getCharacterSize() + 4.f;
     }
 
@@ -187,10 +176,8 @@ void HUD::updateElementPositions(float viewWidth, float viewHeight) {
         m_timeText.setOrigin(bounds.left + bounds.width / 2.f, bounds.top);
         sf::Vector2f pos(viewWidth / 2.f, m_padding);
         m_timeText.setPosition(pos);
-        std::cout << "Time Text position (centered): (" << pos.x << ", " << pos.y << ")\n";
     }
 
-    std::cout << "----------------------------------------\n";
 }
 
 

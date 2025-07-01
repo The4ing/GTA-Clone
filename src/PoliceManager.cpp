@@ -41,9 +41,29 @@ void PoliceManager::spawnPolice(const sf::Vector2f& position, PoliceWeaponType w
 void PoliceManager::spawnPoliceCar(const sf::Vector2f& position) {
     m_policeCars.push_back(std::make_unique<PoliceCar>(m_gameManager, position));
     if (!m_policeCars.empty()) {
-        // PoliceCar constructor now handles setting position
-        // std::cout << "Spawned Police Car at: (" << position.x << ", " << position.y << ")\n";
+        m_policeCars.back()->setIsAmbient(false); // Ensure cars spawned this way are aggressive
+        // std::cout << "Spawned AGGRESSIVE Police Car at: (" << position.x << ", " << position.y << ")\n";
     }
+}
+
+void PoliceManager::spawnAmbientPoliceCarOnRoadSegment(const RoadSegment* road, int laneIndex, const std::string& actualDir, const sf::Vector2f& spawnPosition) {
+    auto newPoliceCar = std::make_unique<PoliceCar>(m_gameManager, spawnPosition);
+
+    // It seems PoliceCar constructor handles its own texture ("PoliceCar") and scale (0.09f).
+    // If specific textures like "policeCar1" are needed, or different scales, set them here.
+    // newPoliceCar->setTexture(ResourceManager::getInstance().getTexture("policeCar1")); // Example if needed
+    // newPoliceCar->setScale(0.05f, 0.05f); // Example if different scale needed
+
+    newPoliceCar->setPosition(spawnPosition); // Redundant if constructor does it, but safe.
+    newPoliceCar->setDirectionVec(actualDir);
+    newPoliceCar->setCurrentRoad(road);
+    newPoliceCar->setCurrentLaneIndex(laneIndex);
+
+    newPoliceCar->setIsAmbient(true);
+    newPoliceCar->m_playerCausedWantedIncrease = false; // Explicitly set, though it's the default
+
+    m_policeCars.push_back(std::move(newPoliceCar));
+    // std::cout << "Spawned AMBIENT Police Car at: (" << spawnPosition.x << ", " << spawnPosition.y << ")\n";
 }
 
 void PoliceManager::update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
@@ -281,6 +301,9 @@ void PoliceManager::damageClosestOfficer(const sf::Vector2f& pos, int amount) {
     }
 }
 
+const std::vector<std::unique_ptr<PoliceCar>>& PoliceManager::getPoliceCars() const {
+    return m_policeCars;
+}
 
 // This old spawning function might be deprecated or used for ambient 0-star police.
 // For now, the wanted level system in managePolicePopulation is the primary spawner.

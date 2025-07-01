@@ -21,9 +21,8 @@ std::unique_ptr<Player> GameFactory::createPlayer(GameManager& gameManager, cons
     return player;
 }
 
-std::unique_ptr<CarManager> GameFactory::createCarManager(const std::vector<RoadSegment>& roads) {
-
-    auto carManager = std::make_unique<CarManager>();
+std::unique_ptr<CarManager> GameFactory::createCarManager(const std::vector<RoadSegment>& roads, PoliceManager& policeMgr) {
+    auto carManager = std::make_unique<CarManager>(policeMgr); // Pass PoliceManager reference
     carManager->setRoads(roads);
     carManager->buildRoadTree();
     return carManager;
