@@ -1,5 +1,4 @@
-﻿#pragma once
-
+﻿﻿#pragma once
 #include "Character.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Rect.hpp> 
@@ -11,6 +10,7 @@ enum class PoliceState {
     Idle,
     Chasing,
     Shooting,
+    MeleeAttacking, // Added for baton attacks
     BackingUp
 };
 
