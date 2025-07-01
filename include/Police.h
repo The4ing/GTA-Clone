@@ -1,4 +1,4 @@
-﻿﻿#pragma once
+﻿#pragma once
 #include "Character.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Rect.hpp> 
@@ -14,21 +14,31 @@ enum class PoliceState {
     BackingUp
 };
 
+enum class PoliceWeaponType {
+    BATON,
+    PISTOL
+    // Future: RIFLE, SHOTGUN, etc.
+};
+
+
+
 class GameManager;
 
 class Police : public Character {
 public:
-    Police(GameManager& gameManager);
+    // Modified constructor to accept weapon type
+    Police(GameManager& gameManager, PoliceWeaponType weaponType);
 
-    void update(float dt, const sf::Vector2f& playerPosition, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons); 
-    bool moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons); 
+    // Update now takes Player reference for melee attacks
+    void update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
+    bool moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void draw(sf::RenderTarget& window);
 
     void takeDamage(int amount);
     bool isDead() const;
 
     float getCollisionRadius() const;
-    void setTargetPosition(const sf::Vector2f& pos);
+    void setTargetPosition(const sf::Vector2f& pos); // Keep this to update internal targetPos
 
     sf::Vector2f getPosition() const override {
         return sprite.getPosition();
@@ -37,57 +47,75 @@ public:
         sprite.setPosition(pos);
     }
 
+    PoliceWeaponType getWeaponType() const { return m_weaponType; } // Getter for weapon type
+
     void onCollision(GameObject& other) {};
     void collideWithPresent(Present& present) {};
     void collideWithPlayer(Player& /*player*/) {}
-    static constexpr float PATHFINDING_GRID_SIZE = 32.0f;
+ 
 
 private:
     void setRandomWanderDestination(const sf::FloatRect& mapBounds);
     bool checkCollision(const sf::Vector2f& currentPos, const sf::Vector2f& nextPos, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons, float radius);
-    bool pointInPolygonWithRadius(const sf::Vector2f& center, float radius, const std::vector<sf::Vector2f>& poly);
-    float debugPrintTimer = 0.f;
+    // bool pointInPolygonWithRadius(const sf::Vector2f& center, float radius, const std::vector<sf::Vector2f>& poly); // This seems unused, consider removing if confirmed
+    float debugPrintTimer = 0.f; // Keep if used for debugging
     float pathFailCooldown = 0.f;
 
-    sf::Vector2f targetPos;
-    
-    int framesPerRow = 6;
+    sf::Vector2f targetPos; // Player's position, updated by setTargetPosition
+
+    // int framesPerRow = 6; // Likely managed by AnimationManager now
     sf::Sprite sprite;
-    float speed = 40.f;
-    float detectionRadius = 100.f;
+    float speed = 40.f; // Base speed, can be adjusted
+    float detectionRadius = 150.f; // General detection radius
     int health = 100;
     PoliceState state = PoliceState::Idle;
-    float backUpDistance = 30.f; 
-    float backedUpSoFar = 0.f;   
-    sf::Vector2f backUpDirection;  
-    float wanderTimer = 0.f;
+    PoliceWeaponType m_weaponType;
+
+    // Movement / State specific
+    float backUpDistance = 30.f;
+    float backedUpSoFar = 0.f;
+    sf::Vector2f backUpDirection;
     sf::Vector2f wanderDestination;
-    float pauseTimer = 0.f;      // כמה זמן נשאר לעצור עכשיוAdd commentMore actions
-    float nextPauseTime = 0.f;   // מתי לעצור בפעם הבאה (בין 30 ל-60 שניות)
+    float pauseTimer = 0.f;
+    float nextPauseTime = 0.f;
     bool isPaused = false;
 
-    int currentFrame = 0;
-    float animationTimer = 0.f;
-    float animationSpeed;
-    Pathfinder pathfinder; // Added Pathfinder member
+    // Animation related (Some might be handled by AnimationManager)
+    // int currentFrame = 0; // Likely managed by AnimationManager
+    // float animationTimer = 0.f; // Likely managed by AnimationManager
+    // float animationSpeed; // Likely managed by AnimationManager
+
+    Pathfinder pathfinder;
     std::vector<sf::Vector2f> currentPath;
     size_t currentPathIndex = 0;
     float repathTimer = 0.f;
-    sf::Vector2f pathTargetPosition;
+    sf::Vector2f pathTargetPosition; // Position the current path is leading to
 
-    GameManager& m_gameManager; // Reference to GameManager for shootingAdd commentMore actions
+    GameManager& m_gameManager;
+
+    // Weapon specific parameters
+    // Pistol
     float fireCooldownTimer = 0.f;
-    const float fireRate = 1.5f; // Seconds between shots
-    const float shootingRange = 200.f; // Max distance to shoot
-    const float lineOfSightRange = 250.f; // Max distance to detect/see player for shooting state
+    const float PISTOL_FIRE_RATE = 1.5f; // Seconds between shots
+    const float PISTOL_SHOOTING_RANGE = 200.f; // Max distance to shoot
+    const float PISTOL_LINE_OF_SIGHT_RANGE = 250.f; // Max distance to detect/see player for shooting state
 
-    std::unique_ptr<AnimationManager> animationManager; 
-    int sheetCols = 10;
+    // Baton
+    float meleeCooldownTimer = 0.f;
+    const float BATON_MELEE_RATE = 1.0f; // Seconds between attacks
+    const float BATON_MELEE_RANGE = 40.f; // Max distance for baton attack (adjust based on sprite size)
+    const int BATON_DAMAGE = 10;
+
+    std::unique_ptr<AnimationManager> animationManager;
+    int sheetCols = 10; // Sprite sheet dimensions, ensure these are correct
     int sheetRows = 10;
     int frameWidth;
     int frameHeight;
 
     void initAnimations();
-    void setSpecificFrame(int row, int col);
-    void handleShooting(const sf::Vector2f& playerPosition, float dt);
+    void setSpecificFrame(int row, int col); // Could be part of AnimationManager or for specific non-animated states
+    void handleShooting(Player& player, float dt); // Pass player for LOS checks etc.
+    void handleMeleeAttack(Player& player, float dt); // New handler for melee
 };
+
+

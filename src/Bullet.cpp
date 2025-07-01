@@ -1,154 +1,69 @@
 #include "Bullet.h"
 #include "ResourceManager.h"
-#include "CollisionUtils.h"
-#include "iostream"
+#include <cmath>
+#include "CollisionUtils.h" // ??? ??? ????
 
-Bullet::Bullet() : active(false), speed(0.f) {
+Bullet::Bullet() {
+    m_sprite.setOrigin(8.f, 8.f); // Adjust as needed to center the bullet sprite
 }
 
-void Bullet::init(const sf::Vector2f& startPos, const sf::Vector2f& dir, float initialSpeed) {
-    position = startPos;
-    direction = dir;
-    speed = initialSpeed;
-
-    if (!sprite.getTexture()) {
-        try {
-            sf::Texture& tex = ResourceManager::getInstance().getTexture("bullet");
-            sprite.setTexture(tex);
-        }
-        catch (const std::exception& e) {
-            std::cerr << "[Bullet] Failed to load texture 'bullet': " << e.what() << std::endl;
-            active = false; 
-            return;
-        }
-
-        sf::FloatRect bounds = sprite.getLocalBounds();
-        sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
-        sprite.setScale(0.1f, 0.1f);
-    }
-
-    sprite.setPosition(position);
-
-    float angleRad = std::atan2(direction.y, direction.x);
-    float angleDeg = angleRad * 180.f / 3.14159f;
-    sprite.setRotation(angleDeg);
-
-    active = true;
+void Bullet::init(const sf::Vector2f& startPos, const sf::Vector2f& direction, BulletType type) {
+    m_position = startPos;
+    m_direction = direction;
+    m_active = true;
+    setType(type);
+    m_sprite.setPosition(m_position);
 }
-
-
 
 void Bullet::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    if (!active) return;
-    move(direction, dt);
-    sprite.setPosition(position);
-}
+    if (!m_active) return;
 
-void Bullet::draw(sf::RenderTarget& target) {
-    if (!active) return;
-    target.draw(sprite);
-}
+    sf::Vector2f nextPos = m_position + m_direction * m_speed * dt;
 
-sf::Vector2f Bullet::getPosition() const {
-    return position;
-}
-
-void Bullet::setPosition(const sf::Vector2f& pos) {
-    position = pos;
-    sprite.setPosition(position);
-}
-
-void Bullet::move(const sf::Vector2f& dir, float dt) {
-    position += dir * speed * dt;
-}
-
-float Bullet::getSpeed() const {
-    return speed;
-}
-
-bool Bullet::checkCollision(const std::vector<std::vector<sf::Vector2f>>& blockedPolygons,
-    const std::vector<Pedestrian>& npcs,
-    const std::vector<Vehicle>& cars) {
-    if (!active) return false;
-
+    // ???? ??????? ?? ???????
     for (const auto& polygon : blockedPolygons) {
-        if (CollisionUtils::pointInPolygon(position, polygon)) {
-            active = false;
-            return true;
+        if (CollisionUtils::pointInPolygon(nextPos, polygon)) {
+            m_active = false;
+            return;
         }
     }
 
-    for (const auto& npc : npcs) {
-        if (sprite.getGlobalBounds().intersects(npc.getCollisionBounds())) {
-            active = false;
-            // npc.takeDamage(...) // ?????? ?? ????? ???
-            return true;
-        }
+    m_position = nextPos;
+    m_sprite.setPosition(m_position);
+}
+
+
+void Bullet::draw(sf::RenderTarget& target) const {
+    if (m_active)
+        target.draw(m_sprite);
+}
+
+void Bullet::setType(BulletType type) {
+    m_type = type;
+
+    switch (type) {
+    case BulletType::Default:
+        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
+        m_damage = 10.f;
+        m_explosionRadius = 0.f;
+        break;
+
+    case BulletType::Pistol:
+        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_pistol"));
+        m_damage = 10.f;
+        m_explosionRadius = 0.f;
+        break;
+
+    case BulletType::Rifle:
+        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_rifle"));
+        m_damage = 10.f;
+        m_explosionRadius = 0.f;
+        break;
+
+    case BulletType::TankShell:
+        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_tank"));
+        m_damage = 100.f;
+        m_explosionRadius = 100.f;
+        break;
     }
-
-    for (const auto& car : cars) {
-        if (sprite.getGlobalBounds().intersects(car.getSprite().getGlobalBounds())) {
-            active = false;
-            // car.takeDamage(...) // ?????? ?? ????? ???
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void Bullet::onCollision(GameObject& other) {
-    // ????? ??dynamic_cast ?????? ???????? ??????? ??? ????? ????????
-    if (Player* player = dynamic_cast<Player*>(&other)) {
-        collideWithPlayer(*player);
-    }
-    else if (Present* present = dynamic_cast<Present*>(&other)) {
-        collideWithPresent(*present);
-    }
-    // ???? ?????? ??????? ?????? ????? ?????
-}
-
-void Bullet::collideWithPlayer(Player& player) {
-    // ?? ????? ?????? ???? ????? (??????)
-    // player.takeDamage(10);
-    setActive(false);
-}
-
-void Bullet::collideWithPresent(Present& present) {
-    // ?? ????? ?????? ???? ????? (?? ???? ???????)
-    setActive(false);
-}
-
-void Player::setCurrentWeapon(const std::string& name, int maxAmmo) {
-    m_currentWeaponName = name;
-  //  m_currentWeaponAmmo = Weapon;
-    m_maxWeaponAmmo = maxAmmo;
-}
-
-void Player::collideWithPlayer(Player& other) {
-    // ????? ??? ?? ?????? ??????? ??? ??????
-}
-
-int Player::getWantedLevel() const {
-    return m_wantedLevel;
-}
-
-int Player::getMoney() const {
-    return m_money;
-}
-
-int Player::getHealth() const {
-    return m_health;
-}
-
-int Player::getArmor() const {
-    return m_armor;
-}
-
-std::string Player::getCurrentWeaponName() const {
-    return m_currentWeaponName;
-}
-
-int Player::getMaxAmmo() const {
-    return m_maxWeaponAmmo;
 }

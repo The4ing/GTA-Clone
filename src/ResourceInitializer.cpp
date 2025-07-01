@@ -43,7 +43,7 @@ void ResourceInitializer::loadGameResources() {
     // Object Textures
     rm.loadTexture("static_building", "resources/building.png");
     rm.loadTexture("map", "resources/map.png");
-    rm.loadTexture("bullet", "resources/bullet.png");
+ //   rm.loadTexture("bullet", "resources/bullet.png");
     rm.loadTexture("car", "resources/car.png");
 
     // Sound Buffers
@@ -59,4 +59,13 @@ void ResourceInitializer::loadGameResources() {
     //inventory 
     rm.loadTexture("StoreAmmo", "resources/StoreAmmo.png");
     rm.loadTexture("Store", "resources/Store.png");
+
+    //bullets:
+    rm.loadTexture("bullet_default", "resources/bullet.png");
+    rm.loadTexture("bullet_rifle", "resources/bullet.png");
+    rm.loadTexture("bullet_tank", "resources/bullet.png");
+    rm.loadTexture("PoliceCar", "resources/policeCar.png");
+    rm.loadTexture("policeHelicopter", "resources/policeHelicopter.png");
+    rm.loadTexture("policeTank", "resources/policeTank.png");
+    rm.loadTexture("tankBody", "resources/tankBody.png");
 }

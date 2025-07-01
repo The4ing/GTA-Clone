@@ -41,7 +41,7 @@ std::unique_ptr<PoliceManager> GameFactory::createPoliceManager(GameManager& gam
         sf::Vector2f pos(x, y);
 
         if (!isBlocked(pos, blockedPolygons)) {
-            policeManager->spawnPolice(pos);
+            policeManager->spawnPolice(pos, PoliceWeaponType::BATON);
             ++i; // רק אם הצלחנו למקם
         }
     }

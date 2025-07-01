@@ -16,6 +16,7 @@
 #include "player.h"
 #include "InventoryUI.h"
 #include "Constants.h"       // Required for MAP_BOUNDS
+#include "PathfindingGrid.h"
 
 using json = nlohmann::json;
 
@@ -273,7 +274,12 @@ void GameManager::processEvents() {
                         sf::Vector2f playerPos = player->getPosition();
 
                         for (auto& vehicle : carManager->getVehicles()) {
-                            if (!vehicle.hasDriver()) { // Check if vehicle is empty
+                            if (!vehicle.hasDriver()) {
+                                // אם זה רכב משטרה והשחקן מבוקש – אל תאפשר כניסה
+                                if (dynamic_cast<PoliceCar*>(&vehicle) && player->getWantedLevel() > 0) {
+                                    continue;
+                                }
+
                                 float distSq = distanceSquared(playerPos, vehicle.getPosition());
                                 if (distSq < enterRadiusSq && distSq < minDistanceSq) {
                                     minDistanceSq = distSq;
@@ -281,6 +287,7 @@ void GameManager::processEvents() {
                                 }
                             }
                         }
+
 
                         if (closestVehicle) {
                             player->enterVehicle(closestVehicle);
@@ -354,7 +361,7 @@ void GameManager::update(float dt) {
             carManager->update(dt, blockedPolygons);
 
         if (policeManager)
-            policeManager->update(dt, player->getPosition(), blockedPolygons);
+            policeManager->update(dt, *player, blockedPolygons);
 
         if (pedestrianManager)
             pedestrianManager->update(dt, blockedPolygons);
@@ -376,10 +383,6 @@ void GameManager::update(float dt) {
                 std::vector<Vehicle> current_cars;
                 if (carManager) {
                     current_cars = carManager->getVehicles();
-                }
-
-                if (bullet_ptr->checkCollision(blockedPolygons, current_npcs, current_cars)) {
-                    // Collision handled by checkCollision
                 }
             }
         }
@@ -428,7 +431,8 @@ void GameManager::update(float dt) {
     gameView.setCenter(newCenter);
 
     if (policeManager)
-        policeManager->update(dt, player->getPosition(), blockedPolygons);
+        policeManager->update(dt, *player, blockedPolygons);
+
 
     if (pedestrianManager)
         pedestrianManager->update(dt, blockedPolygons);
@@ -441,6 +445,7 @@ void GameManager::update(float dt) {
         if (bullet_ptr->isActive()) {
             bullet_ptr->update(dt, blockedPolygons);
 
+
             std::vector<Pedestrian> current_npcs;
             if (pedestrianManager) {
                 for (const auto& p_ptr : pedestrianManager->getPedestrians()) {
@@ -452,12 +457,7 @@ void GameManager::update(float dt) {
                 current_cars = carManager->getVehicles();
             }
 
-            if (bullet_ptr->checkCollision(blockedPolygons, current_npcs, current_cars)) {
-                // checkCollision now sets active to false. BulletPool::returnBullet is not strictly needed here
-                // as the bullet is already marked inactive. The pool reuses inactive bullets.
-                // However, if returnBullet had other logic (e.g. tracking), it would be called.
-                // For now, checkCollision handles making it inactive.
-            }
+
         }
     }
 
@@ -686,7 +686,7 @@ void GameManager::startGameFullscreen() {
     buildBlockedPolyTree();
 
     std::cout << "Initializing PathfindingGrid..." << std::endl;
-    pathfindingGrid = std::make_unique<PathfindingGrid>(MAP_BOUNDS, Police::PATHFINDING_GRID_SIZE);
+    pathfindingGrid = std::make_unique<PathfindingGrid>(MAP_BOUNDS, PATHFINDING_GRID_SIZE);
     pathfindingGrid->preprocess(blockedPolygons);
     std::cout << "PathfindingGrid preprocessing completed." << std::endl;
 
@@ -777,18 +777,13 @@ void GameManager::setFullscreen(bool fullscreen) {
 
 }
 
-
-void GameManager::addBullet(const sf::Vector2f& startPos, const sf::Vector2f& direction) {
+void GameManager::addBullet(const sf::Vector2f& startPos, const sf::Vector2f& direction, BulletType type) {
     Bullet* bullet = bulletPool.getBullet();
     if (bullet) {
-        bullet->init(startPos, direction); // Call the new init method
+        bullet->init(startPos, direction, type);
     }
-    else {
-        // Optional: Log that the bullet pool is exhausted
-        // std::cerr << "Bullet pool exhausted!" << std::endl;
-    }
-    // If bullet is nullptr, no bullet is fired. This is safer than crashing.
 }
+
 
 PathfindingGrid* GameManager::getPathfindingGrid() const {
     return pathfindingGrid.get();

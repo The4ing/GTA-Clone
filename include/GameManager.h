@@ -30,7 +30,9 @@ class GameManager {
 public:
     GameManager();
     // void addBullet(std::unique_ptr<Bullet> bullet); // Old methodAdd commentMore actions
-    void addBullet(const sf::Vector2f& startPos, const sf::Vector2f& direction); // New method for pool
+  //  void addBullet(const sf::Vector2f& startPos, const sf::Vector2f& direction); // New method for pool
+    void addBullet(const sf::Vector2f& startPos, const sf::Vector2f& direction, BulletType type = BulletType::Default);
+
     void run();
     PathfindingGrid* getPathfindingGrid() const;
 
