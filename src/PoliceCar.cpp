@@ -13,7 +13,10 @@ PoliceCar::PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition
     m_pathfinder(*gameManager.getPathfindingGrid()), // Initialize Pathfinder
     m_currentPathIndex(0),
     m_repathTimer(0.f),
-    m_currentTargetPosition(-1.f, -1.f) {
+    m_currentTargetPosition(-1.f, -1.f),
+    m_isAmbient(true), // Explicitly initialize, though defaults in .h
+    m_playerCausedWantedIncrease(false) // Explicitly initialize
+{
 
     // Use Vehicle's setTexture or manage sprite locally if Vehicle doesn't have one.
     // Assuming Vehicle class has a sprite or a way to set texture.
@@ -37,24 +40,46 @@ PoliceCar::PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition
     // this->speed = m_speed; // Example if Vehicle has a public 'speed' member
 }
 
+void PoliceCar::setIsAmbient(bool isAmbient) {
+    m_isAmbient = isAmbient;
+}
+
+bool PoliceCar::isAmbient() const {
+    return m_isAmbient;
+}
+
 void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    Vehicle::update(dt, blockedPolygons); // Call base class update if it has any relevant logic
+    // Always call Vehicle::update for basic movement processing, collision response from Vehicle side etc.
+    Vehicle::update(dt, blockedPolygons);
 
-    updateChaseBehavior(dt, player, blockedPolygons);
-
-    // Basic collision with player for "run over" - can be expanded
-    if (attemptRunOverPlayer(player)) {
-        player.takeDamage(25); // Example damage
-        // Potentially add some knockback or effect
+    if (m_isAmbient && player.getWantedLevel() >= 3) {
+        m_isAmbient = false; // Transition to non-ambient (aggressive)
+        // No need to reset m_playerCausedWantedIncrease here, that's for a different mechanic
     }
 
-    if (m_bumpCooldown > 0.f)
+    if (m_isAmbient) {
+        // Ambient behavior:
+        // For now, Vehicle::update() handles its general movement if it's on a path (e.g., Bezier curve).
+        // If not on a path, it might just continue straight or stop, depending on Vehicle's AI.
+        // No specific chase behavior.
+        // We might need to add more sophisticated ambient driving logic here later if Vehicle::update
+        // isn't sufficient for believable ambient police car driving.
+    }
+    else {
+        // Non-ambient (aggressive) behavior:
+        updateChaseBehavior(dt, player, blockedPolygons);
+
+        // Basic collision with player for "run over" - can be expanded
+        if (m_bumpCooldown <= 0.f && attemptRunOverPlayer(player)) {
+            player.takeDamage(25); // Example damage
+            m_bumpCooldown = 3.f; // Cooldown for bumping/damaging player
+            // Potentially add some knockback or effect
+        }
+    }
+
+    if (m_bumpCooldown > 0.f) {
         m_bumpCooldown -= dt;
-
-    if (m_bumpCooldown <= 0.f && attemptRunOverPlayer(player)) {
-        m_bumpCooldown = 3.f; // ????? ??? ??? ??????
     }
-
 }
 
 void PoliceCar::updateChaseBehavior(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {

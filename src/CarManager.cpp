@@ -7,13 +7,17 @@
 #include <iostream>
 #include <algorithm> // std::shuffle
 #include <random>    // std::default_random_engine
-
+#include "PoliceManager.h" 
 using json = nlohmann::json;
 
-CarManager::CarManager() : vehicleTree(sf::FloatRect(0.f, 0.f, 4640.f, 4672.f)) {
+CarManager::CarManager(PoliceManager& policeMgr)
+    : vehicleTree(sf::FloatRect(0.f, 0.f, 4640.f, 4672.f)),
+    m_policeManager(policeMgr) {
     if (!debugFont.loadFromFile("resources/Miskan.ttf")) {
         std::cerr << "Failed to load debug font for road debug text\n";
     }
+    // Seed for random number generation if not already done elsewhere (e.g. main or GameManager)
+    // std::srand(static_cast<unsigned int>(std::time(nullptr))); // Example
 
 }
 
@@ -53,7 +57,6 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
         // First, call the vehicle's own update method.
         // This handles player input if present, or basic AI movement (like Bezier curve execution if inTurn is true for AI).
         vehicle.update(dt, blockedPolygons);
-        std::cout << "check if entered here\n";
         // If a player is driving this vehicle, skip all AI decision-making and pathfinding logic.
         if (vehicle.hasDriver()) {
             continue;
@@ -88,9 +91,6 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
         int laneIndex = vehicle.getCurrentLaneIndex();
         sf::Vector2f endPoint = vehicle.getCurrentRoad()->getLaneEdge(laneIndex, false);
         float distanceToEnd = length(vehicle.getPosition(), endPoint);
-        std::cout << "podition:" << vehicle.getPosition().x <<" , " << vehicle.getPosition().y << "\n";
-        std::cout << "podition:" << endPoint.x << " , " << endPoint.y << "\n";
-        std::cout << "distanceToEnd" << distanceToEnd << "\n";
         if (distanceToEnd > 10.f)
             continue;
 
@@ -308,13 +308,33 @@ void CarManager::spawnSingleVehicleOnRoad() {
     car.setCurrentRoad(&road);
     car.setCurrentLaneIndex(laneIndex);
 
-    addVehicle(car);
-    vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), &vehicles.back());
+    //addVehicle(car);
+    //vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), &vehicles.back());
 
 
     //std::cout << "Spawned car at (" << laneCenter.x << ", " << laneCenter.y
     //    << ") on lane " << laneIndex << " direction: " << actualDir
     //    << " (road#" << roadIdx << ")\n";
+    int spawnChoice = rand() % 100; // Random number between 0 and 99Add commentMore actions
+    const int POLICE_CAR_SPAWN_CHANCE = 15; // 15% chance
+
+    if (spawnChoice < POLICE_CAR_SPAWN_CHANCE) {
+        // Spawn an ambient police car via PoliceManager
+        // The method signature for spawnAmbientPoliceCarOnRoadSegment is defined in plan step 5
+        // as (const RoadSegment* road, int laneIndex, const std::string& actualDir, const sf::Vector2f& spawnPosition)
+        m_policeManager.spawnAmbientPoliceCarOnRoadSegment(&road, laneIndex, actualDir, laneCenter);
+        // std::cout << "Attempted to spawn ambient POLICE car at (" << laneCenter.x << ", " << laneCenter.y
+        //           << ") on lane " << laneIndex << " direction: " << actualDir
+        //           << " (road#" << roadIdx << ")\n";
+    }
+    else {
+        // Spawn a regular car
+        addVehicle(car);
+        vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), &vehicles.back());
+        // std::cout << "Spawned REGULAR car at (" << laneCenter.x << ", " << laneCenter.y
+        //           << ") on lane " << laneIndex << " direction: " << actualDir
+        //           << " (road#" << roadIdx << ")\n";
+    }
 }
 
 

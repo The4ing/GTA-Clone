@@ -7,10 +7,12 @@
 #include <memory>
 #include <iostream>
 
+class PoliceManager;
+
 class CarManager {
 public:
-    CarManager();
 
+    CarManager(PoliceManager& policeMgr);
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void draw(sf::RenderTarget& window);
 
@@ -43,6 +45,7 @@ private:
     std::vector<RoadSegment> roads;
     QuadTree<RoadSegment> roadTree{ sf::FloatRect(0, 0, 4640, 4672) };
     sf::Font debugFont;
+    PoliceManager& m_policeManager;
 
     bool isRightTurn(const std::string& from, const std::string& to);
     bool isLeftTurn(const std::string& from, const std::string& to);
