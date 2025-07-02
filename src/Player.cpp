@@ -15,7 +15,7 @@ Player::Player(GameManager& gameManager) // Modified constructor
     sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
     m_money(PlayerMoney), m_health(MaxHealth), m_armor(100),
     m_currentWeaponName("Fists"), m_maxWeaponAmmo(0),
-    m_wantedLevel(5)
+    m_wantedLevel(2)
 {
     sf::Texture& texture = ResourceManager::getInstance().getTexture("player");
     sprite.setTexture(texture);

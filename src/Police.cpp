@@ -8,6 +8,7 @@
 #include "Player.h"       // Included for Player type
 #include <cmath>        // For std::atan2, std::cos, std::sin, std::hypot
 #include <iostream>     // For std::cerr (error logging)
+#include <cstdlib>
 
 Police::Police(GameManager & gameManager, PoliceWeaponType weaponType) :
     m_gameManager(gameManager),
@@ -60,28 +61,40 @@ void Police::handleShooting(Player& player, float dt) {
         aimDir /= aimDirLen;
     }
 
-    float angle = std::atan2(aimDir.y, aimDir.x) * 180.f / M_PI;
-    sprite.setRotation(angle + 90.f);
+//    float angle = std::atan2(aimDir.y, aimDir.x) * 180.f / M_PI;
+   // sprite.setRotation(angle + 90.f);
+
+    float baseAngle = std::atan2(aimDir.y, aimDir.x);
+    sprite.setRotation(baseAngle * 180.f / M_PI + 90.f);
 
     if (fireCooldownTimer <= 0.f) {
-        m_gameManager.addBullet(getPosition() + aimDir * 20.f, aimDir);
+        //m_gameManager.addBullet(getPosition() + aimDir * 20.f, aimDir);
+        float accuracyOffset = 0.f;
+        if (player.getWantedLevel() >= 2) {
+            float maxOffset = 0.2f; // radians, ~11 degrees
+            accuracyOffset = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.f * maxOffset;
+        }
+        sf::Vector2f bulletDir(std::cos(baseAngle + accuracyOffset), std::sin(baseAngle + accuracyOffset));
+        m_gameManager.addBullet(getPosition() + bulletDir * 20.f, bulletDir);
         fireCooldownTimer = PISTOL_FIRE_RATE;
-        // TODO: Ensure "Shoot_Gun" animation exists and is played
         animationManager->setAnimation("Walk_Gun_1", false); // Placeholder, use actual shooting animation
     }
 }
 
-void Police::handleMeleeAttack(Player& player, float dt) {
+void Police::handleMeleeAttack(Player& player, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     sf::Vector2f playerPosition = player.getPosition();
     sf::Vector2f aimDir = playerPosition - getPosition();
+     float distance = std::hypot(aimDir.x, aimDir.y);
     float angle = std::atan2(aimDir.y, aimDir.x) * 180.f / M_PI;
     sprite.setRotation(angle + 90.f); // Face the player
 
-    if (meleeCooldownTimer <= 0.f) {
-        // std::cout << "Police " << this << " attacking player with baton!" << std::endl;
-        player.takeDamage(BATON_DAMAGE); // Player needs takeDamage method
+    if (distance > BATON_MELEE_RANGE - 5.f) {
+        moveToward(playerPosition, dt);
+    }
+    else if (meleeCooldownTimer <= 0.f) {
+        player.takeDamage(BATON_DAMAGE);
         meleeCooldownTimer = BATON_MELEE_RATE;
-        animationManager->setAnimation("Baton_Attack", false); // Play baton attack animation
+        animationManager->setAnimation("Baton_Attack", false);
     }
 }
 
@@ -118,8 +131,18 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
             return;
         }
     }
-
+    int wantedLevel = player.getWantedLevel();
     float distToPlayer = std::hypot(targetPos.x - getPosition().x, targetPos.y - getPosition().y);
+
+    if (wantedLevel == 0 && state != PoliceState::BackingUp) {
+        if (state != PoliceState::Idle) {
+            state = PoliceState::Idle;
+            currentPath.clear();
+            currentPathIndex = 0;
+            pathTargetPosition = sf::Vector2f(-1.f, -1.f);
+            setRandomWanderDestination(MAP_BOUNDS);
+        }
+    }
 
     // --- State Transition Logic ---
     // If actively attacking, check if should continue or switch to chasing
@@ -140,7 +163,7 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
             currentPath.clear(); currentPathIndex = 0; pathTargetPosition = sf::Vector2f(-1, -1);
         }
         else {
-            handleMeleeAttack(player, dt);
+            handleMeleeAttack(player, dt, blockedPolygons);
             animationManager->update(dt);
             return; // Skip movement while melee attacking
         }
@@ -148,7 +171,7 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
 
     // Determine new state based on conditions (if not already attacking)
     bool canAttack = false;
-    if (m_weaponType == PoliceWeaponType::PISTOL && distToPlayer <= PISTOL_SHOOTING_RANGE && distToPlayer <= PISTOL_LINE_OF_SIGHT_RANGE) {
+    if (wantedLevel > 0 && m_weaponType == PoliceWeaponType::PISTOL && distToPlayer <= PISTOL_SHOOTING_RANGE && distToPlayer <= PISTOL_LINE_OF_SIGHT_RANGE) {
         if (state != PoliceState::Shooting) {
             state = PoliceState::Shooting;
             currentPath.clear(); currentPathIndex = 0;
@@ -156,7 +179,7 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
         }
         canAttack = true;
     }
-    else if (m_weaponType == PoliceWeaponType::BATON && distToPlayer <= BATON_MELEE_RANGE) {
+    else if (wantedLevel > 0 && m_weaponType == PoliceWeaponType::BATON && distToPlayer <= BATON_MELEE_RANGE) {
         if (state != PoliceState::MeleeAttacking) {
             state = PoliceState::MeleeAttacking;
             currentPath.clear(); currentPathIndex = 0;
@@ -166,7 +189,7 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
     }
 
     if (!canAttack) { // If cannot attack, decide if chasing or idle
-        if (distToPlayer <= detectionRadius) {
+        if (wantedLevel > 0 && distToPlayer <= detectionRadius) {
             if (state != PoliceState::Chasing) {
                 // std::cout << "Police " << this << " entering CHASING state." << std::endl;
                 state = PoliceState::Chasing;
@@ -174,7 +197,7 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
                 repathTimer = 1.0f; // Force repath soon
             }
         }
-        else if (state == PoliceState::Chasing && distToPlayer > detectionRadius + 30.f) {
+        else if (state == PoliceState::Chasing && (wantedLevel == 0 || distToPlayer > detectionRadius + 30.f)) {
             // std::cout << "Police " << this << " leaving CHASING, entering IDLE state." << std::endl;
             state = PoliceState::Idle;
             currentPath.clear(); currentPathIndex = 0;
@@ -245,7 +268,7 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
         // Movement Execution
         if (!currentPath.empty() && currentPathIndex < currentPath.size()) {
             sf::Vector2f nextWaypoint = currentPath[currentPathIndex];
-            bool hitObstacle = moveToward(nextWaypoint, dt, blockedPolygons);
+            bool hitObstacle = moveToward(nextWaypoint, dt);
 
             if (hitObstacle) {
                 state = PoliceState::BackingUp;
@@ -293,7 +316,7 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
 }
 
 
-bool Police::moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+bool Police::moveToward(const sf::Vector2f& target, float dt) {
     sf::Vector2f currentPos = getPosition();
     sf::Vector2f dir = target - currentPos;
     float len = std::hypot(dir.x, dir.y); // Use std::hypot
@@ -311,7 +334,7 @@ bool Police::moveToward(const sf::Vector2f& target, float dt, const std::vector<
 
     // Simplified collision: Check only the final candidate position for this step.
     // More robust would be sweep test or multiple intermediate checks if step is large.
-    if (checkCollision(currentPos, nextPosCandidate, blockedPolygons, getCollisionRadius())) {
+    if (checkCollision(currentPos, nextPosCandidate, getCollisionRadius())) {
         // std::cout << "Police: Collision detected at nextPosCandidate" << std::endl;
         return true; // Collision detected
     }
@@ -397,7 +420,7 @@ void Police::setRandomWanderDestination(const sf::FloatRect& mapBounds) {
     pathFailCooldown = 0.f;   // Reset path fail cooldown
 }
 
-bool Police::checkCollision(const sf::Vector2f& currentPos, const sf::Vector2f& nextPos, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons, float radius) {
+bool Police::checkCollision(const sf::Vector2f& currentPos, const sf::Vector2f& nextPos, float radius) {
     // בדוק קטע בין currentPos ל-nextPos או נקודות ביניים
     const int steps = 5;
     for (int i = 1; i <= steps; ++i) {
@@ -405,10 +428,8 @@ bool Police::checkCollision(const sf::Vector2f& currentPos, const sf::Vector2f& 
         sf::Vector2f interpPos = currentPos + (nextPos - currentPos) * t;
 
         // אפשר לבדוק אם circle סביב interpPos חופף פוליגון חסום
-        for (const auto& poly : blockedPolygons) {
-            if (CollisionUtils::pointInPolygon(interpPos, poly)) {
-                return true; // התנגשות
-            }
+        if (m_gameManager.isPositionBlocked(interpPos)) {
+            return true;
         }
     }
     return false;

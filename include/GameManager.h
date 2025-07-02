@@ -14,7 +14,7 @@
 #include "BulletPool.h"
 #include "PathfindingGrid.h"
 #include "Store.h"
-
+#include "QuadTree.h"
 
 enum class GameState {
     Menu,
@@ -32,6 +32,8 @@ public:
 
     void run();
     PathfindingGrid* getPathfindingGrid() const;
+    bool isPositionBlocked(const sf::Vector2f& pos) const;
+    const QuadTree<std::vector<sf::Vector2f>>& getBlockedPolyTree() const { return blockedPolyTree; }
 
 private:
     bool isFullscreen = false;
