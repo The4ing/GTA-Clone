@@ -101,8 +101,8 @@ private:
 
     void initAnimations();
     void setSpecificFrame(int row, int col); 
-    void handleShooting(Player& player, float dt); 
-    void handleMeleeAttack(Player& player, float dt); 
+    void handleShooting(Player& player, float dt);
+    void handleMeleeAttack(Player& player, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
 };
 
 
