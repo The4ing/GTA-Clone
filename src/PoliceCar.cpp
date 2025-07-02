@@ -6,6 +6,7 @@
 #include "CollisionUtils.h" // For collision checks if needed
 #include <cmath>        // For std::hypot, std::atan2, M_PI
 #include <iostream>     // For debugging
+#include "PatrolZone.h" 
 
 PoliceCar::PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition)
     : Vehicle(), // Call base Vehicle constructor
@@ -15,7 +16,8 @@ PoliceCar::PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition
     m_repathTimer(0.f),
     m_currentTargetPosition(-1.f, -1.f),
     m_isAmbient(true), // Explicitly initialize, though defaults in .h
-    m_playerCausedWantedIncrease(false) // Explicitly initialize
+    m_playerCausedWantedIncrease(false), // Explicitly initialize
+    m_assignedZone(nullptr) // Initialize assigned zoneAdd commentMore actions
 {
 
     // Use Vehicle's setTexture or manage sprite locally if Vehicle doesn't have one.
@@ -47,6 +49,7 @@ void PoliceCar::setIsAmbient(bool isAmbient) {
 bool PoliceCar::isAmbient() const {
     return m_isAmbient;
 }
+
 
 void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     // Always call Vehicle::update for basic movement processing, collision response from Vehicle side etc.
@@ -80,6 +83,62 @@ void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<s
     if (m_bumpCooldown > 0.f) {
         m_bumpCooldown -= dt;
     }
+}
+
+void PoliceCar::setPatrolZone(PatrolZone* zone) {
+        m_assignedZone = zone;
+}
+
+PatrolZone* PoliceCar::getPatrolZone() const {
+    return m_assignedZone;
+}
+
+bool PoliceCar::canSeePlayer(const Player& player, const std::vector<std::vector<sf::Vector2f>>& obstacles) {
+    sf::Vector2f selfPos = getPosition(); // Vehicle::getPosition()
+    sf::Vector2f playerPos = player.getPosition();
+    sf::Vector2f directionToPlayer = playerPos - selfPos;
+    float distanceToPlayer = std::hypot(directionToPlayer.x, directionToPlayer.y);
+
+    // 1. Distance Check
+    if (distanceToPlayer > m_visionDistance) {
+        return false;
+    }
+
+    // 2. Field of View (FOV) Check
+    if (distanceToPlayer > 0.001f) {
+        // Vehicle's forward vector depends on its orientation.
+        // Vehicle class has m_sprite.getRotation() and also `directionVec` for AI, and `angle` for player.
+        // For AI driven, `directionVec` (if normalized) or angle from `m_sprite.getRotation()` can be used.
+        // Let's use m_sprite.getRotation() consistent with Police.cpp
+        // Assuming 0 rotation is UP for the sprite.
+        float unitAngleRad = (getSprite().getRotation() - 90.f) * (static_cast<float>(M_PI) / 180.f);
+        sf::Vector2f forwardVector(std::cos(unitAngleRad), std::sin(unitAngleRad));
+
+        sf::Vector2f normalizedDirToPlayer = directionToPlayer / distanceToPlayer;
+
+        float dotProduct = forwardVector.x * normalizedDirToPlayer.x + forwardVector.y * normalizedDirToPlayer.y;
+        dotProduct = std::max(-1.0f, std::min(1.0f, dotProduct));
+        float angleBetweenActualRad = std::acos(dotProduct);
+
+        float fovThresholdRad = (m_fieldOfViewAngle / 2.f) * (static_cast<float>(M_PI) / 180.f);
+
+        if (angleBetweenActualRad > fovThresholdRad) {
+            return false;
+        }
+    }
+
+    // 3. Line of Sight (LOS) Check - Simplified
+    const int LOS_SAMPLE_POINTS = 3;
+    for (int i = 0; i <= LOS_SAMPLE_POINTS; ++i) {
+        if (i == 0 && LOS_SAMPLE_POINTS > 0) continue;
+        sf::Vector2f testPoint = selfPos + directionToPlayer * (static_cast<float>(i) / LOS_SAMPLE_POINTS);
+        for (const auto& polygon : obstacles) {
+            if (CollisionUtils::pointInPolygon(testPoint, polygon)) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void PoliceCar::updateChaseBehavior(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {

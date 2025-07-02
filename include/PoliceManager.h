@@ -12,13 +12,18 @@
 
 class GameManager;
 class Player;
+class PatrolZone; // Forward declarationAdd commentMore actions
+struct RoadSegment; // Forward declaration
 
 class PoliceManager {
 public:
     PoliceManager(GameManager& gameManager);
 
-    void spawnPolice(const sf::Vector2f& position, PoliceWeaponType weaponType);
-    void spawnPoliceCar(const sf::Vector2f& position);
+    Police* spawnPatrolOfficer(const sf::Vector2f& position, PoliceWeaponType weaponType, PatrolZone* zone); // For static patrolAdd commentMore actions
+    PoliceCar* spawnPatrolCar(const sf::Vector2f& position, PatrolZone* zone); // For static patrol car
+
+    void spawnPolice(const sf::Vector2f& position, PoliceWeaponType weaponType); // General dynamic spawn (aggressive)
+    void spawnPoliceCar(const sf::Vector2f& position); // Spawns an aggressive police car (dynamic)
     void spawnAmbientPoliceCarOnRoadSegment(const RoadSegment* road, int laneIndex, const std::string& actualDir, const sf::Vector2f& spawnPosition);
     void spawnPoliceHelicopter(const sf::Vector2f& position);
     void spawnPoliceTank(const sf::Vector2f& position);
@@ -43,11 +48,15 @@ private:
     void updatePoliceHelicopters(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void updatePoliceTanks(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
 
-    void managePolicePopulation(int wantedLevel, const sf::Vector2f& playerPos);
+    void managePolicePopulation(int wantedLevel, const sf::Vector2f& playerPos, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
+
+
     int countPoliceByType(PoliceWeaponType type);
     int countPoliceCars();
     int countPoliceHelicopters();
     int countPoliceTanks();
+    bool isInsideBlockedPolygon(const sf::Vector2f& position, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
+
 
     GameManager& m_gameManager;
 
@@ -68,7 +77,10 @@ private:
     int m_desiredPoliceHelicopters = 0;
     int m_desiredPoliceTanks = 0;
 
-    const float SPAWN_COOLDOWN_SECONDS = 2.0f;
+
+    int m_numSeeingPlayer = 0; 
+    float m_timePlayerNotSeen = 0.0f;
+    float m_wantedReductionCooldownTimer = 0.0f; // Cooldown between successive wanted level reductions
 
     std::vector<sf::Vector2i> activeChunks;
     float spawnCooldown = 0.f;

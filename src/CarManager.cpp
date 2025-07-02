@@ -316,7 +316,7 @@ void CarManager::spawnSingleVehicleOnRoad() {
     //    << ") on lane " << laneIndex << " direction: " << actualDir
     //    << " (road#" << roadIdx << ")\n";
     int spawnChoice = rand() % 100; // Random number between 0 and 99Add commentMore actions
-    const int POLICE_CAR_SPAWN_CHANCE = 15; // 15% chance
+
 
     if (spawnChoice < POLICE_CAR_SPAWN_CHANCE) {
         // Spawn an ambient police car via PoliceManager

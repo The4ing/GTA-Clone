@@ -63,7 +63,7 @@ private:
     void playAnimation(const std::string& animName, bool loop = true, bool pingpong = false);
 
     sf::Sprite  sprite;
-    float       speed = 250.f;
+    float       speed = 50.f;
     int         frameWidth;
     int         frameHeight;
     int         currentFrame;
