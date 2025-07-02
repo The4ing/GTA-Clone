@@ -66,8 +66,9 @@ bool HUD::loadResources(const std::string& fontPath, const std::string& starText
 
     for (int i = 0; i < MAX_STARS; ++i) {
         m_starSprites[i].setTexture(m_starTexture);
-        float scale = m_starIconSize / m_starTexture.getSize().x;
-        m_starSprites[i].setScale(scale, scale);
+       // float scale = m_starIconSize / m_starTexture.getSize().x;
+        m_starSprites[i].setScale(0.15, 0.15);
+
     }
 
     updateElementPositions(1920.f, 1080.f);
@@ -177,6 +178,28 @@ void HUD::updateElementPositions(float viewWidth, float viewHeight) {
         sf::Vector2f pos(viewWidth / 2.f, m_padding);
         m_timeText.setPosition(pos);
     }
+    std::cout << "View width: " << viewWidth << ", height: " << viewHeight << std::endl;
+    float starWidth = m_starTexture.getSize().x * m_starSprites[0].getScale().x;
+    std::cout << "Star width (scaled): " << starWidth << std::endl;
+
+
+    // Wanted Stars Positioning
+    if (m_currentWantedLevel > 0) {
+        float starWidth = m_starTexture.getSize().x * m_starSprites[0].getScale().x;
+        float totalStarsWidth = (m_currentWantedLevel * starWidth) + ((m_currentWantedLevel - 1) * m_starSpacing);
+        float startX = m_viewWidth - m_padding - totalStarsWidth;
+        float startY = m_moneyText.getPosition().y + m_moneyText.getCharacterSize() + 130.f;
+
+        for (int i = 0; i < m_currentWantedLevel; ++i) {
+            m_starSprites[i].setColor(GTA_STAR_YELLOW);
+            m_starSprites[i].setPosition(startX + i * (starWidth + m_starSpacing), startY);
+            // ?? ????? ????? ?? ????
+            std::cout << "Star " << i << " position: ("
+                << m_starSprites[i].getPosition().x << ", "
+                << m_starSprites[i].getPosition().y << ")" << std::endl;
+        }
+    }
+
 
 }
 
@@ -276,6 +299,12 @@ void HUD::draw(sf::RenderWindow& window) {
        //     std::cout << "Star " << i << ": " << m_starSprites[i].getPosition().x << ", " << m_starSprites[i].getPosition().y << std::endl;
         }
     }
+    if (m_currentWantedLevel > 0) {
+        for (int i = 0; i < m_currentWantedLevel; ++i) {
+            window.draw(m_starSprites[i]);
+        }
+    }
+
 
     // ??? ???? ?????
     drawTextWithShadow(window, m_moneyText, SHADOW_OFFSET, GTA_SHADOW_BLACK);
@@ -285,20 +314,20 @@ void HUD::draw(sf::RenderWindow& window) {
     drawTextWithShadow(window, m_ammoText, SHADOW_OFFSET, GTA_SHADOW_BLACK);
     drawTextWithShadow(window, m_timeText, SHADOW_OFFSET, GTA_SHADOW_BLACK);
 
-    if (m_currentWantedLevel > 0) {
-        float starWidth = m_starTexture.getSize().x * m_starSprites[0].getScale().x;
-        float totalStarsWidth = (m_currentWantedLevel * starWidth) + ((m_currentWantedLevel - 1) * m_starSpacing);
-        // x ????? ??? ????, ???? m_padding ?????, ????? ???? ?? ???????
-        float startX = viewWidth - m_padding - totalStarsWidth;
-        // y ???? ????? ???? ?? ????? ??? (?????? 5 ???????)
-        float startY = m_moneyText.getPosition().y + m_moneyText.getCharacterSize() + 5.f;
+    //if (m_currentWantedLevel > 0) {
+    //    float starWidth = m_starTexture.getSize().x * m_starSprites[0].getScale().x;
+    //    float totalStarsWidth = (m_currentWantedLevel * starWidth) + ((m_currentWantedLevel - 1) * m_starSpacing);
+    //    // x ????? ??? ????, ???? m_padding ?????, ????? ???? ?? ???????
+    //    float startX = viewWidth - m_padding - totalStarsWidth;
+    //    // y ???? ????? ???? ?? ????? ??? (?????? 5 ???????)
+    //    float startY = m_moneyText.getPosition().y + m_moneyText.getCharacterSize() + 5.f;
 
-        for (int i = 0; i < m_currentWantedLevel; ++i) {
-            m_starSprites[i].setColor(GTA_STAR_YELLOW);
-            m_starSprites[i].setPosition(startX + i * (starWidth + m_starSpacing), startY);
-            window.draw(m_starSprites[i]);
-        }
-    }
+    //    for (int i = 0; i < m_currentWantedLevel; ++i) {
+    //        m_starSprites[i].setColor(GTA_STAR_YELLOW);
+    //        m_starSprites[i].setPosition(startX + i * (starWidth + m_starSpacing), startY);
+    //        window.draw(m_starSprites[i]);
+    //    }
+    //}
     //std::cout << "Weapon Icon position at draw: ("
     //    << m_weaponIcon.getPosition().x << ", "
     //    << m_weaponIcon.getPosition().y << ")" << std::endl;
