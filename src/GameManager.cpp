@@ -17,6 +17,7 @@
 #include "InventoryUI.h"
 #include "Constants.h"       // Required for MAP_BOUNDS
 #include "PathfindingGrid.h"
+#include "CollisionUtils.h"
 
 using json = nlohmann::json;
 
@@ -820,4 +821,16 @@ void GameManager::addBullet(const sf::Vector2f& startPos, const sf::Vector2f& di
 
 PathfindingGrid* GameManager::getPathfindingGrid() const {
     return pathfindingGrid.get();
+}
+
+bool GameManager::isPositionBlocked(const sf::Vector2f& pos) const {
+    sf::FloatRect query(pos.x - 1.f, pos.y - 1.f, 2.f, 2.f);
+    std::vector<const std::vector<sf::Vector2f>*> possible;
+    blockedPolyTree.query(query, possible);
+    for (const auto* poly : possible) {
+        if (CollisionUtils::pointInPolygon(pos, *poly)) {
+            return true;
+        }
+    }
+    return false;
 }

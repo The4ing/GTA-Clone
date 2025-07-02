@@ -28,7 +28,7 @@ class Police : public Character {
 public:
     Police(GameManager& gameManager, PoliceWeaponType weaponType);
     void update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
-    bool moveToward(const sf::Vector2f& target, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
+    bool moveToward(const sf::Vector2f& target, float dt);
     void draw(sf::RenderTarget& window);
 
     void takeDamage(int amount);
@@ -53,7 +53,7 @@ public:
 
 private:
     void setRandomWanderDestination(const sf::FloatRect& mapBounds);
-    bool checkCollision(const sf::Vector2f& currentPos, const sf::Vector2f& nextPos, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons, float radius);
+    bool checkCollision(const sf::Vector2f& currentPos, const sf::Vector2f& nextPos, float radius);
     // bool pointInPolygonWithRadius(const sf::Vector2f& center, float radius, const std::vector<sf::Vector2f>& poly); //  unused for now
     float debugPrintTimer = 0.f; // for debugging
     float pathFailCooldown = 0.f;
@@ -101,8 +101,8 @@ private:
 
     void initAnimations();
     void setSpecificFrame(int row, int col); 
-    void handleShooting(Player& player, float dt); 
-    void handleMeleeAttack(Player& player, float dt); 
+    void handleShooting(Player& player, float dt);
+    void handleMeleeAttack(Player& player, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
 };
 
 
