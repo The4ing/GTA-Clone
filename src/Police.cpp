@@ -9,6 +9,7 @@
 #include <cmath>        // For std::atan2, std::cos, std::sin, std::hypot
 #include <iostream>     // For std::cerr (error logging)
 #include <cstdlib>
+#include "PatrolZone.h" 
 
 Police::Police(GameManager & gameManager, PoliceWeaponType weaponType) :
     m_gameManager(gameManager),
@@ -16,7 +17,8 @@ Police::Police(GameManager & gameManager, PoliceWeaponType weaponType) :
     pathfinder(*gameManager.getPathfindingGrid()),
     state(PoliceState::Idle),
     currentPathIndex(0), repathTimer(0.f), pathFailCooldown(0.f),
-    fireCooldownTimer(0.f), meleeCooldownTimer(0.f)
+    fireCooldownTimer(0.f), meleeCooldownTimer(0.f), 
+    m_assignedZone(nullptr) // Initialize assigned zone
     // animationTimer(0.f), animationSpeed(0.005f), currentFrame(0) // Likely handled by AnimationManager
 {
     if (!gameManager.getPathfindingGrid()) {
@@ -293,6 +295,27 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
         }
     }
 
+    // ניהול טיימרים של הרדאר
+    if (showRadar) {
+        radarTimer -= dt;
+        if (radarTimer <= 0.f) {
+            showRadar = false;
+            radarCooldown = 15.f; // מרווח זמן עד הצגה חוזרת
+        }
+    }
+    else {
+        if (radarCooldown > 0.f)
+            radarCooldown -= dt;
+    }
+
+    // בדוק אם ניתן להציג רדאר שוב
+    if (!showRadar && radarCooldown <= 0.f) {
+        if (canSeePlayer(player, blockedPolygons)) {
+            showRadar = true;
+            radarTimer = 3.f; // הרדאר יוצג ל־3 שניות
+        }
+    }
+
     // --- Animation ---
     // Animation selection based on state and weapon
     bool isMoving = !currentPath.empty() && currentPathIndex < currentPath.size() && (state == PoliceState::Chasing || state == PoliceState::Idle);
@@ -359,7 +382,16 @@ bool Police::moveToward(const sf::Vector2f& target, float dt) {
 
 
 void Police::draw(sf::RenderTarget& window) {
+
+    if (showRadar) {
+        sf::CircleShape radar(10.f); // קוטר הרדאר
+        radar.setFillColor(sf::Color(255, 0, 0, 180)); // אדום שקוף
+        radar.setOrigin(10.f, 10.f);
+        radar.setPosition(getPosition().x, getPosition().y - 25.f); // מעט מעל הראש
+        window.draw(radar);
+    }
     window.draw(sprite);
+
 }
 
 void Police::takeDamage(int amount) {
@@ -447,4 +479,71 @@ void Police::initAnimations() {
 void Police::setSpecificFrame(int row, int col) {
     sf::IntRect rect(col * frameWidth, row * frameHeight, frameWidth, frameHeight);
     sprite.setTextureRect(rect);
+}
+
+void Police::setPatrolZone(PatrolZone* zone) {
+    m_assignedZone = zone;
+}
+
+PatrolZone* Police::getPatrolZone() const {
+    return m_assignedZone;
+}
+
+bool Police::canSeePlayer(const Player& player, const std::vector<std::vector<sf::Vector2f>>& obstacles) {
+    sf::Vector2f selfPos = getPosition();
+    sf::Vector2f playerPos = player.getPosition();
+    sf::Vector2f directionToPlayer = playerPos - selfPos;
+    float distanceToPlayer = std::hypot(directionToPlayer.x, directionToPlayer.y);
+
+    // 1. Distance Check
+    if (distanceToPlayer > m_visionDistance) {
+        // std::cout << "Police " << this << ": Player too far." << std::endl;
+        return false;
+    }
+
+    // 2. Field of View (FOV) Check
+    if (distanceToPlayer > 0.001f) {
+        // Sprite rotation: 0 degrees is UP. Adjusted by -90 for math angles (0 degrees = positive X).
+        float unitAngleRad = (sprite.getRotation() - 90.f) * (static_cast<float>(M_PI) / 180.f);
+        sf::Vector2f forwardVector(std::cos(unitAngleRad), std::sin(unitAngleRad));
+
+        sf::Vector2f normalizedDirToPlayer = directionToPlayer / distanceToPlayer;
+
+        float dotProduct = forwardVector.x * normalizedDirToPlayer.x + forwardVector.y * normalizedDirToPlayer.y;
+        dotProduct = std::max(-1.0f, std::min(1.0f, dotProduct)); // Clamp for acos
+        float angleBetweenActualRad = std::acos(dotProduct);
+
+        float fovThresholdRad = (m_fieldOfViewAngle / 2.f) * (static_cast<float>(M_PI) / 180.f);
+
+        if (angleBetweenActualRad > fovThresholdRad) {
+            // std::cout << "Police " << this << ": Player outside FOV. Angle: " << angleBetweenActualRad * 180.f / M_PI << ", Threshold: " << fovThresholdRad * 180.f / M_PI << std::endl;
+            return false;
+        }
+    }
+
+    // 3. Line of Sight (LOS) Check - Simplified (checking discrete points)
+    // A more robust solution would use segment-polygon intersection.
+    const int LOS_SAMPLE_POINTS = 3; // Check start, middle, end (effectively) or more points
+    for (int i = 0; i <= LOS_SAMPLE_POINTS; ++i) { // Check points including start and end of segment fraction
+        float fraction = static_cast<float>(i) / LOS_SAMPLE_POINTS;
+        // Avoid checking the exact start point (selfPos) if it might be inside an obstacle definition due to sprite origin vs collision shape.
+        // Start check slightly away from self to avoid self-occlusion if origin is on edge of a theoretical bounding box.
+        // However, for general obstacle polygons, this isn't an issue.
+        // If checking point is very close to selfPos, skip (i=0, fraction=0).
+        if (i == 0 && LOS_SAMPLE_POINTS > 0) continue; // Don't check exact selfPos for obstruction
+
+        sf::Vector2f testPoint = selfPos + directionToPlayer * fraction;
+
+        for (const auto& polygon : obstacles) {
+            if (CollisionUtils::pointInPolygon(testPoint, polygon)) {
+                // To prevent player's own collision shape from occluding if they are the target.
+                // This needs more sophisticated handling if player is also an "obstacle".
+                // For now, any obstruction blocks.
+                // std::cout << "Police " << this << ": LOS blocked at point (" << testPoint.x << "," << testPoint.y << ")" << std::endl;
+                return false;
+            }
+        }
+    }
+    // std::cout << "Police " << this << ": Player SEEN!" << std::endl;
+    return true;
 }

@@ -7,10 +7,16 @@
 
 class GameManager;
 class Player;
+class PatrolZone; // Forward declaration
 
 class PoliceCar : public Vehicle {
 public:
     PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition);
+
+    void setPatrolZone(PatrolZone* zone); 
+        PatrolZone* getPatrolZone() const;
+
+    bool canSeePlayer(const Player& player, const std::vector<std::vector<sf::Vector2f>>& obstacles);
 
     void update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
 
@@ -29,6 +35,7 @@ private:
 
     GameManager& m_gameManager;
     bool m_isAmbient = true;
+
     Pathfinder m_pathfinder;
     sf::Sprite m_sprite;
 
@@ -44,4 +51,9 @@ private:
     const float PLAYER_MOVE_THRESHOLD_FOR_REPATH_SQ = (PATHFINDING_GRID_SIZE * 2.0f) * (PATHFINDING_GRID_SIZE * 2.0f);
     const float TARGET_REACHED_DISTANCE = PATHFINDING_GRID_SIZE;
     const float RUN_OVER_DISTANCE = 30.f;
+    PatrolZone* m_assignedZone = nullptr; 
+
+        // Vision parameters (can be different from foot police)
+        float m_visionDistance = 250.f;
+    float m_fieldOfViewAngle = 140.f; // Degrees
 };

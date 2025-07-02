@@ -726,6 +726,7 @@ void GameManager::startGameFullscreen() {
 
     mapTexture = &ResourceManager::getInstance().getTexture("map");
     mapSprite.setTexture(*mapTexture);
+    setupPatrolZones(); // Call to define patrol zones
     pedestrianManager = GameFactory::createPedestrianManager(blockedPolygons);
     policeManager = GameFactory::createPoliceManager(*this, blockedPolygons);
     store = GameFactory::createStores(blockedPolygons);
@@ -833,4 +834,46 @@ bool GameManager::isPositionBlocked(const sf::Vector2f& pos) const {
         }
     }
     return false;
+}
+
+const std::vector<PatrolZone>& GameManager::getPatrolZones() const {
+    return m_patrolZones;
+}
+
+void GameManager::setupPatrolZones() {
+    // Placeholder: Define a few patrol zones
+    // These coordinates and radii are arbitrary and need to be adjusted for your map.
+    // Zone IDs should be unique.
+    m_patrolZones.emplace_back(0, sf::Vector2f(500.f, 500.f), 300.f);  // Zone 0
+    m_patrolZones.emplace_back(1, sf::Vector2f(1500.f, 800.f), 250.f); // Zone 1
+    m_patrolZones.emplace_back(2, sf::Vector2f(800.f, 1500.f), 400.f); // Zone 2
+    // ... add more zones to cover the map
+
+    // TODO:
+    // For each zone, spawn initial foot police and optionally a patrol car using PoliceManager.
+    // This requires PoliceManager to have methods to spawn units and assign them to a zone.
+    // Example (conceptual, actual methods might differ):
+    // if (policeManager) {
+    //     for (PatrolZone& zone : m_patrolZones) {
+    //         // Spawn 2 foot officers for this zone
+    //         for (int i = 0; i < 2; ++i) {
+    //             // Find a valid spawn point within the zone
+    //             sf::Vector2f spawnPos = zone.center + sf::Vector2f(rand() % 100 - 50, rand() % 100 - 50);
+    //             Police* officer = policeManager->spawnPatrolOfficer(spawnPos, &zone); // spawnPatrolOfficer needs to exist
+    //             if (officer) {
+    //                 zone.assignedFootPatrols.push_back(officer);
+    //             }
+    //         }
+    //         // Spawn 1 patrol car for this zone (50% chance)
+    //         if (rand() % 2 == 0) {
+    //             sf::Vector2f carSpawnPos = zone.center + sf::Vector2f(rand() % 50 - 25, rand() % 50 - 25); // Near center
+    //             // Find nearest road for carSpawnPos
+    //             // PoliceCar* car = policeManager->spawnPatrolCar(carSpawnPos, &zone); // spawnPatrolCar needs to exist
+    //             // if (car) {
+    //             //     zone.assignedPatrolCar = car;
+    //             // }
+    //         }
+    //     }
+    // }
+    std::cout << "Patrol zones set up. Count: " << m_patrolZones.size() << std::endl;
 }

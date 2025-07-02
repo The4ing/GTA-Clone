@@ -16,3 +16,12 @@ bool CollisionUtils::pointInPolygon(const sf::Vector2f& p, const std::vector<sf:
 
     return inside;
 }
+
+bool CollisionUtils::isInsideBlockedPolygon(const sf::Vector2f& point, const std::vector<std::vector<sf::Vector2f>>& polygons) {
+    for (const auto& poly : polygons) {
+        if (CollisionUtils::pointInPolygon(point, poly)) {
+            return true;
+        }
+    }
+    return false;
+}

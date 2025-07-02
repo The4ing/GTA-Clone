@@ -21,12 +21,16 @@ enum class PoliceWeaponType {
 };
 
 
-
+class PatrolZone; // Forward declaration
 class GameManager;
 
 class Police : public Character {
 public:
     Police(GameManager& gameManager, PoliceWeaponType weaponType);
+    void setPatrolZone(PatrolZone* zone); 
+        PatrolZone* getPatrolZone() const;
+
+    bool canSeePlayer(const Player& player, const std::vector<std::vector<sf::Vector2f>>& obstacles);
     void update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     bool moveToward(const sf::Vector2f& target, float dt);
     void draw(sf::RenderTarget& window);
@@ -103,6 +107,15 @@ private:
     void setSpecificFrame(int row, int col); 
     void handleShooting(Player& player, float dt);
     void handleMeleeAttack(Player& player, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
+
+    PatrolZone* m_assignedZone = nullptr;
+    float radarTimer = 0.f;          // סופר את הזמן שהרדאר מוצג
+    float radarCooldown = 0.f;       // סופר את הזמן בין הפעלות
+    bool showRadar = false;
+
+        // Vision parameters
+        float m_visionDistance = 200.f;
+    float m_fieldOfViewAngle = 120.f; // Degrees
 };
 
 

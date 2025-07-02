@@ -15,6 +15,7 @@
 #include "PathfindingGrid.h"
 #include "Store.h"
 #include "QuadTree.h"
+#include "PatrolZone.h" 
 
 enum class GameState {
     Menu,
@@ -32,10 +33,12 @@ public:
 
     void run();
     PathfindingGrid* getPathfindingGrid() const;
+    const std::vector<PatrolZone>& getPatrolZones() const;
     bool isPositionBlocked(const sf::Vector2f& pos) const;
     const QuadTree<std::vector<sf::Vector2f>>& getBlockedPolyTree() const { return blockedPolyTree; }
 
 private:
+    void setupPatrolZones(); // Method to initialize patrol zones
     bool isFullscreen = false;
     void processEvents();
     void update(float dt);
@@ -58,6 +61,7 @@ private:
     sf::Sprite mapSprite;
     sf::Texture* mapTexture = nullptr;
     std::vector<std::unique_ptr<Store>> store;
+    std::vector<PatrolZone>     m_patrolZones; // Holds all patrol zones
     std::unique_ptr<Player>     player;
     std::unique_ptr<CarManager> carManager;
     std::unique_ptr<PoliceManager> policeManager;
