@@ -36,6 +36,7 @@ public:
     const std::vector<PatrolZone>& getPatrolZones() const;
     bool isPositionBlocked(const sf::Vector2f& pos) const;
     const QuadTree<std::vector<sf::Vector2f>>& getBlockedPolyTree() const { return blockedPolyTree; }
+    const sf::View& getGameView() const { return gameView; }
 
 private:
     void setupPatrolZones(); // Method to initialize patrol zones
