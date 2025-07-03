@@ -29,12 +29,24 @@ float distanceSquared(const sf::Vector2f& p1, const sf::Vector2f& p2) {
 }
 
 GameManager::GameManager()
-    : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top-Down GTA Clone"), m_gameTime(sf::Time::Zero), m_isAwaitingFirstPlayerMove(false)
+    : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top-Down GTA Clone"),
+    m_gameTime(sf::Time::Zero), m_isAwaitingFirstPlayerMove(false)
 {
     frozenBackgroundTexture.create(window.getSize().x, window.getSize().y);
     window.setFramerateLimit(60);
     menu = std::make_unique<Menu>(window);
     currentState = GameState::Menu;
+    // Setup "Press Any Key" text
+    try {
+        m_pressStartText.setFont(ResourceManager::getInstance().getFont("main"));
+        m_pressStartText.setString("Press any key to start");
+        m_pressStartText.setCharacterSize(60);
+        m_pressStartText.setFillColor(sf::Color::White);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error initializing start text: " << e.what() << std::endl;
+    }
+    updatePressStartPosition();
 }
 
 void GameManager::run() {
@@ -196,23 +208,16 @@ void GameManager::processEvents() {
             if (m_hud) {
                 m_hud->updateElementPositions(w, h);  // ← חשוב!
             }
+            updatePressStartPosition();
         }
 
 
         if (event.type == sf::Event::KeyPressed) {
             if (m_isAwaitingFirstPlayerMove && currentState == GameState::Playing) {
                 // Check for movement keys or any action key that should start the game
-                if (event.key.code == sf::Keyboard::W ||
-                    event.key.code == sf::Keyboard::A ||
-                    event.key.code == sf::Keyboard::S ||
-                    event.key.code == sf::Keyboard::D ||
-                    event.key.code == sf::Keyboard::Up ||
-                    event.key.code == sf::Keyboard::Down ||
-                    event.key.code == sf::Keyboard::Left ||
-                    event.key.code == sf::Keyboard::Right ||
-                    event.key.code == sf::Keyboard::Space) { // Assuming space might be jump or action
-                    m_isAwaitingFirstPlayerMove = false;
+                if (event.key.code != sf::Keyboard::F11) { // Ignore fullscreen toggle
                     std::cout << "First player move detected, game is now active." << std::endl; // For debugging
+                    m_isAwaitingFirstPlayerMove = false; 
                 }
             }
 
@@ -379,16 +384,12 @@ void GameManager::update(float dt) {
     sf::Clock frameTimer;
     bool timeThisFrame = (currentState == GameState::Playing && m_playingFrameCount < 10);
 
-    // Player update always happens to catch the first input
-    if (player) {
-        player->update(dt, blockedPolygons);
-    }
-    else {
-        return; // Early exit if player isn't initialized
-    }
+    // --- 1. Update player (always runs to catch first input) ---
+    if (!player) return;
+    player->update(dt, blockedPolygons);
 
+    // --- 2. If game started, update systems ---
     if (!m_isAwaitingFirstPlayerMove) {
-        // Update game time only if game has started
         m_gameTime += sf::seconds(dt * GAME_TIME_SCALE);
 
         if (carManager)
@@ -400,37 +401,25 @@ void GameManager::update(float dt) {
         if (pedestrianManager)
             pedestrianManager->update(dt, blockedPolygons);
 
-        for (auto& present : presents) // Assuming presents might have timed behavior or animations
+        for (auto& present : presents)
             present->update(dt, blockedPolygons);
 
-        // Update bullets from the pool
         for (auto& bullet_ptr : bulletPool.getAllBullets()) {
             if (bullet_ptr->isActive()) {
                 bullet_ptr->update(dt, blockedPolygons);
-
-                std::vector<Pedestrian> current_npcs;
-                if (pedestrianManager) {
-                    for (const auto& p_ptr : pedestrianManager->getPedestrians()) {
-                        if (p_ptr) current_npcs.push_back(*p_ptr);
-                    }
-                }
-                std::vector<Vehicle> current_cars;
-                if (carManager) {
-                    current_cars = carManager->getVehicles();
-                }
+                // Optional: collect NPCs/cars for potential collision later
             }
         }
+
         // Vehicle-to-Vehicle collision (Player-driven vs AI)
-        if (player && player->isInVehicle() && carManager) {
+        if (player->isInVehicle() && carManager) {
             Vehicle* playerVehicle = player->getCurrentVehicle();
             if (playerVehicle) {
-                sf::FloatRect playerVehicleBounds = playerVehicle->getSprite().getGlobalBounds();
+                sf::FloatRect playerBounds = playerVehicle->getSprite().getGlobalBounds();
                 for (auto& aiVehicle : carManager->getVehicles()) {
-                    if (&aiVehicle == playerVehicle || aiVehicle.hasDriver()) {
+                    if (&aiVehicle == playerVehicle || aiVehicle.hasDriver())
                         continue;
-                    }
-                    sf::FloatRect aiVehicleBounds = aiVehicle.getSprite().getGlobalBounds();
-                    if (playerVehicleBounds.intersects(aiVehicleBounds)) {
+                    if (playerBounds.intersects(aiVehicle.getSprite().getGlobalBounds())) {
                         playerVehicle->stop();
                         aiVehicle.stop();
                     }
@@ -438,118 +427,54 @@ void GameManager::update(float dt) {
             }
         }
     }
-    // This part handles view centering and should always run if player exists
-    //  sf::Vector2f playerPos = player->getPosition();
-  //  sf::Vector2f newCenter = playerPos;
 
-    sf::Vector2f focusPosition;
-    if (player->isInVehicle() && player->getCurrentVehicle()) {
-        focusPosition = player->getCurrentVehicle()->getPosition();
-    }
-    else {
-        focusPosition = player->getPosition();
-    }
-    sf::Vector2f newCenter = focusPosition;
+    // --- 3. Camera follow player or vehicle ---
+    sf::Vector2f focusPosition = player->isInVehicle() && player->getCurrentVehicle()
+        ? player->getCurrentVehicle()->getPosition()
+        : player->getPosition();
+
     sf::Vector2f viewSize = gameView.getSize();
-    float halfW = viewSize.x * 0.5f;
-    float halfH = viewSize.y * 0.5f;
+    float halfW = std::min(viewSize.x * 0.5f, MAP_WIDTH * 0.5f);
+    float halfH = std::min(viewSize.y * 0.5f, MAP_HEIGHT * 0.5f);
 
-    if (viewSize.x > MAP_WIDTH)  halfW = MAP_WIDTH * 0.5f;
-    if (viewSize.y > MAP_HEIGHT) halfH = MAP_HEIGHT * 0.5f;
-
-    if (newCenter.x < halfW)               newCenter.x = halfW;
-    if (newCenter.x > (MAP_WIDTH - halfW)) newCenter.x = MAP_WIDTH - halfW;
-    if (newCenter.y < halfH)               newCenter.y = halfH;
-    if (newCenter.y > (MAP_HEIGHT - halfH))newCenter.y = MAP_HEIGHT - halfH;
-
+    sf::Vector2f newCenter = focusPosition;
+    newCenter.x = std::clamp(newCenter.x, halfW, MAP_WIDTH - halfW);
+    newCenter.y = std::clamp(newCenter.y, halfH, MAP_HEIGHT - halfH);
     gameView.setCenter(newCenter);
 
-    if (policeManager)
-        policeManager->update(dt, *player, blockedPolygons);
-
-
-    if (pedestrianManager)
-        pedestrianManager->update(dt, blockedPolygons);
-
-    for (auto& present : presents)
-        present->update(dt, blockedPolygons);
-
-    // Update bullets from the pool
-    for (auto& bullet_ptr : bulletPool.getAllBullets()) {
-        if (bullet_ptr->isActive()) {
-            bullet_ptr->update(dt, blockedPolygons);
-
-
-            std::vector<Pedestrian> current_npcs;
-            if (pedestrianManager) {
-                for (const auto& p_ptr : pedestrianManager->getPedestrians()) {
-                    if (p_ptr) current_npcs.push_back(*p_ptr);
-                }
-            }
-            std::vector<Vehicle> current_cars;
-            if (carManager) {
-                current_cars = carManager->getVehicles();
-            }
-
-
-        }
-    }
-
-    // No need to explicitly remove bullets from a vector here,
-    // as the pool manages inactive bullets.
-
+    // --- 4. Collision with presents ---
     for (auto& present : presents) {
-        if (!present->isCollected()) {
-            if (player->getCollisionBounds().intersects(present->getSprite().getGlobalBounds())) {
-                player->onCollision(*present);  // Double Dispatch
-            }
+        if (!present->isCollected() &&
+            player->getCollisionBounds().intersects(present->getSprite().getGlobalBounds())) {
+            player->onCollision(*present);  // Double Dispatch
         }
     }
-    // Update HUD
-    if (m_hud && player && currentState == GameState::Playing) {
-        PlayerData playerData;
-        playerData.money = player->getMoney();
-        playerData.health = player->getHealth();
-        playerData.armor = player->getArmor();
-        playerData.weaponName = player->getCurrentWeaponName();
-        //playerData.currentAmmo = player->getCurrentAmmo();
-        playerData.maxAmmo = player->getMaxAmmo();
 
-        int wantedLevel = player->getWantedLevel();
-        m_hud->update(playerData, wantedLevel, m_gameTime);
-    }
-    // Vehicle-to-Vehicle collision (Player-driven vs AI)Add commentMore actionsAdd commentMore actions
-    if (player && player->isInVehicle() && carManager) {
-        Vehicle* playerVehicle = player->getCurrentVehicle();
-        if (playerVehicle) { // Should always be true if isInVehicle is true
-            sf::FloatRect playerVehicleBounds = playerVehicle->getSprite().getGlobalBounds();
+    // --- 5. HUD Update ---
+    if (m_hud && currentState == GameState::Playing) {
+        PlayerData data;
+        data.money = player->getMoney();
+        data.health = player->getHealth();
+        data.armor = player->getArmor();
+        data.weaponName = player->getCurrentWeaponName();
+        data.maxAmmo = player->getMaxAmmo();
 
-            for (auto& aiVehicle : carManager->getVehicles()) {
-                if (&aiVehicle == playerVehicle || aiVehicle.hasDriver()) { // Don't check against self or other player-driven cars (if multiplayer later)
-                    continue;
-                }
-                sf::FloatRect aiVehicleBounds = aiVehicle.getSprite().getGlobalBounds();
-                if (playerVehicleBounds.intersects(aiVehicleBounds)) {
-                    // Collision detected!
-                    // Simple response: stop both vehicles for now.
-                    playerVehicle->stop(); // stop() method sets speed to 0
-                    aiVehicle.stop();
-                    // Could add sound, visual effect, damage later
-    // std::cout << "Player vehicle collided with AI vehicle!" << std::endl; // Commented out for less console spam
-                }
-            }
-        }
+        m_hud->update(data, player->getWantedLevel(), m_gameTime);
     }
+
+    // --- 6. Store Proximity Check ---
     for (auto& s : store) {
         float distSq = distanceSquared(player->getPosition(), s->getPosition());
         s->setPlayerClose(distSq < STORE_INTERACT_RADIUS * STORE_INTERACT_RADIUS);
     }
 
+    // --- 7. Frame Timing Debug ---
     if (timeThisFrame) {
         sf::Time updateTime = frameTimer.getElapsedTime();
         std::cout << "Frame " << m_playingFrameCount << " update time: " << updateTime.asSeconds() << "s\n";
     }
 }
+
 
 void GameManager::render() {
     sf::Clock frameTimer;
@@ -602,7 +527,12 @@ void GameManager::render() {
     window.setView(window.getDefaultView());
     if (m_hud)
         m_hud->draw(window);
-
+    if (m_isAwaitingFirstPlayerMove) {
+        sf::RectangleShape overlay(sf::Vector2f(window.getSize()));
+        overlay.setFillColor(sf::Color(0, 0, 0, 150));
+        window.draw(overlay);
+        window.draw(m_pressStartText);
+    }
 
 
 
@@ -711,9 +641,39 @@ void GameManager::startGameFullscreen() {
     window.setFramerateLimit(60);
     isFullscreen = true;
 
+    updatePressStartPosition();
+
+    // Display a simple loading screen while heavy resources are initialized
+    sf::Sprite loadingBgSprite;
+    sf::Text loadingText;
+    try {
+        loadingBgSprite.setTexture(ResourceManager::getInstance().getTexture("loading_background"));
+        sf::Vector2u texSize = loadingBgSprite.getTexture()->getSize();
+        sf::Vector2u winSize = window.getSize();
+        loadingBgSprite.setScale(static_cast<float>(winSize.x) / texSize.x,
+            static_cast<float>(winSize.y) / texSize.y);
+        loadingText.setFont(ResourceManager::getInstance().getFont("main"));
+        loadingText.setString("Loading...");
+        loadingText.setCharacterSize(50);
+        loadingText.setFillColor(sf::Color::White);
+        sf::FloatRect rect = loadingText.getLocalBounds();
+        loadingText.setOrigin(rect.left + rect.width / 2.f, rect.top + rect.height / 2.f);
+        loadingText.setPosition(winSize.x / 2.f, winSize.y / 2.f);
+        window.clear();
+        window.draw(loadingBgSprite);
+        window.draw(loadingText);
+        window.display();
+    }
+    catch (...) {
+        // If resources missing, just clear screen
+        window.clear();
+        window.display();
+    }
+
     gameView.setSize(static_cast<float>(desktop.width), static_cast<float>(desktop.height));
     gameView.setCenter(gameView.getSize().x / 2.f, gameView.getSize().y / 2.f);
     window.setView(gameView);
+    updatePressStartPosition();
 
 
     loadCollisionRectsFromJSON("resources/map.tmj");
@@ -878,4 +838,12 @@ void GameManager::setupPatrolZones() {
     //     }
     // }
     std::cout << "Patrol zones set up. Count: " << m_patrolZones.size() << std::endl;
+}
+
+void GameManager::updatePressStartPosition() {
+    sf::FloatRect textRect = m_pressStartText.getLocalBounds();
+    m_pressStartText.setOrigin(textRect.left + textRect.width / 2.f,
+        textRect.top + textRect.height / 2.f);
+    m_pressStartText.setPosition(window.getSize().x / 2.f,
+        window.getSize().y / 2.f);
 }

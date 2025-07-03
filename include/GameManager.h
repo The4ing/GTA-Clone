@@ -48,7 +48,7 @@ private:
     void setFullscreen(bool fullscreen);
     void loadCollisionRectsFromJSON(const std::string& filename);
     void buildBlockedPolyTree();
-    //FOR THE INVENTORY SHOWAdd commentMore actions
+    void updatePressStartPosition();
     void renderFrozenGame(sf::RenderTarget& target);
 
 
@@ -76,7 +76,7 @@ private:
     std::unique_ptr<HUD>        m_hud;
     sf::View                    m_hudView;
     static constexpr float GAME_TIME_SCALE = 60.0f;
-
+    sf::Text m_pressStartText;
     InventoryUI inventoryUI;
     sf::RenderTexture frozenBackgroundTexture;
     sf::Sprite frozenBackgroundSprite;
