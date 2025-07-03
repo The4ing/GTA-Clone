@@ -28,11 +28,19 @@ public:
     void setIsAmbient(bool isAmbient);
     bool isAmbient() const;
     bool m_playerCausedWantedIncrease = false;
+    void startRetreating(const sf::Vector2f& retreatTarget); 
+    bool isRetreating() const; // Implementation will check internal state
+    bool needsCleanup = false;
+    void setIsStatic(bool isStatic) { m_isStatic = isStatic; }
+    bool isStatic() const { return m_isStatic; }
+
 
 private:
+    enum class CarState { Chasing, AmbientDriving, Retreating };
+    CarState m_carState = CarState::AmbientDriving;
     void updateChaseBehavior(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     bool attemptRunOverPlayer(Player& player);
-
+    bool m_isStatic = false; // Flag to mark static police cars
     GameManager& m_gameManager;
     bool m_isAmbient = true;
 

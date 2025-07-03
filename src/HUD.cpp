@@ -178,9 +178,7 @@ void HUD::updateElementPositions(float viewWidth, float viewHeight) {
         sf::Vector2f pos(viewWidth / 2.f, m_padding);
         m_timeText.setPosition(pos);
     }
-    std::cout << "View width: " << viewWidth << ", height: " << viewHeight << std::endl;
     float starWidth = m_starTexture.getSize().x * m_starSprites[0].getScale().x;
-    std::cout << "Star width (scaled): " << starWidth << std::endl;
 
 
     // Wanted Stars Positioning
@@ -193,10 +191,6 @@ void HUD::updateElementPositions(float viewWidth, float viewHeight) {
         for (int i = 0; i < m_currentWantedLevel; ++i) {
             m_starSprites[i].setColor(GTA_STAR_YELLOW);
             m_starSprites[i].setPosition(startX + i * (starWidth + m_starSpacing), startY);
-            // ?? ????? ????? ?? ????
-            std::cout << "Star " << i << " position: ("
-                << m_starSprites[i].getPosition().x << ", "
-                << m_starSprites[i].getPosition().y << ")" << std::endl;
         }
     }
 

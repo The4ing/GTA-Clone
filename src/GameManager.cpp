@@ -729,6 +729,8 @@ void GameManager::startGameFullscreen() {
     setupPatrolZones(); // Call to define patrol zones
     pedestrianManager = GameFactory::createPedestrianManager(blockedPolygons);
     policeManager = GameFactory::createPoliceManager(*this, blockedPolygons);
+    if (policeManager)
+        //    policeManager->spawnStaticPoliceUnits(MAP_BOUNDS, STATIC_POLICE_GRID_SIZE, blockedPolygons);
     store = GameFactory::createStores(blockedPolygons);
 
     carManager = GameFactory::createCarManager(roads, *policeManager);

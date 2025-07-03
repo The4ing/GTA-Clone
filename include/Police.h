@@ -11,7 +11,8 @@ enum class PoliceState {
     Chasing,
     Shooting,
     MeleeAttacking, 
-    BackingUp
+    BackingUp, 
+    Retreating // New state for leaving the screen
 };
 
 enum class PoliceWeaponType {
@@ -34,7 +35,9 @@ public:
     void update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     bool moveToward(const sf::Vector2f& target, float dt);
     void draw(sf::RenderTarget& window);
-
+    void startRetreating(const sf::Vector2f& retreatTarget); 
+    bool isRetreating() const { return state == PoliceState::Retreating; }
+    bool needsCleanup = false; // Flag to mark for removal after retreating
     void takeDamage(int amount);
     bool isDead() const;
 
@@ -53,6 +56,8 @@ public:
     void onCollision(GameObject& other) {};
     void collideWithPresent(Present& present) {};
     void collideWithPlayer(Player& /*player*/) {}
+    void setIsStatic(bool isStatic) { m_isStatic = isStatic; }
+    bool isStatic() const { return m_isStatic; }
  
 
 private:
@@ -114,8 +119,10 @@ private:
     bool showRadar = false;
 
         // Vision parameters
-        float m_visionDistance = 200.f;
+    float m_visionDistance = 200.f;
     float m_fieldOfViewAngle = 120.f; // Degrees
+    bool m_isStatic = false; // Flag to mark static police unitsAdd commentMore actions
+
 };
 
 

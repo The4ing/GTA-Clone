@@ -336,6 +336,54 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
     // Attacking states (Shooting, MeleeAttacking) handle their animations in their respective handlers or earlier in update.
 
     animationManager->update(dt);
+    if (state == PoliceState::Retreating) {
+            if (!currentPath.empty() && currentPathIndex < currentPath.size()) {
+                sf::Vector2f nextWaypoint = currentPath[currentPathIndex];
+                moveToward(nextWaypoint, dt); // Movement logic is reused
+
+                float distanceToWaypoint = std::hypot(nextWaypoint.x - getPosition().x, nextWaypoint.y - getPosition().y);
+                if (distanceToWaypoint < PATHFINDING_GRID_SIZE / 2.0f) {
+                    currentPathIndex++;
+                }
+                if (currentPathIndex >= currentPath.size()) { // Reached end of retreat path
+                    needsCleanup = true;
+                    // std::cout << "Police " << this << " reached retreat destination. Marking for cleanup." << std::endl;
+                }
+            }
+            else { // No path or path finished, but not yet marked for cleanup (e.g. if path failed)
+                needsCleanup = true; // Mark for cleanup anyway if stuck without a path while retreating
+                // std::cout << "Police " << this << " has no retreat path or finished. Marking for cleanup." << std::endl;
+            }
+        animationManager->setAnimation("Walk_NoWeapon", true); // Use walking animation for retreating
+        animationManager->update(dt);
+        return; // Don't process other states if retreating
+    }
+}
+
+void Police::startRetreating(const sf::Vector2f& retreatTarget) {
+        if (state == PoliceState::Retreating) return; // Already retreating
+
+    state = PoliceState::Retreating;
+    targetPos = retreatTarget; // The actual off-screen target
+    currentPath.clear();
+    currentPathIndex = 0;
+    pathFailCooldown = 0.f; // Allow immediate pathfinding
+
+    if (PoliceManager::canRequestPath()) {
+        PoliceManager::recordPathfindingCall();
+        currentPath = pathfinder.findPath(getPosition(), retreatTarget);
+        if (currentPath.empty()) {
+            // std::cout << "Police " << this << ": Failed to find retreat path to (" << retreatTarget.x << "," << retreatTarget.y << "). Will be cleaned up." << std::endl;
+            needsCleanup = true; // Mark for immediate cleanup if path fails
+        }
+        else {
+            // std::cout << "Police " << this << ": Starting retreat to (" << retreatTarget.x << "," << retreatTarget.y << ") with " << currentPath.size() << " waypoints." << std::endl;
+        }
+    }
+    else {
+        // std::cout << "Police " << this << ": Pathfinding throttled for retreat. Will be cleaned up." << std::endl;
+        needsCleanup = true; // Mark for cleanup if pathfinding is throttled
+    }
 }
 
 

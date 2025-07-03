@@ -40,10 +40,47 @@ PoliceCar::PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition
 
     // If Vehicle class has speed, set it there. Otherwise, use m_speed from PoliceCar.h
     // this->speed = m_speed; // Example if Vehicle has a public 'speed' member
+    m_carState = CarState::AmbientDriving; // Default state
+}
+bool PoliceCar::isRetreating() const {
+        return m_carState == CarState::Retreating;
+}
+
+void PoliceCar::startRetreating(const sf::Vector2f& retreatTarget) {
+    if (m_carState == CarState::Retreating) return;
+
+    m_carState = CarState::Retreating;
+    m_isAmbient = false; // No longer ambient if retreating
+    m_currentTargetPosition = retreatTarget; // Store the final off-screen target
+    m_currentPath.clear();
+    m_currentPathIndex = 0;
+    m_repathTimer = REPATH_COOLDOWN; // Force immediate path attempt
+
+    if (PoliceManager::canRequestPath()) {
+        PoliceManager::recordPathfindingCall();
+        m_currentPath = m_pathfinder.findPath(getPosition(), retreatTarget);
+        if (m_currentPath.empty()) {
+            // std::cout << "PoliceCar " << this << ": Failed to find retreat path. Marking for cleanup." << std::endl;
+            needsCleanup = true;
+        }
+        else {
+            // std::cout << "PoliceCar " << this << ": Starting retreat to (" << retreatTarget.x << "," << retreatTarget.y << ")" << std::endl;
+        }
+    }
+    else {
+        // std::cout << "PoliceCar " << this << ": Pathfinding throttled for retreat. Marking for cleanup." << std::endl;
+        needsCleanup = true;
+    }
 }
 
 void PoliceCar::setIsAmbient(bool isAmbient) {
     m_isAmbient = isAmbient;
+    if (m_isAmbient && m_carState != CarState::Retreating) { // Don't switch to ambient if retreatingAdd commentMore actions
+        m_carState = CarState::AmbientDriving;
+    }
+    else if (!m_isAmbient && m_carState == CarState::AmbientDriving) {
+        m_carState = CarState::Chasing; // Default to chasing if not ambient and not retreating
+    }
 }
 
 bool PoliceCar::isAmbient() const {
@@ -53,30 +90,97 @@ bool PoliceCar::isAmbient() const {
 
 void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     // Always call Vehicle::update for basic movement processing, collision response from Vehicle side etc.
-    Vehicle::update(dt, blockedPolygons);
+    Vehicle::update(dt, blockedPolygons); // Base vehicle logicAdd commentMore actions
 
-    if (m_isAmbient && player.getWantedLevel() >= 3) {
-        m_isAmbient = false; // Transition to non-ambient (aggressive)
-        // No need to reset m_playerCausedWantedIncrease here, that's for a different mechanic
+    if (m_carState == CarState::Retreating) {
+        m_repathTimer += dt; // Similar to chase, path to retreat target
+        bool needsNewRetreatPath = m_currentPath.empty() || m_currentPathIndex >= m_currentPath.size();
+
+        // No need to check if target moved significantly, as retreat target is fixed.
+        // However, if path fails or is blocked, might need to repath or give up.
+
+        if (needsNewRetreatPath && m_repathTimer >= REPATH_COOLDOWN && PoliceManager::canRequestPath()) {
+            PoliceManager::recordPathfindingCall();
+            m_currentPath = m_pathfinder.findPath(getPosition(), m_currentTargetPosition); // m_currentTargetPosition is the retreat spot
+            m_currentPathIndex = 0;
+            m_repathTimer = 0.f;
+            if (m_currentPath.empty()) {
+                // std::cout << "PoliceCar " << this << ": Failed to RE-find retreat path. Marking for cleanup." << std::endl;
+                needsCleanup = true;
+            }
+        }
+        else if (needsNewRetreatPath && m_repathTimer >= REPATH_COOLDOWN) {
+            m_repathTimer = 0.f; // Throttled
+            needsCleanup = true; // If throttled during retreat and no path, assume stuck
+        }
+
+        if (!m_currentPath.empty() && m_currentPathIndex < m_currentPath.size()) {
+                sf::Vector2f nextWaypoint = m_currentPath[m_currentPathIndex];
+            // Simplified movement logic (similar to chase, but towards m_currentTargetPosition)
+            sf::Vector2f direction = nextWaypoint - getPosition();
+            float distanceToWaypoint = std::hypot(direction.x, direction.y);
+            if (distanceToWaypoint > 0.01f) direction /= distanceToWaypoint;
+
+            sf::Vector2f currentPos = getPosition();
+            float moveStep = m_speed * dt; // Use car's speed
+            sf::Vector2f nextPosCandidate = currentPos + direction * std::min(moveStep, distanceToWaypoint);
+
+            // Basic collision check for retreating cars as well
+            bool collision = false;
+            // NOTE: This simple collision check might be insufficient. Ideally, use Vehicle's collision.
+            for (const auto& poly : blockedPolygons) {
+                if (CollisionUtils::pointInPolygon(nextPosCandidate, poly)) {
+                    collision = true;
+                    m_currentPath.clear();
+                    m_currentPathIndex = 0;
+                    // std::cout << "PoliceCar (Retreating): Collision, clearing path." << std::endl;
+                    // Consider if it should try to repath or just give up (mark needsCleanup = true)
+                    break;
+                }
+            }
+
+            if (!collision) {
+                setPosition(nextPosCandidate);
+                m_sprite.setPosition(nextPosCandidate);
+                if (distanceToWaypoint > 0.01f) {
+                    float angle = std::atan2(direction.y, direction.x) * 180.f / M_PI;
+                    m_sprite.setRotation(angle + 90.f);
+                }
+            }
+
+
+            if (distanceToWaypoint < TARGET_REACHED_DISTANCE) {
+                m_currentPathIndex++;
+            }
+            if (m_currentPathIndex >= m_currentPath.size()) {
+                needsCleanup = true; // Reached end of retreat path
+                // std::cout << "PoliceCar " << this << " reached retreat destination. Cleanup." << std::endl;
+            }
+        }
+        else if (m_currentPath.empty() && m_carState == CarState::Retreating) {
+            // No path to retreat, or path finished, mark for cleanup
+            needsCleanup = true;
+            // std::cout << "PoliceCar " << this << " has no/finished retreat path. Cleanup." << std::endl;
+        }
+        return; // Don't process other states if retreating
     }
 
-    if (m_isAmbient) {
-        // Ambient behavior:
-        // For now, Vehicle::update() handles its general movement if it's on a path (e.g., Bezier curve).
-        // If not on a path, it might just continue straight or stop, depending on Vehicle's AI.
-        // No specific chase behavior.
-        // We might need to add more sophisticated ambient driving logic here later if Vehicle::update
-        // isn't sufficient for believable ambient police car driving.
+
+    // --- Regular Update Logic (Ambient or Chasing) ---
+    if (m_isAmbient && player.getWantedLevel() >= 3 && m_carState != CarState::Retreating) {
+        setIsAmbient(false); // Transition to non-ambient (aggressive), which sets state to Chasing
     }
-    else {
+
+    if (m_carState == CarState::AmbientDriving) {
+            // Ambient behavior logic (currently relies on Vehicle::update or simple driving)
+    }
+    else if (m_carState == CarState::Chasing) {
         // Non-ambient (aggressive) behavior:
         updateChaseBehavior(dt, player, blockedPolygons);
 
-        // Basic collision with player for "run over" - can be expanded
         if (m_bumpCooldown <= 0.f && attemptRunOverPlayer(player)) {
-            player.takeDamage(25); // Example damage
-            m_bumpCooldown = 3.f; // Cooldown for bumping/damaging player
-            // Potentially add some knockback or effect
+            player.takeDamage(25);
+            m_bumpCooldown = 3.f;
         }
     }
 
