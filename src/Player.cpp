@@ -35,6 +35,7 @@ Player::Player(GameManager& gameManager) // Modified constructor
 
     animationManager = std::make_unique<AnimationManager>(sprite, frameWidth, frameHeight, sheetCols, sheetRows);
     animationManager->initAnimations();
+    m_shooter = std::make_unique<PlayerShooter>(*this, gameManager.getBulletPool());
 
     WeaponsAmmo = {
     { "Fists",   AmmoSetting{0, 0} },        
@@ -55,7 +56,9 @@ sf::Vector2f Player::getPosition() const {
     return sprite.getPosition();
 }
 
-
+float Player::getRotation() const {
+    return sprite.getRotation();
+}
 
 void Player::takeDamage(int amount)
 {
@@ -77,6 +80,17 @@ int Player::getCurrentAmmo(const std::string& name) const {
     if (it != WeaponsAmmo.end())
         return it->second.Ammo;
     return 0; // או ערך ברירת מחדל מתאים
+}
+
+bool Player::consumeAmmo(const std::string& name) {
+    auto it = WeaponsAmmo.find(name);
+    if (it == WeaponsAmmo.end())
+        return false;
+    AmmoSetting& ammo = it->second;
+    if (ammo.Ammo <= 0)
+        return false;
+    --ammo.Ammo;
+    return true;
 }
 
 void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
@@ -161,78 +175,20 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
                 }
                 else if (m_currentWeaponName == "Pistol") {
                     playAnimation("PistolShoot", false);
-                    SoundManager::getInstance().playSound("gunshot");
-
-                    // חישוב כיוון הירי
-                    float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f); // Convert angle to radians
-                    sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad));
-
-                    // ה-offset של הקנה (הזזת הקנה ביחס לכיוון הסיבוב)
-                    float gunOffsetDistance = 5.f;  // מרחק הקנה מהשחקן, כמה פיקסלים (שיעביר את הקנה קצת ימינה או שמאלה)
-                    sf::Vector2f gunOffset;
-                    sf::Vector2f bulletStartPos;
-
-                    float currentRotation = sprite.getRotation();
-                    std::cout << "Current Rotation: " << currentRotation << std::endl;
-                    if ((currentRotation >= 315.f && currentRotation <= 360.f) || (currentRotation >= 0.f && currentRotation < 45.f)) {
-                        // Player is facing up (315° to 45°)
-                        gunOffset = sf::Vector2f(bulletDir.x, bulletDir.y * 100);
-                        bulletStartPos = getCenter();
-                        bulletStartPos.x += 5;
-                        bulletStartPos.y += 5;
-                        std::cout << "UP" << std::endl;
-                    }
-                    else if (currentRotation >= 45.f && currentRotation < 135.f) {
-                        // Player is facing right (45° to 135°)
-                        gunOffset = sf::Vector2f(bulletDir.x * gunOffsetDistance, bulletDir.y * gunOffsetDistance);
-                        bulletStartPos = getCenter() + gunOffset;  // המיקום שבו הכדור מתחיל
-                        std::cout << "RIGHT" << std::endl;
-                    }
-                    else if (currentRotation >= 135.f && currentRotation < 225.f) {
-                        // Player is facing down (135° to 225°)
-                        gunOffset = sf::Vector2f(bulletDir.x * gunOffsetDistance, bulletDir.y * gunOffsetDistance);
-                        bulletStartPos = getCenter() + gunOffset;  // המיקום שבו הכדור מתחיל
-                        std::cout << "DOWN" << std::endl;
-                    }
-                    else {
-                        // Player is facing left (225° to 315°)
-                       // אם השחקן פונה ימינה או למעלה, קנה ימינה
-                        gunOffset = sf::Vector2f(bulletDir.x, bulletDir.y * 100);
-                        bulletStartPos = getCenter();
-                        bulletStartPos.x -= 5;
-                        bulletStartPos.y -= 5;
-                        std::cout << "LEFT" << std::endl;
-                    }
-                    // חישוב המיקום של הקנה ביחס לכיוון של השחקן
-
-
-                    // הוספת הכדור למשחק
-                    m_gameManager.addBullet(bulletStartPos, bulletDir);
+                    m_shooter->shoot(m_currentWeaponName);
                 }
-
-
-
                 else if (m_currentWeaponName == "Rifle") {
                     playAnimation("RifleShoot", false);
-                    SoundManager::getInstance().playSound("rifleShot");
-                    float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f);
-                    sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad));
-                    m_gameManager.addBullet(getCenter(), bulletDir);
+                    m_shooter->shoot(m_currentWeaponName);
 
                 }
                 else if (m_currentWeaponName == "Minigun") {
                     playAnimation("MinigunShoot", false);
-                    SoundManager::getInstance().playSound("minigunShot");
-                    float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f);
-                    sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad));
-                    m_gameManager.addBullet(getCenter(), bulletDir);
+                    m_shooter->shoot(m_currentWeaponName);
                 }
                 else if (m_currentWeaponName == "Bazooka") {
                     playAnimation("BazookaShoot", false);
-                    SoundManager::getInstance().playSound("RPGshot");
-                    float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f);
-                    sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad));
-                    m_gameManager.addBullet(getCenter(), bulletDir); // Consider a different bullet type for RPG later
+                    m_shooter->shoot(m_currentWeaponName);
                 }
                 else if (m_currentWeaponName == "Knife") {
                     playAnimation("KnifeAttack", false);
@@ -399,6 +355,10 @@ void Player::increaseSpeed() {
 }
 void Player::AddAmmo() {
     
+}
+
+PlayerShooter& Player::getShooter() {
+    return *m_shooter;
 }
 
 bool Player::tryBuyAmmo(const std::string& weaponName, int amountToAdd, int price) {

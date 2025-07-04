@@ -54,6 +54,7 @@ void ResourceInitializer::loadGameResources() {
     rm.loadSoundBuffer("RPGshot", "resources/sounds/RPGshot.wav");
     rm.loadSoundBuffer("KnifeAttack", "resources/sounds/KnifeAttack.wav");
     rm.loadSoundBuffer("ThrowGrenade", "resources/sounds/ThrowGrenade.wav");
+    rm.loadSoundBuffer("noAmmo", "resources/sounds/noAmmo.wav");
     // rm.loadSoundBuffer("explosion", "resources/sounds/explosion.wav");
 
     //inventory 

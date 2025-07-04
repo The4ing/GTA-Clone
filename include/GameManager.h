@@ -16,6 +16,7 @@
 #include "Store.h"
 #include "QuadTree.h"
 #include "PatrolZone.h" 
+#include "PlayerShooter.h"
 
 enum class GameState {
     Menu,
@@ -35,6 +36,7 @@ public:
     PathfindingGrid* getPathfindingGrid() const;
     const std::vector<PatrolZone>& getPatrolZones() const;
     bool isPositionBlocked(const sf::Vector2f& pos) const;
+    BulletPool& getBulletPool() { return bulletPool; }
     const QuadTree<std::vector<sf::Vector2f>>& getBlockedPolyTree() const { return blockedPolyTree; }
     const sf::View& getGameView() const { return gameView; }
 

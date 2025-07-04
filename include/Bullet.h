@@ -36,8 +36,8 @@ public:
     void collideWithPresent(Present& present) override;
 
     bool checkCollision(const std::vector<std::vector<sf::Vector2f>>& blockedPolygons,
-        const std::vector<Pedestrian>& npcs,
-        const std::vector<Vehicle>& cars);
+        const std::vector<Pedestrian*>& npcs,
+        const std::vector<Vehicle*>& cars);
 
     void setType(BulletType type);
     bool isActive() const;

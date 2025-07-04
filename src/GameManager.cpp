@@ -359,12 +359,18 @@ void GameManager::update(float dt) {
         for (auto& present : presents)
             present->update(dt, blockedPolygons);
 
-        for (auto& bullet_ptr : bulletPool.getAllBullets()) {
-            if (bullet_ptr->isActive()) {
-                bullet_ptr->update(dt, blockedPolygons);
-                // Optional: collect NPCs/cars for potential collision later
-            }
+        std::vector<Pedestrian*> npcPtrs;
+        if (pedestrianManager) {
+            for (const auto& up : pedestrianManager->getPedestrians())
+                npcPtrs.push_back(up.get());
         }
+        std::vector<Vehicle*> carPtrs;
+        if (carManager) {
+            for (auto& v : carManager->getVehicles())
+                carPtrs.push_back(&v);
+        }
+
+        player->getShooter().update(dt, blockedPolygons, npcPtrs, carPtrs);
 
         // Vehicle-to-Vehicle collision (Player-driven vs AI)
         if (player->isInVehicle() && carManager) {
