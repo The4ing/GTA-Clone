@@ -3,7 +3,7 @@
 #include <iostream>
 #include "ResourceManager.h"
 #include <functional>
-#include "player.h"
+#include "Player.h"
 
 InventoryUI::InventoryUI() :selectedIndex(0)
 {

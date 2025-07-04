@@ -16,13 +16,13 @@ sf::Vector2f Character::getPosition() const {
 }
 
 void Character::setPosition(const sf::Vector2f& pos) {
-   
-    sprite.move(pos);
+    this->position = pos;
+    this->sprite.setPosition(this->position); 
 }
 
 void Character::move(const sf::Vector2f& direction, float dt) {
-    //position+ = direction * speed * dt;
-    sprite.setPosition(position);
+    this->position += direction * this->speed * dt; // Update member variable
+    this->sprite.setPosition(this->position);     // Update sprite position
 }
 
 float Character::getSpeed() const {

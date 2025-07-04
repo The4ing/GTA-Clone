@@ -1,6 +1,7 @@
 
 #include "SpeedBoost.h"
-#include "Player.h"
+
+
 
 SpeedBoost::SpeedBoost(const sf::Texture& texture, const sf::Vector2f& pos)
     : Present(texture, pos) {

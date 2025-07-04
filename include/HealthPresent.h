@@ -1,5 +1,6 @@
 #pragma once
 #include "Present.h"
+#include "Player.h"
 
 class HealthPresent : public Present {
 public:

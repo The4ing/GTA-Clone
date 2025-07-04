@@ -3,7 +3,7 @@
 #include <memory>
 #include <SFML/Graphics.hpp>
 #include <iostream>
-#include "player.h"
+#include "Player.h"
 #include "HUD.h" 
 #include "CarManager.h"
 #include "PoliceManager.h"
@@ -50,6 +50,7 @@ private:
     void buildBlockedPolyTree();
     void updatePressStartPosition();
     void renderFrozenGame(sf::RenderTarget& target);
+    void displayLoadingScreen(const std::string& message, float initialProgress = 0.0f);
 
 
     std::vector<std::vector<sf::Vector2f>> blockedPolygons;

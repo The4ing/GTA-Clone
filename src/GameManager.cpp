@@ -1,42 +1,52 @@
 ﻿#include "GameManager.h"
-#include <iostream> // For std::cerr
-#include "ResourceManager.h"
-#include "ResourceInitializer.h" // For loadGameResources
-#include "Slideshow.h"
+#include <SFML/Graphics.hpp>
+#include <SFML/System/Clock.hpp>
+#include <SFML/System/Sleep.hpp>
 #include <nlohmann/json.hpp>
-#include <SFML/System/Clock.hpp> // For sf::Clock
-#include <SFML/System/Sleep.hpp> // For sf::sleep (optional, for testing loading screen)
-#include <fstream>
+#include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <ctime>
-#include <algorithm>
-#include "GameFactory.h"
-#include "Vehicle.h"
+#include <fstream>
+#include <iostream>
 #include <limits>
-#include "player.h"
-#include "InventoryUI.h"
-#include "Constants.h"       // Required for MAP_BOUNDS
-#include "PathfindingGrid.h"
 #include "CollisionUtils.h"
+#include "Constants.h"
+#include "GameFactory.h"
+#include "InventoryUI.h"
+#include "PathfindingGrid.h"
+#include "Player.h"
+#include "ResourceInitializer.h"
+#include "ResourceManager.h"
+#include "Slideshow.h"
+#include "Vehicle.h"
+
+// Uncomment to time‑profile את 10 הפריימים הראשונים
+// #define DEBUG_TIMING
 
 using json = nlohmann::json;
 
-// Helper function to calculate distance between two points (squared, to avoid sqrt initially)Add commentMore actions
-float distanceSquared(const sf::Vector2f& p1, const sf::Vector2f& p2) {
+/*‑‑‑‑‑  כלי עזר  ‑‑‑‑‑*/
+static float distanceSquared(const sf::Vector2f& p1, const sf::Vector2f& p2)
+{
     float dx = p1.x - p2.x;
     float dy = p1.y - p2.y;
     return dx * dx + dy * dy;
 }
 
+/*‑‑‑‑‑  ctor  ‑‑‑‑‑*/
 GameManager::GameManager()
-    : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top-Down GTA Clone"),
-    m_gameTime(sf::Time::Zero), m_isAwaitingFirstPlayerMove(false)
+    : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top‑Down GTA Clone"),
+    m_gameTime(sf::Time::Zero),
+    m_isAwaitingFirstPlayerMove(false)
 {
     frozenBackgroundTexture.create(window.getSize().x, window.getSize().y);
     window.setFramerateLimit(60);
+
     menu = std::make_unique<Menu>(window);
     currentState = GameState::Menu;
-    // Setup "Press Any Key" text
+
+    /* Press‑any‑key overlay */
     try {
         m_pressStartText.setFont(ResourceManager::getInstance().getFont("main"));
         m_pressStartText.setString("Press any key to start");
@@ -44,155 +54,98 @@ GameManager::GameManager()
         m_pressStartText.setFillColor(sf::Color::White);
     }
     catch (const std::exception& e) {
-        std::cerr << "Error initializing start text: " << e.what() << std::endl;
+        std::cerr << "Error initializing start text: " << e.what() << '\n';
     }
     updatePressStartPosition();
 }
 
-void GameManager::run() {
-    Slideshow slideshow(window, 2.5f);
-    //slideshow.run();
+/*‑‑‑‑‑  main loop  ‑‑‑‑‑*/
+void GameManager::run()
+{
+    Slideshow slideshow(window, 2.5f);       // לוגו/קרדיטים בהפעלה – אם תרצה
+    // slideshow.run();
 
     while (window.isOpen()) {
         float deltaTime = clock.restart().asSeconds();
         processEvents();
 
+        /*‑‑‑ MENU ‑‑‑*/
         if (currentState == GameState::Menu) {
             if (menu->isOptionChosen()) {
-                std::string selected = menu->getSelectedOption();
+                const std::string selected = menu->getSelectedOption();
+
+                /*‑‑‑ Start Game ‑‑‑*/
                 if (selected == "Start Game") {
-                    // --- Enhanced Loading Screen ---
-                    window.clear();
+                    /* שלב 1 – הצג בר טעינה ריק */
+                    displayLoadingScreen("Loading Game...", 0.f);
 
-                    // Background
-                    sf::Sprite loadingBgSprite;
-                    try {
-                        loadingBgSprite.setTexture(ResourceManager::getInstance().getTexture("loading_background"));
-                        // Scale background to fit window
-                        sf::Vector2u texSize = loadingBgSprite.getTexture()->getSize();
-                        sf::Vector2u winSize = window.getSize();
-                        loadingBgSprite.setScale(
-                            static_cast<float>(winSize.x) / texSize.x,
-                            static_cast<float>(winSize.y) / texSize.y
-                        );
-                    }
-                    catch (const std::runtime_error& e) {
-                        std::cerr << "Error loading loading_background: " << e.what() << std::endl;
-                        // Fallback: simple black background
-                    }
-                    window.draw(loadingBgSprite);
+                    sf::Clock loadingClock;
 
-                    // Loading Text
-                    sf::Text loadingText;
-                    try {
-                        loadingText.setFont(ResourceManager::getInstance().getFont("main"));
-                        loadingText.setString("Loading Game...");
-                        loadingText.setCharacterSize(50); // Increased size
-                        loadingText.setFillColor(sf::Color::White);
-                        // Center text
-                        sf::FloatRect textRect = loadingText.getLocalBounds();
-                        loadingText.setOrigin(textRect.left + textRect.width / 2.0f,
-                            textRect.top + textRect.height / 2.0f);
-                        loadingText.setPosition(window.getSize().x / 2.0f, window.getSize().y / 2.0f - 50.f); // Position above loading bar
-                    }
-                    catch (const std::runtime_error& e) {
-                        std::cerr << "Error loading main font for loading text: " << e.what() << std::endl;
-                    }
-                    window.draw(loadingText);
-
-                    // Loading Bar
-                    float barWidth = 400.f;
-                    float barHeight = 30.f;
-                    sf::RectangleShape loadingBarBackground(sf::Vector2f(barWidth, barHeight));
-                    loadingBarBackground.setFillColor(sf::Color(50, 50, 50)); // Dark gray
-                    loadingBarBackground.setPosition(window.getSize().x / 2.0f - barWidth / 2.0f,
-                        window.getSize().y / 2.0f + 20.f); // Position below text
-
-                    sf::RectangleShape loadingBarFill(sf::Vector2f(0, barHeight)); // Start with 0 width
-                    loadingBarFill.setFillColor(sf::Color(100, 200, 50)); // Light green
-                    loadingBarFill.setPosition(loadingBarBackground.getPosition());
-
-                    window.draw(loadingBarBackground);
-                    window.draw(loadingBarFill);
-                    window.display();
-
-                    // Actually load resources
-                    sf::Clock loadingClock; // Start timing for resource loading
+                    /* שלב 2 – טען משאבים כבדים */
                     ResourceInitializer::loadGameResources();
-                    sf::Time resourceLoadTime = loadingClock.getElapsedTime();
-                    std::cout << "Time to load game resources: " << resourceLoadTime.asSeconds() << "s\n";
 
-                    // Simulate loading bar fill (for Option A)
-                    // For a quick visual, just fill it after loading.
-                    // An animation loop here would be more complex.
-                    loadingBarFill.setSize(sf::Vector2f(barWidth, barHeight));
-                    window.clear(); // Clear again before drawing the full bar
-                    window.draw(loadingBgSprite);
-                    window.draw(loadingText);
-                    window.draw(loadingBarBackground);
-                    window.draw(loadingBarFill);
-                    window.display();
-                    // sf::sleep(sf::seconds(0.5f)); // Optional: show full bar for a moment
+                    std::cout << "Time to load game resources: "
+                        << loadingClock.getElapsedTime().asSeconds() << " s\n";
 
-                    loadingClock.restart(); // Restart clock for startGameFullscreen timing
+                    /* שלב 3 – הצג בר טעינה מלא */
+                    displayLoadingScreen("Loading Game...", 1.f);
+
+                    loadingClock.restart();
                     startGameFullscreen();
-                    sf::Time startGameSetupTime = loadingClock.getElapsedTime();
-                    std::cout << "Time for startGameFullscreen setup: " << startGameSetupTime.asSeconds() << "s\n";
 
+                    std::cout << "Time for startGameFullscreen setup: "
+                        << loadingClock.getElapsedTime().asSeconds() << " s\n";
                 }
+                /*‑‑‑ Exit ‑‑‑*/
                 else if (selected == "Exit") {
                     window.close();
                 }
             }
 
-            if (currentState == GameState::Menu) { // Check if still in Menu state before drawing menu
+            /* ציור התפריט */
+            if (currentState == GameState::Menu) {
                 window.clear();
                 menu->draw();
                 window.display();
             }
-
         }
+
+        /*‑‑‑ PLAYING ‑‑‑*/
         else if (currentState == GameState::Playing) {
             update(deltaTime);
             render();
+#ifdef DEBUG_TIMING
             if (m_playingFrameCount < 10) m_playingFrameCount++;
+#endif
         }
-        //
-        else if (currentState == GameState::Inventory) {
-            //inventoryUI.handleInput(*player ,player->getInventory(), window);
 
+        /*‑‑‑ INVENTORY ‑‑‑*/
+        else if (currentState == GameState::Inventory) {
             window.clear();
-            // inventoryUI.draw(window, player->getInventory());
-            window.setView(window.getDefaultView());  // הצגה לפי View רגיל של המסך
+            window.setView(window.getDefaultView());
             inventoryUI.handleInput(*player, player->getInventory(), window);
-            window.draw(frozenBackgroundSprite); // הרקע הקפואAdd commentMore actions
-            inventoryUI.draw(window, player->getInventory()); // האינבנטורי מעל
+            window.draw(frozenBackgroundSprite);
+            inventoryUI.draw(window, player->getInventory());
             window.display();
         }
+
+        /*‑‑‑ STORE ‑‑‑*/
         else if (currentState == GameState::Store) {
             window.clear();
-            // inventoryUI.draw(window, player->getInventory());
-            window.setView(window.getDefaultView());  // הצגה לפי View רגיל של המסך
+            window.setView(window.getDefaultView());
+
             for (auto& storePtr : store) {
-                if (storePtr->getPlayerClose())
-                    storePtr->open(*player);
+                if (storePtr->getPlayerClose()) storePtr->open(*player);
                 storePtr->handleInput(*player, window);
             }
-            window.draw(frozenBackgroundSprite); // הרקע הקפואAdd commentMore actions
+            window.draw(frozenBackgroundSprite);
 
-
-            // ואז ציור החנות
-            for (auto& storePtr : store) {
-                storePtr->drawUI(window);
-            }
-
+            for (auto& storePtr : store) storePtr->drawUI(window);
             window.display();
-
         }
-
-
     }
 }
+
 
 void GameManager::processEvents() {
     sf::Event event;
@@ -217,7 +170,7 @@ void GameManager::processEvents() {
                 // Check for movement keys or any action key that should start the game
                 if (event.key.code != sf::Keyboard::F11) { // Ignore fullscreen toggle
                     std::cout << "First player move detected, game is now active." << std::endl; // For debugging
-                    m_isAwaitingFirstPlayerMove = false; 
+                    m_isAwaitingFirstPlayerMove = false;
                 }
             }
 
@@ -381,8 +334,10 @@ void GameManager::renderFrozenGame(sf::RenderTarget& target) {
 }
 
 void GameManager::update(float dt) {
+#ifdef DEBUG_TIMING
     sf::Clock frameTimer;
     bool timeThisFrame = (currentState == GameState::Playing && m_playingFrameCount < 10);
+#endif
 
     // --- 1. Update player (always runs to catch first input) ---
     if (!player) return;
@@ -469,16 +424,20 @@ void GameManager::update(float dt) {
     }
 
     // --- 7. Frame Timing Debug ---
+#ifdef DEBUG_TIMING
     if (timeThisFrame) {
         sf::Time updateTime = frameTimer.getElapsedTime();
         std::cout << "Frame " << m_playingFrameCount << " update time: " << updateTime.asSeconds() << "s\n";
     }
+#endif
 }
 
 
 void GameManager::render() {
+#ifdef DEBUG_TIMING
     sf::Clock frameTimer;
     bool timeThisFrame = (currentState == GameState::Playing && m_playingFrameCount < 10);
+#endif
 
     window.clear(sf::Color::Black);
     window.setView(gameView);
@@ -539,11 +498,12 @@ void GameManager::render() {
 
     window.display();
 
+#ifdef DEBUG_TIMING
     if (timeThisFrame) {
         sf::Time renderTime = frameTimer.getElapsedTime();
         std::cout << "Frame " << m_playingFrameCount << " render time: " << renderTime.asSeconds() << "s\n";
     }
-
+#endif
 
 }
 
@@ -644,31 +604,18 @@ void GameManager::startGameFullscreen() {
     updatePressStartPosition();
 
     // Display a simple loading screen while heavy resources are initialized
-    sf::Sprite loadingBgSprite;
-    sf::Text loadingText;
     try {
-        loadingBgSprite.setTexture(ResourceManager::getInstance().getTexture("loading_background"));
-        sf::Vector2u texSize = loadingBgSprite.getTexture()->getSize();
-        sf::Vector2u winSize = window.getSize();
-        loadingBgSprite.setScale(static_cast<float>(winSize.x) / texSize.x,
-            static_cast<float>(winSize.y) / texSize.y);
-        loadingText.setFont(ResourceManager::getInstance().getFont("main"));
-        loadingText.setString("Loading...");
-        loadingText.setCharacterSize(50);
-        loadingText.setFillColor(sf::Color::White);
-        sf::FloatRect rect = loadingText.getLocalBounds();
-        loadingText.setOrigin(rect.left + rect.width / 2.f, rect.top + rect.height / 2.f);
-        loadingText.setPosition(winSize.x / 2.f, winSize.y / 2.f);
-        window.clear();
-        window.draw(loadingBgSprite);
-        window.draw(loadingText);
+        // Call the new helper function. Progress is 0 initially for this stage.
+        displayLoadingScreen("Loading...", 0.0f);
+    }
+    catch (const std::exception& e) { // Catch specific sf::RuntimeError or std::exception
+        std::cerr << "Error displaying initial loading screen in startGameFullscreen: " << e.what() << std::endl;
+        // If resources for loading screen itself are missing, just clear screen
+        window.clear(sf::Color::Black); // Clear with a fallback color
         window.display();
     }
-    catch (...) {
-        // If resources missing, just clear screen
-        window.clear();
-        window.display();
-    }
+    // Note: The actual resource loading for the game happens after this.
+    // The old code here was only for the visual display of "Loading..."
 
     gameView.setSize(static_cast<float>(desktop.width), static_cast<float>(desktop.height));
     gameView.setCenter(gameView.getSize().x / 2.f, gameView.getSize().y / 2.f);
@@ -691,7 +638,7 @@ void GameManager::startGameFullscreen() {
     policeManager = GameFactory::createPoliceManager(*this, blockedPolygons);
     if (policeManager)
         //    policeManager->spawnStaticPoliceUnits(MAP_BOUNDS, STATIC_POLICE_GRID_SIZE, blockedPolygons);
-    store = GameFactory::createStores(blockedPolygons);
+        store = GameFactory::createStores(blockedPolygons);
 
     carManager = GameFactory::createCarManager(roads, *policeManager);
 
@@ -846,4 +793,58 @@ void GameManager::updatePressStartPosition() {
         textRect.top + textRect.height / 2.f);
     m_pressStartText.setPosition(window.getSize().x / 2.f,
         window.getSize().y / 2.f);
+}
+
+void GameManager::displayLoadingScreen(const std::string& message, float initialProgress) {
+    window.clear();
+
+    // Background
+    sf::Sprite loadingBgSprite;
+    try {
+        loadingBgSprite.setTexture(ResourceManager::getInstance().getTexture("loading_background"));
+        sf::Vector2u texSize = loadingBgSprite.getTexture()->getSize();
+        sf::Vector2u winSize = window.getSize();
+        loadingBgSprite.setScale(
+            static_cast<float>(winSize.x) / texSize.x,
+            static_cast<float>(winSize.y) / texSize.y
+        );
+    }
+    catch (const std::runtime_error& e) {
+        std::cerr << "Error loading loading_background: " << e.what() << std::endl;
+        // Fallback: simple black background if texture fails
+    }
+    window.draw(loadingBgSprite);
+
+    // Loading Text
+    sf::Text loadingText;
+    try {
+        loadingText.setFont(ResourceManager::getInstance().getFont("main"));
+        loadingText.setString(message);
+        loadingText.setCharacterSize(50);
+        loadingText.setFillColor(sf::Color::White);
+        sf::FloatRect textRect = loadingText.getLocalBounds();
+        loadingText.setOrigin(textRect.left + textRect.width / 2.0f,
+            textRect.top + textRect.height / 2.0f);
+        loadingText.setPosition(window.getSize().x / 2.0f, window.getSize().y / 2.0f - 50.f);
+    }
+    catch (const std::runtime_error& e) {
+        std::cerr << "Error loading main font for loading text: " << e.what() << std::endl;
+    }
+    window.draw(loadingText);
+
+    // Loading Bar
+    float barWidth = 400.f;
+    float barHeight = 30.f;
+    sf::RectangleShape loadingBarBackground(sf::Vector2f(barWidth, barHeight));
+    loadingBarBackground.setFillColor(sf::Color(50, 50, 50)); // Dark gray
+    loadingBarBackground.setPosition(window.getSize().x / 2.0f - barWidth / 2.0f,
+        window.getSize().y / 2.0f + 20.f);
+
+    sf::RectangleShape loadingBarFill(sf::Vector2f(barWidth * initialProgress, barHeight));
+    loadingBarFill.setFillColor(sf::Color(100, 200, 50)); // Light green
+    loadingBarFill.setPosition(loadingBarBackground.getPosition());
+
+    window.draw(loadingBarBackground);
+    window.draw(loadingBarFill);
+    window.display();
 }
