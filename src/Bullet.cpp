@@ -80,8 +80,8 @@ void Bullet::collideWithPresent(Present& present) {
 }
 
 bool Bullet::checkCollision(const std::vector<std::vector<sf::Vector2f>>& blockedPolygons,
-    const std::vector<Pedestrian>& npcs,
-    const std::vector<Vehicle>& cars) {
+    const std::vector<Pedestrian*>& npcs,
+    const std::vector<Vehicle*>& cars) {
     if (!m_active) return false;
 
     for (const auto& polygon : blockedPolygons) {
@@ -91,15 +91,15 @@ bool Bullet::checkCollision(const std::vector<std::vector<sf::Vector2f>>& blocke
         }
     }
 
-    for (const auto& npc : npcs) {
-        if (m_sprite.getGlobalBounds().intersects(npc.getCollisionBounds())) {
+    for (const auto* npc : npcs) {
+        if (npc && m_sprite.getGlobalBounds().intersects(npc->getCollisionBounds())) {
             m_active = false;
             return true;
         }
     }
 
-    for (const auto& car : cars) {
-        if (m_sprite.getGlobalBounds().intersects(car.getSprite().getGlobalBounds())) {
+    for (const auto* car : cars) {
+        if (car && m_sprite.getGlobalBounds().intersects(car->getSprite().getGlobalBounds())) {
             m_active = false;
             return true;
         }

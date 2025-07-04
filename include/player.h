@@ -5,6 +5,9 @@
 #include "Inventory.h"
 #include "AnimationManager.h"
 #include "Bullet.h"
+#include <memory>
+
+class PlayerShooter;
 
 class Vehicle;
 class GameManager; // Forward declaration ????
@@ -15,6 +18,7 @@ public:
 
     void setPosition(const sf::Vector2f& pos);
     sf::Vector2f getPosition() const;
+    float getRotation() const;
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void draw(sf::RenderTarget& window);
     sf::FloatRect getCollisionBounds(const sf::Vector2f& offset = {}) const;
@@ -30,6 +34,7 @@ public:
     int getCurrentAmmo(const std::string& name) const;
     int getMaxAmmo() const;
     int getWantedLevel() const;
+    bool consumeAmmo(const std::string& name);
 
     // HUD Data Setters
     void setMoney(int money);
@@ -57,6 +62,8 @@ public:
     Vehicle* getCurrentVehicle() const;
     bool isInVehicle() const;
 
+    PlayerShooter& getShooter();
+
 private:
     Vehicle* m_currentVehicle;
     void setSpecificFrame(int row, int col);
@@ -82,6 +89,7 @@ private:
     CurrentWepapon m_currentWeaponAmmo;
     int m_maxWeaponAmmo;
     int m_wantedLevel;
+    std::unique_ptr<PlayerShooter> m_shooter;
 
     Inventory inventory;
     int Bullets = 0;
