@@ -14,8 +14,8 @@ Player::Player(GameManager& gameManager) // Modified constructor
     m_currentVehicle(nullptr), frameWidth(0), frameHeight(0), currentFrame(0),
     sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
     m_money(PlayerMoney), m_health(MaxHealth), m_armor(100),
-    m_currentWeaponName("Fists"), m_maxWeaponAmmo(0),
-    m_wantedLevel(1)
+    m_currentWeaponName("Pistol"), m_maxWeaponAmmo(0),
+    m_wantedLevel(0)
 {
     sf::Texture& texture = ResourceManager::getInstance().getTexture("player");
     sprite.setTexture(texture);
@@ -78,7 +78,6 @@ int Player::getCurrentAmmo(const std::string& name) const {
         return it->second.Ammo;
     return 0; // או ערך ברירת מחדל מתאים
 }
-
 
 void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     if (m_currentVehicle) {
@@ -163,15 +162,60 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
                 else if (m_currentWeaponName == "Pistol") {
                     playAnimation("PistolShoot", false);
                     SoundManager::getInstance().playSound("gunshot");
-                    // Create and add bulletAdd commentMore actions
-                    float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f); // Convert angle to radians, adjust for sprite orientation
+
+                    // חישוב כיוון הירי
+                    float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f); // Convert angle to radians
                     sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad));
-                    m_gameManager.addBullet(getCenter(), bulletDir);
+
+                    // ה-offset של הקנה (הזזת הקנה ביחס לכיוון הסיבוב)
+                    float gunOffsetDistance = 5.f;  // מרחק הקנה מהשחקן, כמה פיקסלים (שיעביר את הקנה קצת ימינה או שמאלה)
+                    sf::Vector2f gunOffset;
+                    sf::Vector2f bulletStartPos;
+
+                    float currentRotation = sprite.getRotation();
+                    std::cout << "Current Rotation: " << currentRotation << std::endl;
+                    if ((currentRotation >= 315.f && currentRotation <= 360.f) || (currentRotation >= 0.f && currentRotation < 45.f)) {
+                        // Player is facing up (315° to 45°)
+                        gunOffset = sf::Vector2f(bulletDir.x, bulletDir.y * 100);
+                        bulletStartPos = getCenter();
+                        bulletStartPos.x += 5;
+                        bulletStartPos.y += 5;
+                        std::cout << "UP" << std::endl;
+                    }
+                    else if (currentRotation >= 45.f && currentRotation < 135.f) {
+                        // Player is facing right (45° to 135°)
+                        gunOffset = sf::Vector2f(bulletDir.x * gunOffsetDistance, bulletDir.y * gunOffsetDistance);
+                        bulletStartPos = getCenter() + gunOffset;  // המיקום שבו הכדור מתחיל
+                        std::cout << "RIGHT" << std::endl;
+                    }
+                    else if (currentRotation >= 135.f && currentRotation < 225.f) {
+                        // Player is facing down (135° to 225°)
+                        gunOffset = sf::Vector2f(bulletDir.x * gunOffsetDistance, bulletDir.y * gunOffsetDistance);
+                        bulletStartPos = getCenter() + gunOffset;  // המיקום שבו הכדור מתחיל
+                        std::cout << "DOWN" << std::endl;
+                    }
+                    else {
+                        // Player is facing left (225° to 315°)
+                       // אם השחקן פונה ימינה או למעלה, קנה ימינה
+                        gunOffset = sf::Vector2f(bulletDir.x, bulletDir.y * 100);
+                        bulletStartPos = getCenter();
+                        bulletStartPos.x -= 5;
+                        bulletStartPos.y -= 5;
+                        std::cout << "LEFT" << std::endl;
+                    }
+                    // חישוב המיקום של הקנה ביחס לכיוון של השחקן
+
+
+                    // הוספת הכדור למשחק
+                    m_gameManager.addBullet(bulletStartPos, bulletDir);
                 }
+
+
+
                 else if (m_currentWeaponName == "Rifle") {
                     playAnimation("RifleShoot", false);
                     SoundManager::getInstance().playSound("rifleShot");
-                    float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f); 
+                    float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f);
                     sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad));
                     m_gameManager.addBullet(getCenter(), bulletDir);
 
@@ -187,8 +231,8 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
                     playAnimation("BazookaShoot", false);
                     SoundManager::getInstance().playSound("RPGshot");
                     float angleRad = (sprite.getRotation() - 90.f) * (3.14159f / 180.f);
-                        sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad));
-                        m_gameManager.addBullet(getCenter(), bulletDir); // Consider a different bullet type for RPG later
+                    sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad));
+                    m_gameManager.addBullet(getCenter(), bulletDir); // Consider a different bullet type for RPG later
                 }
                 else if (m_currentWeaponName == "Knife") {
                     playAnimation("KnifeAttack", false);
@@ -255,9 +299,6 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
 
     animationManager->update(dt);
 }
-
-
-
 
 
 

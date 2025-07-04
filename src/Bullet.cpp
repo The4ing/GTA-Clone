@@ -4,8 +4,6 @@
 #include <cmath>
 
 Bullet::Bullet() {
-    m_sprite.setOrigin(8.f, 8.f);
-    m_sprite.setScale(0.1f, 0.1f);
 }
 
 void Bullet::init(const sf::Vector2f& startPos, const sf::Vector2f& direction, BulletType type) {
@@ -115,21 +113,23 @@ void Bullet::setType(BulletType type) {
     switch (type) {
     case BulletType::Default:
         m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
+        m_sprite.setScale(0.01, 0.01);
         m_damage = 10.f;
         m_explosionRadius = 0.f;
         break;
     case BulletType::Pistol:
-        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_pistol"));
+        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
+        m_sprite.setScale(0.05, 0.05);
         m_damage = 10.f;
         m_explosionRadius = 0.f;
         break;
     case BulletType::Rifle:
-        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_rifle"));
+        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
         m_damage = 10.f;
         m_explosionRadius = 0.f;
         break;
     case BulletType::TankShell:
-        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_tank"));
+        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
         m_damage = 100.f;
         m_explosionRadius = 100.f;
         break;
