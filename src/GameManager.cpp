@@ -345,6 +345,9 @@ void GameManager::processEvents() {
                     std::cerr << "GameManager: Cannot open stats. Player missing." << std::endl;
                 }
             }
+            else if (action == PauseMenu::MenuAction::Exit) {
+                window.close();
+            }
             else {
                 if (!pauseMenu.isOpen() && currentState == GameState::Paused) {
                     currentState = GameState::Playing;

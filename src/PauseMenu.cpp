@@ -17,7 +17,7 @@ PauseMenu::PauseMenu() : m_isOpen(false), selectedIndex(0), selectedOption(MenuO
         std::cerr << "Error loading font: resources/Miskan.ttf. Pause menu text might not display correctly." << std::endl;
     }
 
-    menuItems = { "Resume Game", "Start New Game", "Map", "Stats", "Volume Up", "Volume Down", "Mute" };
+    menuItems = { "Resume Game", "Start New Game", "Map", "Stats", "Volume Up", "Volume Down", "Mute", "Exit" };
 
     playerMarker.setRadius(8.f);
     playerMarker.setFillColor(sf::Color::Blue);
@@ -98,26 +98,26 @@ void PauseMenu::draw(sf::RenderTarget& target) {
     titleText.setPosition(static_cast<float>(target.getSize().x) / 2.0f, static_cast<float>(target.getSize().y) / 4.0f);
     target.draw(titleText);
 
-    // Display menu items
-    float currentY = static_cast<float>(target.getSize().y) / 2.5f; // Initial Y position for the first menu item
-    float itemSpacing = 45.f; // Spacing between menu items
+    float currentY = static_cast<float>(target.getSize().y) / 2.5f;
+    float itemSpacing = 45.f;
+    if (!showingMap && !showingStats) {
+        for (size_t i = 0; i < menuItems.size(); ++i) {
+            menuText.setString(menuItems[i]);
+            sf::FloatRect itemBounds = menuText.getLocalBounds();
+            menuText.setOrigin(itemBounds.left + itemBounds.width / 2.0f, itemBounds.top + itemBounds.height / 2.0f);
+            menuText.setPosition(static_cast<float>(target.getSize().x) / 2.0f, currentY);
 
-    for (size_t i = 0; i < menuItems.size(); ++i) {
-        menuText.setString(menuItems[i]);
-        sf::FloatRect itemBounds = menuText.getLocalBounds();
-        menuText.setOrigin(itemBounds.left + itemBounds.width / 2.0f, itemBounds.top + itemBounds.height / 2.0f);
-        menuText.setPosition(static_cast<float>(target.getSize().x) / 2.0f, currentY);
-
-        if (static_cast<int>(i) == selectedIndex) {
-            menuText.setFillColor(sf::Color::Yellow); // Highlight for selected item
-            menuText.setStyle(sf::Text::Bold);
+            if (static_cast<int>(i) == selectedIndex) {
+                menuText.setFillColor(sf::Color::Yellow);
+                menuText.setStyle(sf::Text::Bold);
+            }
+            else {
+                menuText.setFillColor(sf::Color::White);
+                menuText.setStyle(sf::Text::Regular);
+            }
+            target.draw(menuText);
+            currentY += itemSpacing;
         }
-        else {
-            menuText.setFillColor(sf::Color::White);
-            menuText.setStyle(sf::Text::Regular);
-        }
-        target.draw(menuText);
-        currentY += itemSpacing;
     }
 
     // Draw volume level text if no sub-screen or dialog is active
@@ -375,41 +375,43 @@ void PauseMenu::handleEvent(const sf::Event& event) {
 
         if (showingMap && mapResourcesInitialized) {
             float moveSpeed = 30.f;
-            switch (event.key.code) {
-            case sf::Keyboard::Left:
-            case sf::Keyboard::A:
-                mapDisplayView.move(-moveSpeed, 0);
-                break;
-            case sf::Keyboard::Right:
-            case sf::Keyboard::D:
-                mapDisplayView.move(moveSpeed, 0);
-                break;
-            case sf::Keyboard::Up:
-            case sf::Keyboard::W:
-                mapDisplayView.move(0, -moveSpeed);
-                break;
-            case sf::Keyboard::Down:
-            case sf::Keyboard::S:
-                mapDisplayView.move(0, moveSpeed);
-                break;
-            case sf::Keyboard::Add:
-            case sf::Keyboard::Equal:
-                mapDisplayView.zoom(0.85f);
-                break;
-            case sf::Keyboard::Subtract:
-            case sf::Keyboard::Dash:
-                mapDisplayView.zoom(1.15f);
-                break;
-            default:
-                break;
+            if (event.type == sf::Event::KeyPressed) {
+                switch (event.key.code) {
+                case sf::Keyboard::Left:
+                case sf::Keyboard::A:
+                    mapDisplayView.move(-moveSpeed, 0);
+                    break;
+                case sf::Keyboard::Right:
+                case sf::Keyboard::D:
+                    mapDisplayView.move(moveSpeed, 0);
+                    break;
+                case sf::Keyboard::Up:
+                case sf::Keyboard::W:
+                    mapDisplayView.move(0, -moveSpeed);
+                    break;
+                case sf::Keyboard::Down:
+                case sf::Keyboard::S:
+                    mapDisplayView.move(0, moveSpeed);
+                    break;
+                case sf::Keyboard::Add:
+                case sf::Keyboard::Equal:
+                    mapDisplayView.zoom(0.85f);
+                    break;
+                case sf::Keyboard::Subtract:
+                case sf::Keyboard::Dash:
+                    mapDisplayView.zoom(1.15f);
+                    break;
+                default:
+                    break;
+                }
             }
-        }
-        else if (event.type == sf::Event::MouseWheelScrolled) {
-            if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
-                if (event.mouseWheelScroll.delta > 0)
-                    mapDisplayView.zoom(0.9f);
-                else if (event.mouseWheelScroll.delta < 0)
-                    mapDisplayView.zoom(1.1f);
+            else if (event.type == sf::Event::MouseWheelScrolled) {
+                if (event.mouseWheelScroll.wheel == sf::Mouse::VerticalWheel) {
+                    if (event.mouseWheelScroll.delta > 0)
+                        mapDisplayView.zoom(0.9f);
+                    else if (event.mouseWheelScroll.delta < 0)
+                        mapDisplayView.zoom(1.1f);
+                }
             }
         }
         return;
@@ -531,6 +533,10 @@ void PauseMenu::selectCurrent() {
                 break;
             }
         }
+        break;
+    case MenuOption::Exit:
+        m_currentAction = MenuAction::Exit;
+        std::cout << "Action: Exit" << std::endl;
         break;
     case MenuOption::Count: // Should not be selectable
         break;
