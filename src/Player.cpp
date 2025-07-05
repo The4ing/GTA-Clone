@@ -344,15 +344,18 @@ void Player::heal(int amount) {
      
     }
 }
-void Player::increaseSpeed() {
+void Player::increaseSpeed(bool ShopItem) {
     std::cout << speedBoostTimer << std::endl;
-        if (speedBoostTimer <= 0.f) {
-            speed += 30.f;
+    if (speedBoostTimer <= 0.f &&  !ShopItem) {
+        speed += 30.f;
         speedBoostTimer = 15.f;
     }
     else {
         inventory.addItem("Speed", ResourceManager::getInstance().getTexture("Speed"));
     }
+}
+void Player::AddAmmo() {
+    
 }
 void Player::AddAmmo() {
     
@@ -386,7 +389,8 @@ bool Player::tryBuyAmmo(const std::string& weaponName, int amountToAdd, int pric
     int amountCanAdd = std::min(amountToAdd, ammo.MaxAmmo - ammo.Ammo);
 
     ammo.Ammo += amountCanAdd;
-    m_money -= price;
+    decreaseMoney(price);
+   
 
     std::cout << "Bought " << amountCanAdd << " ammo for " << weaponName << "\n";
     return true;
@@ -492,6 +496,15 @@ int Player::getWantedLevel() const {
     return m_wantedLevel;
 }
 
+void Player::setArmor(int armor,int price)
+{
+    if (price > m_money)
+        return;
+    m_armor += armor;
+    if (m_armor > MaxArmor)
+        m_armor = MaxArmor;
+
+}
 void Player::setWantedLevel(int level) {
     m_wantedLevel = level;
 }
