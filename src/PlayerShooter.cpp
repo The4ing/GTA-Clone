@@ -111,11 +111,12 @@ void PlayerShooter::shoot(const std::string& weaponName) {
 void PlayerShooter::update(float dt,
     const std::vector<std::vector<sf::Vector2f>>& blockedPolygons,
     const std::vector<Pedestrian*>& npcs,
+    const std::vector<Police*>& police,
     const std::vector<Vehicle*>& vehicles) {
     for (auto& bptr : m_pool.getAllBullets()) {
         if (!bptr->isActive()) continue;
         bptr->update(dt, blockedPolygons);
-        if (bptr->checkCollision(blockedPolygons, npcs, vehicles)) {
+        if (bptr->checkCollision(blockedPolygons, npcs, police, vehicles)) {
             //SoundManager::getInstance().playSound("gunshot");
         }
     }

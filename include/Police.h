@@ -38,10 +38,14 @@ public:
     void startRetreating(const sf::Vector2f& retreatTarget); 
     bool isRetreating() const { return state == PoliceState::Retreating; }
     bool needsCleanup = false; // Flag to mark for removal after retreating
+    bool dying = false;
+    float deathTimer = 0.f;
+    const float deathDuration = 1.f;
     void takeDamage(int amount);
     bool isDead() const;
 
     float getCollisionRadius() const;
+    sf::FloatRect getCollisionBounds() const;
     void setTargetPosition(const sf::Vector2f& pos); 
 
     sf::Vector2f getPosition() const override {

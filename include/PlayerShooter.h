@@ -16,6 +16,7 @@ public:
     void update(float dt,
         const std::vector<std::vector<sf::Vector2f>>& blockedPolygons,
         const std::vector<Pedestrian*>& npcs,
+        const std::vector<Police*>& police,
         const std::vector<Vehicle*>& vehicles);
 
 

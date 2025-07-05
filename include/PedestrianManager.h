@@ -4,6 +4,7 @@
 #include <memory>
 #include "QuadTree.h"
 #include "CollisionUtils.h"
+#include <algorithm>
 
 class PedestrianManager {
 public:

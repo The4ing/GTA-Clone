@@ -79,17 +79,30 @@ void Bullet::collideWithPresent(Present& present) {
 
 bool Bullet::checkCollision(const std::vector<std::vector<sf::Vector2f>>& blockedPolygons,
     const std::vector<Pedestrian*>& npcs,
+    const std::vector<Police*>& police,
     const std::vector<Vehicle*>& cars) {
     if (!m_active) return false;
 
     if (CollisionUtils::isInsideBlockedPolygon(m_position, blockedPolygons)) {
         m_active = false;
+        applyExplosionDamage(npcs, police, cars);
         return true;
     }
 
-    for (const auto* npc : npcs) {
-        if (npc && m_sprite.getGlobalBounds().intersects(npc->getCollisionBounds())) {
+    for (auto* npc : npcs) {
+        if (npc && !npc->isDead() && m_sprite.getGlobalBounds().intersects(npc->getCollisionBounds())) {
+            npc->takeDamage(m_damage);
             m_active = false;
+            applyExplosionDamage(npcs, police, cars);
+            return true;
+        }
+    }
+
+    for (auto* cop : police) {
+        if (cop && !cop->isDead() && m_sprite.getGlobalBounds().intersects(cop->getCollisionBounds())) {
+            cop->takeDamage(static_cast<int>(m_damage));
+            m_active = false;
+            applyExplosionDamage(npcs, police, cars);
             return true;
         }
     }
@@ -97,6 +110,7 @@ bool Bullet::checkCollision(const std::vector<std::vector<sf::Vector2f>>& blocke
     for (const auto* car : cars) {
         if (car && m_sprite.getGlobalBounds().intersects(car->getSprite().getGlobalBounds())) {
             m_active = false;
+            applyExplosionDamage(npcs, police, cars);
             return true;
         }
     }
@@ -164,4 +178,38 @@ float Bullet::getDamage() const {
 
 float Bullet::getExplosionRadius() const {
     return m_explosionRadius;
+}
+
+
+void Bullet::applyExplosionDamage(const std::vector<Pedestrian*>& npcs,
+    const std::vector<Police*>& police,
+    const std::vector<Vehicle*>& cars) {
+    if (m_explosionRadius <= 0.f)
+        return;
+
+    for (auto* npc : npcs) {
+        if (!npc)
+            continue;
+        float dx = npc->getPosition().x - m_position.x;
+        float dy = npc->getPosition().y - m_position.y;
+        float dist = std::sqrt(dx * dx + dy * dy);
+        if (dist <= m_explosionRadius) {
+            float factor = 1.f - (dist / m_explosionRadius);
+            npc->takeDamage(m_damage * factor);
+        }
+    }
+
+    for (auto* cop : police) {
+        if (!cop)
+            continue;
+        float dx = cop->getPosition().x - m_position.x;
+        float dy = cop->getPosition().y - m_position.y;
+        float dist = std::sqrt(dx * dx + dy * dy);
+        if (dist <= m_explosionRadius) {
+            float factor = 1.f - (dist / m_explosionRadius);
+            cop->takeDamage(static_cast<int>(m_damage * factor));
+        }
+    }
+
+    (void)cars; // vehicles currently ignore damage
 }

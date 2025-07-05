@@ -1016,6 +1016,11 @@ const std::vector<std::unique_ptr<PoliceCar>>& PoliceManager::getPoliceCars() co
     return m_policeCars;
 }
 
+const std::vector<std::unique_ptr<Police>>& PoliceManager::getPoliceOfficers() const {
+    return m_policeOfficers;
+}
+
+
 // This old spawning function might be deprecated or used for ambient 0-star police.
 // For now, the wanted level system in managePolicePopulation is the primary spawner.
 // void PoliceManager::spawnPoliceNearChunk(const sf::Vector2i& chunkCoord) {

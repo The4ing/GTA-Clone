@@ -9,7 +9,8 @@
 #include <cmath>        // For std::atan2, std::cos, std::sin, std::hypot
 #include <iostream>     // For std::cerr (error logging)
 #include <cstdlib>
-#include "PatrolZone.h" 
+#include "PatrolZone.h"
+#include "SoundManager.h"
 
 Police::Police(GameManager & gameManager, PoliceWeaponType weaponType) :
     m_gameManager(gameManager),
@@ -100,8 +101,15 @@ void Police::handleMeleeAttack(Player& player, float dt, const std::vector<std::
     }
 }
 
-
 void Police::update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+    if (dying) {
+        animationManager->update(dt);
+        deathTimer += dt;
+        if (deathTimer >= deathDuration || animationManager->isAnimationFinished()) {
+            needsCleanup = true;
+        }
+        return;
+    }
     setTargetPosition(player.getPosition()); // Update target with player's current position
     repathTimer += dt;
 
@@ -443,8 +451,16 @@ void Police::draw(sf::RenderTarget& window) {
 }
 
 void Police::takeDamage(int amount) {
+    if (dying)
+        return;
     health -= amount;
     if (health < 0) health = 0;
+    SoundManager::getInstance().playSound("NPC_hurt");
+    if (health == 0) {
+        dying = true;
+        deathTimer = 0.f;
+        animationManager->setAnimation("Dying", false);
+    }
 }
 
 bool Police::isDead() const {
@@ -454,6 +470,12 @@ bool Police::isDead() const {
 float Police::getCollisionRadius() const {
     // Effective radius after scaling. Original frameWidth * scale / 2
     return (frameWidth * sprite.getScale().x) / 2.0f * 0.8f; // 0.8f is an adjustment factor
+}
+
+sf::FloatRect Police::getCollisionBounds() const {
+    float r = getCollisionRadius();
+    sf::Vector2f pos = getPosition();
+    return { pos.x - r, pos.y - r, r * 2.f, r * 2.f };
 }
 
 void Police::setTargetPosition(const sf::Vector2f& pos) {

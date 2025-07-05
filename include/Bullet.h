@@ -9,6 +9,7 @@
 #include "CollisionUtils.h"
 #include <SFML/Graphics.hpp>
 #include <cmath>
+#include "Police.h"
 #include "GameObject.h"
 
 enum class BulletType {
@@ -40,6 +41,7 @@ public:
 
     bool checkCollision(const std::vector<std::vector<sf::Vector2f>>& blockedPolygons,
         const std::vector<Pedestrian*>& npcs,
+        const std::vector<Police*>& police,
         const std::vector<Vehicle*>& cars);
 
     void setType(BulletType type);
@@ -57,6 +59,9 @@ private:
     BulletType m_type = BulletType::Default;
     float m_damage = 10.f;
     float m_explosionRadius = 0.f;
-
     bool m_active = false;
+
+    void applyExplosionDamage(const std::vector<Pedestrian*>& npcs,
+        const std::vector<Police*>& police,
+        const std::vector<Vehicle*>& cars);
 };

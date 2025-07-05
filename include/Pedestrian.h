@@ -14,6 +14,9 @@ public:
     void move(const sf::Vector2f& direction, float dt) override;
     float getSpeed() const override;
     float getCollisionRadius() const;
+    void takeDamage(float amount);
+    bool isDead() const;
+    bool shouldRemove() const { return remove; }
 
     void onCollision(GameObject&) {};
     void collideWithPresent(Present&) {};
@@ -33,7 +36,7 @@ private:
     sf::Vector2f nextDirection;   
 
     float speed = 50.f;
-
+    int health = 100;
     int characterRow = 0;
     int currentFrame = 0;
     float animationTimer = 0.f;
@@ -50,6 +53,10 @@ private:
     const float backupDistance = 30.f;
     bool isBackingUp = false;
     float backupProgress = 0.f;
+    bool dying = false;
+    float deathTimer = 0.f;
+    const float deathDuration = 3.f;
+    bool remove = false;
 
 
     bool isIdle = false;
