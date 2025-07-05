@@ -18,7 +18,7 @@ public:
     void handleEvent(const sf::Event& event);
 
 private:
-    enum class MenuOption { Resume, NewGame, Map, Stats, VolumeUp, VolumeDown, Mute, Count }; // Added Count for easier iteration if needed
+    enum class MenuOption { Resume, NewGame, Map, Stats, VolumeUp, VolumeDown, Mute, Exit, Count }; // Added Count for easier iteration if needed
     std::vector<std::string> menuItems;
     MenuOption selectedOption = MenuOption::Resume; // Store as enum for type safety
     int selectedIndex = 0; // Kept for easier navigation with % operator, will sync with selectedOption
@@ -38,7 +38,7 @@ private:
     void selectCurrent();
 
 public: // Public for GameManager to access
-    enum class MenuAction { None, RequestNewGame, Resume, RequestOpenMap, RequestOpenStats};
+    enum class MenuAction { None, RequestNewGame, Resume, RequestOpenMap, RequestOpenStats, Exit};
     MenuAction getAndClearAction();
     void prepareMapScreen(const sf::Texture& mapTex, sf::Vector2f playerPos, sf::Vector2u windowSize);
 
