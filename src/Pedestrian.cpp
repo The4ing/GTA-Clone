@@ -226,7 +226,13 @@ void Pedestrian::takeDamage(float amount) {
     health -= static_cast<int>(amount);
     if (health < 0)
         health = 0;
-    SoundManager::getInstance().playSound("NPC_hurt");
+
+    static const std::vector<std::string> hurtSounds = {
+        "hurt1", "hurt2", "hurt3", "hurt4"
+    };
+    SoundManager::getInstance().playRandomSound(hurtSounds, 0.95f, 1.05f);
+
+
     if (health == 0) {
         dying = true;
         deathTimer = 0.f;
