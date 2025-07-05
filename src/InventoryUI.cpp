@@ -96,7 +96,7 @@ void InventoryUI::handleInput(Player& player, Inventory& inventory, sf::RenderWi
     static const std::unordered_map<std::string, std::function<void()>>   itemActions = {
     { "Health", [&player]() { player.heal(25); } },
     { "Radar",  []() { std::cout << "Radar used\n"; } },
-    { "Speed",  [&player]() { player.increaseSpeed(); } },
+    { "Speed",  [&player]() { player.increaseSpeed(false); } },
     { "Pistol", [&player]() { player.setCurrentWeapon("Pistol",  0); } },
     { "Fists",  [&player]() { player.setCurrentWeapon("Fists", player.getCurrentAmmo("Fists")); } },
     { "Rifle",  [&player]() { player.setCurrentWeapon("Rifle", player.getCurrentAmmo("Rifle")); } },
