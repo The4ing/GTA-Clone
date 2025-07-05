@@ -16,6 +16,7 @@
 #include "Store.h"
 #include "QuadTree.h"
 #include "PatrolZone.h" 
+#include "PauseMenu.h" // Added PauseMenu include
 #include "PlayerShooter.h"
 
 enum class GameState {
@@ -23,6 +24,7 @@ enum class GameState {
     Playing,
     Inventory,
     Store,
+    Paused, // Added Paused state
     Exiting
 };
 
@@ -58,7 +60,7 @@ private:
     std::vector<std::vector<sf::Vector2f>> blockedPolygons;
     QuadTree<std::vector<sf::Vector2f>> blockedPolyTree{ sf::FloatRect(0, 0, 4640, 4672) };
     std::vector<RoadSegment> roads;
-    BulletPool                  bulletPool; 
+    BulletPool                  bulletPool;
     sf::RenderWindow            window;
     sf::View                    gameView;
     std::unique_ptr<Menu>       menu;
@@ -70,7 +72,7 @@ private:
     std::unique_ptr<CarManager> carManager;
     std::unique_ptr<PoliceManager> policeManager;
     std::unique_ptr<PedestrianManager> pedestrianManager;
-    std::unique_ptr<PathfindingGrid> pathfindingGrid; 
+    std::unique_ptr<PathfindingGrid> pathfindingGrid;
     std::vector<std::unique_ptr<Present>> presents;
     GameState                   currentState;
     sf::Clock                   clock;
@@ -78,11 +80,13 @@ private:
     // HUD Members
     std::unique_ptr<HUD>        m_hud;
     sf::View                    m_hudView;
+    PauseMenu                   pauseMenu; // Added PauseMenu instance
     static constexpr float GAME_TIME_SCALE = 60.0f;
     sf::Text m_pressStartText;
     InventoryUI inventoryUI;
     sf::RenderTexture frozenBackgroundTexture;
     sf::Sprite frozenBackgroundSprite;
+    bool wasEscapePressedLastFrame = false;
 
     int m_playingFrameCount = 0; // Counter for initial playing frames diagnostics
     bool m_isAwaitingFirstPlayerMove; // Added for the new feature

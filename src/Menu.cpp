@@ -1,14 +1,15 @@
 ﻿#include "Menu.h"
 #include "ResourceManager.h"
 #include "Settings.h"
+#include <iostream>
 
-Menu::Menu(sf::RenderWindow& win) : window(win) {
+Menu::Menu(sf::RenderWindow & win) : window(win) {
     font = ResourceManager::getInstance().getFont("main");
 
     background.setTexture(ResourceManager::getInstance().getTexture("background_menu"));
 
-    sf::Vector2u textureSize = background.getTexture()->getSize(); 
-    sf::Vector2u windowSize = window.getSize();                    
+    sf::Vector2u textureSize = background.getTexture()->getSize();
+    sf::Vector2u windowSize = window.getSize();
 
     background.setScale(
         static_cast<float>(windowSize.x) / textureSize.x,
@@ -24,7 +25,7 @@ Menu::Menu(sf::RenderWindow& win) : window(win) {
         text.setFont(font);
         text.setString(labels[i]);
         text.setCharacterSize(36);
-        text.setPosition(100.f, 100.f + i * 60.f); 
+        text.setPosition(100.f, 100.f + i * 60.f);
         text.setFillColor(sf::Color::White);
         options.push_back(text);
     }
@@ -36,7 +37,7 @@ void Menu::update(sf::Event& event) {
     auto mousePos = sf::Mouse::getPosition(window);
     auto worldPos = window.mapPixelToCoords(mousePos);
 
-    
+
     int  hoveredIndex = -1;
 
     for (size_t i = 0; i < options.size(); ++i) {
@@ -50,7 +51,7 @@ void Menu::update(sf::Event& event) {
                 event.mouseButton.button == sf::Mouse::Left) {
 
                 if (options[i].getString() == "Settings") {
-                   
+
                     Settings settings(window);
                     while (!settings.shouldExit()) {
                         sf::Event settingsEvent;
@@ -75,7 +76,7 @@ void Menu::update(sf::Event& event) {
         }
         else {
             options[i].setFillColor(sf::Color::White);
-            options[i].setCharacterSize(36);  
+            options[i].setCharacterSize(36);
         }
     }
 }
@@ -100,6 +101,14 @@ bool Menu::isOptionChosen() const {
 
 std::string Menu::getSelectedOption() const {
     return options[selectedIndex].getString();
+}
+
+void Menu::reset() {
+    optionChosen = false;
+    selectedIndex = 0;
+    // If there are other states to reset for the menu, add them here.
+    // For example, if the menu could be in different sub-menus.
+    std::cout << "Menu reset." << std::endl; // For debugging
 }
 
 

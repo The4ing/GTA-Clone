@@ -2,10 +2,10 @@
 #include "Inventory.h"
 
 Inventory::Inventory() {
-    
+
 
     addItem("Fists", ResourceManager::getInstance().getTexture("Fists"));
-    items["Fists"].infinite = true; 
+    items["Fists"].infinite = true;
 }
 
 void Inventory::addItem(const std::string& name, const sf::Texture& texture) {
@@ -48,4 +48,24 @@ const std::unordered_map<std::string, InventoryItem>& Inventory::getAllItems() c
 const sf::Texture* Inventory::getItemTexture(const std::string& name) const {
     auto it = items.find(name);  // ?? ????? ???
     return (it != items.end()) ? it->second.texture : nullptr;
+}
+
+std::vector<std::string> Inventory::getCollectedWeaponNames() const {
+    std::vector<std::string> names;
+    for (const auto& pair : items) {
+        // Consider an item "collected" for stats if its count > 0 or it's an infinite item (like fists).
+        // This assumes all items in inventory might be relevant for "collected weapons" list.
+        // If specific categorization is needed (e.g. only actual weapons, not health packs),
+        // InventoryItem would need a category, or names would need parsing.
+        if (pair.second.count > 0 || pair.second.infinite) {
+            // Exclude "Fists" if it's always there and not considered a "collected" weapon for stats
+            if (pair.first == "Fists" && pair.second.infinite) {
+                // Optionally skip fists or handle as a default, not "collected"
+                // For now, let's include it to show something is always there.
+            }
+            names.push_back(pair.first);
+        }
+    }
+    // std::sort(names.begin(), names.end()); // Optional: sort names alphabetically
+    return names;
 }

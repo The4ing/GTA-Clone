@@ -13,6 +13,10 @@ public:
     void playRandomSound(const std::vector<std::string>& names,
         float minPitch = 1.f, float maxPitch = 1.f);
     void setVolume(float volume);
+    void increaseVolume(float step = 5.f);
+    void decreaseVolume(float step = 5.f);
+    void toggleMute();
+    bool isMuted() const;
     float getVolume() const;
     void removeStoppedSounds();
 
@@ -25,4 +29,6 @@ private:
 
     std::list<sf::Sound> sounds;
     float volume;
+    float volumeBeforeMute;
+    bool muted;
 };

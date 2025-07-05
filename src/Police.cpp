@@ -104,10 +104,12 @@ void Police::handleMeleeAttack(Player& player, float dt, const std::vector<std::
 
 void Police::update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     if (dying) {
+
         animationManager->update(dt);
         deathTimer += dt;
         if (deathTimer >= deathDuration || animationManager->isAnimationFinished()) {
             needsCleanup = true;
+            player.incrementKills();
         }
         return;
     }

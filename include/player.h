@@ -61,6 +61,9 @@ public:
     void exitVehicle();
     Vehicle* getCurrentVehicle() const;
     bool isInVehicle() const;
+    int getKills() const { return killCount; }
+
+    void incrementKills() { ++killCount; } 
 
     PlayerShooter& getShooter();
 
@@ -81,7 +84,7 @@ private:
     sf::Vector2f position;
     bool wasShooting = false;
     bool isFinishingShootAnim = false;
-
+    int killCount = 0; 
     int m_money;
     int m_health;
     int m_armor;
