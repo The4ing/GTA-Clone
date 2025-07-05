@@ -15,6 +15,9 @@ enum class BulletType {
     Default,
     Pistol,
     Rifle,
+    Minigun,
+    Bazooka,
+    Grenade,
     TankShell
 };
 

@@ -204,9 +204,15 @@ void HUD::updateElementPositions(float viewWidth, float viewHeight) {
 void HUD::update(const PlayerData& playerData, int wantedLevel, const sf::Time& gameTime) {
     m_moneyText.setString("$" + std::to_string(playerData.money));
     m_healthText.setString(std::to_string(playerData.health)); // ? 100
-    m_armorText.setString( std::to_string(playerData.armor));  // ? 0 (?????? ???)
+    m_armorText.setString(std::to_string(playerData.armor));
     m_weaponNameText.setString(playerData.weaponName);
 
+    if (playerData.maxAmmo > 0) {
+        m_ammoText.setString(std::to_string(playerData.currentAmmo) + "/" + std::to_string(playerData.maxAmmo));
+    }
+    else {
+        m_ammoText.setString("");
+    }
    
 
    

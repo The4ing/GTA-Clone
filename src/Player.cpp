@@ -14,7 +14,7 @@ Player::Player(GameManager& gameManager) // Modified constructor
     m_currentVehicle(nullptr), frameWidth(0), frameHeight(0), currentFrame(0),
     sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
     m_money(PlayerMoney), m_health(MaxHealth), m_armor(100),
-    m_currentWeaponName("Pistol"), m_maxWeaponAmmo(0),
+    m_currentWeaponName("Bazooka"), m_maxWeaponAmmo(0),
     m_wantedLevel(0)
 {
     sf::Texture& texture = ResourceManager::getInstance().getTexture("player");
@@ -38,14 +38,15 @@ Player::Player(GameManager& gameManager) // Modified constructor
     m_shooter = std::make_unique<PlayerShooter>(*this, gameManager.getBulletPool());
 
     WeaponsAmmo = {
-    { "Fists",   AmmoSetting{0, 0} },        
-    { "Pistol",  AmmoSetting{12, 60} },      
-    { "Rifle",   AmmoSetting{30, 180} },     
-    { "Minigun", AmmoSetting{100, 1000} },   
-    { "Bazooka", AmmoSetting{1, 5} },        
-    { "Knife",   AmmoSetting{0, 0} },        
-    { "Grenade", AmmoSetting{3, 10} }        
+    { "Fists",   AmmoSetting{0, 0} },
+    { "Pistol",  AmmoSetting{12, 60} },
+    { "Rifle",   AmmoSetting{30, 180} },
+    { "Minigun", AmmoSetting{100, 1000} },
+    { "Bazooka", AmmoSetting{5, 5} },
+    { "Knife",   AmmoSetting{0, 0} },
+    { "Grenade", AmmoSetting{3, 10} }
     };
+    m_maxWeaponAmmo = WeaponsAmmo[m_currentWeaponName].MaxAmmo;
 }
 
 void Player::setPosition(const sf::Vector2f& pos) {
@@ -449,19 +450,18 @@ bool Player::isInVehicle() const {
 
 void Player::setCurrentWeapon(const std::string& name, int maxAmmo) {
     m_currentWeaponName = name;
-    m_maxWeaponAmmo = maxAmmo;
 
-    // עדכון כמות תחמושת קיימת אם הנשק כבר במפה שלך
     auto it = WeaponsAmmo.find(name);
     if (it != WeaponsAmmo.end()) {
-        it->second.MaxAmmo = maxAmmo;
+        m_maxWeaponAmmo = it->second.MaxAmmo;
     }
     else {
         // אם הנשק לא קיים עדיין, הוסף אותו
         WeaponsAmmo[name] = AmmoSetting{ 0, maxAmmo };
+        m_maxWeaponAmmo = maxAmmo;
     }
 
-    std::cout << "Switched weapon to: " << name << " with max ammo: " << maxAmmo << std::endl;
+    std::cout << "Switched weapon to: " << name << " with max ammo: " << m_maxWeaponAmmo << std::endl;
 }
 
 int Player::getMoney() const {
@@ -481,6 +481,10 @@ std::string Player::getCurrentWeaponName() const {
 }
 
 int Player::getMaxAmmo() const {
+    auto it = WeaponsAmmo.find(m_currentWeaponName);
+    if (it != WeaponsAmmo.end()) {
+        return it->second.MaxAmmo;
+    }
     return m_maxWeaponAmmo;
 }
 

@@ -21,7 +21,7 @@ public:
 
 private:
     BulletType weaponToBullet(const std::string& weapon) const;
-    sf::Vector2f calculateMuzzlePosition() const;
+    sf::Vector2f calculateMuzzlePosition(const std::string& weapon) const;
 
     Player& m_player;
     BulletPool& m_pool;

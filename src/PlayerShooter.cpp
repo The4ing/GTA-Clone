@@ -5,19 +5,64 @@ PlayerShooter::PlayerShooter(Player& player, BulletPool& pool)
     : m_player(player), m_pool(pool) {
 }
 
-
 BulletType PlayerShooter::weaponToBullet(const std::string& weapon) const {
     if (weapon == "Pistol") return BulletType::Pistol;
     if (weapon == "Rifle") return BulletType::Rifle;
-    if (weapon == "Bazooka") return BulletType::TankShell;
+    if (weapon == "Bazooka") return BulletType::Bazooka;
     return BulletType::Default;
 }
 
-sf::Vector2f PlayerShooter::calculateMuzzlePosition() const {
+// Calculate the muzzle position based on the player's rotation and weapon type
+sf::Vector2f PlayerShooter::calculateMuzzlePosition(const std::string& weapon) const {
     sf::Vector2f center = m_player.getCenter();
-    float angleRad = (m_player.getRotation() - 90.f) * (3.14159f / 180.f);
-    sf::Vector2f dir(std::cos(angleRad), std::sin(angleRad));
-    return center + dir * 5.f;
+
+    // Calculate the rotation in radians
+    float angleRad = (m_player.getRotation() - 90.f) * (3.14159f / 180.f); // Convert angle to radians
+    sf::Vector2f bulletDir(std::cos(angleRad), std::sin(angleRad)); // Direction vector based on rotation
+
+
+    float gunOffsetDistance = 5.f; 
+    sf::Vector2f gunOffset;
+    sf::Vector2f bulletStartPos;
+
+    float currentRotation = m_player.getRotation();
+    if ((currentRotation >= 315.f && currentRotation <= 360.f) || (currentRotation >= 0.f && currentRotation < 45.f)) {
+        // Player is facing up (315° to 45°)
+        gunOffset = sf::Vector2f(bulletDir.x, bulletDir.y * 100);
+        bulletStartPos = m_player.getCenter();
+        bulletStartPos.x += 5;
+        bulletStartPos.y += 5;
+    }
+    else if (
+        (currentRotation >= 45.f && currentRotation < 135.f) || 
+        (currentRotation >= 135.f && currentRotation < 225.f)    
+        )
+    {
+        // Player is facing down (135° to 225°)
+        gunOffset = sf::Vector2f(bulletDir.x * gunOffsetDistance, bulletDir.y * gunOffsetDistance);
+        bulletStartPos = m_player.getCenter() + gunOffset;  
+    }
+    else {
+
+        gunOffset = sf::Vector2f(bulletDir.x, bulletDir.y * 100);
+        bulletStartPos = m_player.getCenter();
+        bulletStartPos.x -= 5;
+        bulletStartPos.y -= 5;
+    }
+
+
+    
+    // Set weapon-specific muzzle offset
+    float weaponOffset = 5.f; // Default muzzle offset for "Pistol"
+    if (weapon == "Rifle") {
+        weaponOffset = 10.f; // Rifle has a longer muzzle offset
+    }
+    else if (weapon == "Bazooka") {
+        weaponOffset = 15.f; // Bazooka has a much longer muzzle offset
+    }
+
+    // Calculate and return the muzzle position based on the offset and direction
+    return bulletStartPos;
 }
 
 void PlayerShooter::shoot(const std::string& weaponName) {
@@ -29,11 +74,17 @@ void PlayerShooter::shoot(const std::string& weaponName) {
     Bullet* bullet = m_pool.getBullet();
     if (!bullet) return;
 
-    sf::Vector2f startPos = calculateMuzzlePosition();
+    // Calculate the muzzle position
+    sf::Vector2f startPos = calculateMuzzlePosition(weaponName);
+
+    // Calculate the direction for the bullet (same as the player's facing direction)
     float angleRad = (m_player.getRotation() - 90.f) * (3.14159f / 180.f);
     sf::Vector2f dir(std::cos(angleRad), std::sin(angleRad));
 
+    // Initialize the bullet with its starting position and direction
     bullet->init(startPos, dir, weaponToBullet(weaponName));
+
+    // Play shooting sound
     SoundManager::getInstance().playSound("gunshot");
 }
 
@@ -49,3 +100,6 @@ void PlayerShooter::update(float dt,
         }
     }
 }
+
+
+

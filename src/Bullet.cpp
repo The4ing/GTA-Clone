@@ -2,7 +2,7 @@
 #include "ResourceManager.h"
 #include "CollisionUtils.h"
 #include <cmath>
-
+#include <iostream>
 Bullet::Bullet() {
 }
 
@@ -108,32 +108,66 @@ bool Bullet::checkCollision(const std::vector<std::vector<sf::Vector2f>>& blocke
     return false;
 }
 
-void Bullet::setType(BulletType type) {
+void Bullet::setType(BulletType type) {//??? ??? ?????########################################################################################################
     m_type = type;
+    sf::Vector2u texSize;
     switch (type) {
     case BulletType::Default:
         m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
+        texSize = m_sprite.getTexture()->getSize();
+        m_sprite.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
         m_sprite.setScale(0.01, 0.01);
         m_damage = 10.f;
         m_explosionRadius = 0.f;
         break;
     case BulletType::Pistol:
         m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
-        m_sprite.setScale(0.05, 0.05);
+        texSize = m_sprite.getTexture()->getSize();
+        m_sprite.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
+        m_sprite.setScale(0.01, 0.01);
         m_damage = 10.f;
         m_explosionRadius = 0.f;
         break;
     case BulletType::Rifle:
+        std::cout << "bazooka";
         m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
+        texSize = m_sprite.getTexture()->getSize();
+        m_sprite.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
+        m_sprite.setScale(0.01, 0.01);
         m_damage = 10.f;
         m_explosionRadius = 0.f;
         break;
     case BulletType::TankShell:
+        std::cout << "tank";
         m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
+        texSize = m_sprite.getTexture()->getSize();
+        m_sprite.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
+        m_damage = 100.f;
+        m_explosionRadius = 100.f;
+        break;
+    case BulletType::Minigun:
+        std::cout << "bazooka";
+     //   m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
+    //    m_damage = 100.f;
+    //    m_explosionRadius = 100.f;
+        break;
+    case BulletType::Bazooka:
+        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_RPG"));
+        texSize = m_sprite.getTexture()->getSize();
+        m_sprite.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
+        std::cout << "bazooka";
+        m_sprite.setScale(0.05, 0.05);
+        m_damage = 100.f;
+        m_explosionRadius = 100.f;
+        break;
+    case BulletType::Grenade:
+        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
+        std::cout << "bazooka";
         m_damage = 100.f;
         m_explosionRadius = 100.f;
         break;
     }
+
 }
 
 bool Bullet::isActive() const {
