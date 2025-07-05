@@ -418,6 +418,7 @@ void GameManager::update(float dt) {
         data.health = player->getHealth();
         data.armor = player->getArmor();
         data.weaponName = player->getCurrentWeaponName();
+        data.currentAmmo = player->getCurrentAmmo(data.weaponName);
         data.maxAmmo = player->getMaxAmmo();
 
         m_hud->update(data, player->getWantedLevel(), m_gameTime);

@@ -62,7 +62,8 @@ void ResourceInitializer::loadGameResources() {
     rm.loadTexture("Store", "resources/Store.png");
 
     //bullets:
-    rm.loadTexture("bullet_default", "resources/bullet.png");
+    rm.loadTexture("bullet_default", "resources/bullet.png"); //pistol or default
+    rm.loadTexture("bullet_RPG", "resources/bulletRPG.png");
     rm.loadTexture("bullet_rifle", "resources/bullet.png");
     rm.loadTexture("bullet_tank", "resources/bullet.png");
     rm.loadTexture("PoliceCar", "resources/policeCar.png");
