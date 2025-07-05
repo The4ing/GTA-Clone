@@ -1,4 +1,4 @@
-﻿#include "Store.h"
+#include "Store.h"
 #include "AmmoRifle.h"
 #include <iostream>
 
@@ -30,16 +30,41 @@ void Store::open(Player& player) {
         },
         {
             "Rifle Ammo", 20, sf::IntRect(223, 0, 223, 320),
-            [](Player& p) { p.tryBuyAmmo("Minigun", 50 ,20); }
+            [](Player& p) { p.tryBuyAmmo("Rifle", 50 ,20); }
         },
         {
-           /* "Bazooka Ammo", 100, sf::IntRect(170, 20, 64, 64),
-            [](Player& p) { p.addAmmo("Bazooka", 5); }*/
+            "Minigun Ammo", 50, sf::IntRect(223 * 2 +5, 0, 255, 320),
+            [](Player& p) { p.tryBuyAmmo("Minigun", 100,50); }
         },
         {
-            /*"Full Heal", 80, sf::IntRect(250, 20, 64, 64),
-            [](Player& p) { p.heal(999); }*/
-        }
+            "Bazooka Ammo", 20, sf::IntRect(223 * 3 +35, 0, 290, 320),
+            [](Player& p) { p.tryBuyAmmo("Bazooka", 1,20); }
+        },
+        {
+            "Armor", 20, sf::IntRect(0, 425, 225, 280),
+            [](Player& p) { p.setArmor(100,20),p.decreaseMoney(20); }
+        },
+          
+        {
+            
+            "Grenade Ammo", 5,sf::IntRect(223 + 10, 425, 215, 280),
+            [](Player& p) { p.tryBuyAmmo("Grenade", 1,20); }
+        },
+
+        {
+            "Knife Ammo", 5, sf::IntRect(223 * 2 + 10, 425, 200, 280),
+            [](Player& p) { p.tryBuyAmmo("Knife", 1,5); }
+        },
+        {
+            "Speed", 5, sf::IntRect(223 * 3 , 425, 200, 280),
+            [](Player& p) { p.increaseSpeed(true),p.decreaseMoney(5); }
+        },
+
+        {
+            "Health", 5, sf::IntRect(223 * 4 +10, 425, 200, 280),
+            [](Player& p) { p.heal(100), p.decreaseMoney(5) ; }
+        },
+
     };
 }
 
@@ -128,7 +153,6 @@ void Store::handleInput(Player& player, const sf::RenderWindow& window) {
                 std::cout << player.getMoney() <<  item.price << "\n";
                 if (player.getMoney() >= item.price) {
                     item.action(player);
-                    player.decreaseMoney(item.price);
                     std::cout << "Purchased: " << item.name << "\n";
                 }
                 else {
