@@ -4,6 +4,7 @@
 #include <cmath>
 #include "Constants.h"
 #include "CollisionUtils.h"
+#include "SoundManager.h"
 
 Pedestrian::Pedestrian(sf::Vector2f pos) : position(pos) {
     sprite.setTexture(ResourceManager::getInstance().getTexture("pedestrian"));
@@ -27,6 +28,15 @@ bool Pedestrian::getIsBackingUp() const {
 }
 
 void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+
+    if (dying) {
+        deathTimer += dt;
+        if (deathTimer >= deathDuration) {
+            remove = true;
+        }
+        return;
+    }
+
     float stepSize = speed * dt;
 
     // ????? ?????
@@ -208,4 +218,21 @@ sf::FloatRect Pedestrian::getCollisionBounds() const {
         radius * 2.f,
         radius * 2.f
     );
+}
+
+void Pedestrian::takeDamage(float amount) {
+    if (dying)
+        return;
+    health -= static_cast<int>(amount);
+    if (health < 0)
+        health = 0;
+    SoundManager::getInstance().playSound("NPC_hurt");
+    if (health == 0) {
+        dying = true;
+        deathTimer = 0.f;
+    }
+}
+
+bool Pedestrian::isDead() const {
+    return health <= 0;
 }

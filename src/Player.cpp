@@ -14,8 +14,8 @@ Player::Player(GameManager& gameManager) // Modified constructor
     m_currentVehicle(nullptr), frameWidth(0), frameHeight(0), currentFrame(0),
     sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
     m_money(PlayerMoney), m_health(MaxHealth), m_armor(MaxArmor),
-    m_currentWeaponName("Minigun"), m_maxWeaponAmmo(0),
-    m_wantedLevel(0)
+    m_currentWeaponName("Rifle"), m_maxWeaponAmmo(0),
+    m_wantedLevel(3)
 {
     sf::Texture& texture = ResourceManager::getInstance().getTexture("player");
     sprite.setTexture(texture);
@@ -40,7 +40,7 @@ Player::Player(GameManager& gameManager) // Modified constructor
     WeaponsAmmo = {
     { "Fists",   AmmoSetting{0, 0} },
     { "Pistol",  AmmoSetting{12, 60} },
-    { "Rifle",   AmmoSetting{30, 180} },
+    { "Rifle",   AmmoSetting{180, 180} },
     { "Minigun", AmmoSetting{1000, 1000} },
     { "Bazooka", AmmoSetting{5, 5} },
     { "Knife",   AmmoSetting{0, 1} },

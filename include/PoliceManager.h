@@ -135,6 +135,7 @@ public:
 
     void clearAllPolice();
     const std::vector<std::unique_ptr<PoliceCar>>& getPoliceCars() const;
+    const std::vector<std::unique_ptr<Police>>& getPoliceOfficers() const;
 
 private:
     void updatePoliceOfficers(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);

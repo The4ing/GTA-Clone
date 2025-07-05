@@ -364,13 +364,18 @@ void GameManager::update(float dt) {
             for (const auto& up : pedestrianManager->getPedestrians())
                 npcPtrs.push_back(up.get());
         }
+        std::vector<Police*> policePtrs;
+        if (policeManager) {
+            for (const auto& p : policeManager->getPoliceOfficers())
+                policePtrs.push_back(p.get());
+        }
         std::vector<Vehicle*> carPtrs;
         if (carManager) {
             for (auto& v : carManager->getVehicles())
                 carPtrs.push_back(&v);
         }
 
-        player->getShooter().update(dt, blockedPolygons, npcPtrs, carPtrs);
+        player->getShooter().update(dt, blockedPolygons, npcPtrs, policePtrs, carPtrs);
 
         // Vehicle-to-Vehicle collision (Player-driven vs AI)
         if (player->isInVehicle() && carManager) {

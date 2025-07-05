@@ -17,6 +17,10 @@ void PedestrianManager::update(float dt, const std::vector<std::vector<sf::Vecto
     for (auto& ped : pedestrians) {
         ped->update(dt, blockedPolygons);
     }
+
+    pedestrians.erase(std::remove_if(pedestrians.begin(), pedestrians.end(),
+        [](const std::unique_ptr<Pedestrian>& p) { return p->shouldRemove(); }),
+        pedestrians.end());
 }
 
 
