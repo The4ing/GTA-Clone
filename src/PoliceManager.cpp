@@ -419,12 +419,7 @@ PoliceCar* PoliceManager::spawnPatrolCar(const sf::Vector2f& position, PatrolZon
 }
 
 bool PoliceManager::isInsideBlockedPolygon(const sf::Vector2f& point, const std::vector<std::vector<sf::Vector2f>>& polygons) {
-    for (const auto& poly : polygons) {
-        if (CollisionUtils::pointInPolygon(point, poly)) {
-            return true;
-        }
-    }
-    return false;
+    return CollisionUtils::isInsideBlockedPolygon(point, polygons);
 }
 
 */
@@ -1078,10 +1073,5 @@ PoliceCar* PoliceManager::spawnPatrolCar(const sf::Vector2f& position, PatrolZon
 }
 
 bool PoliceManager::isInsideBlockedPolygon(const sf::Vector2f& point, const std::vector<std::vector<sf::Vector2f>>& polygons) {
-    for (const auto& poly : polygons) {
-        if (CollisionUtils::pointInPolygon(point, poly)) {
-            return true;
-        }
-    }
-    return false;
+    return CollisionUtils::isInsideBlockedPolygon(point, polygons);
 }

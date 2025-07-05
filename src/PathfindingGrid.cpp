@@ -28,13 +28,7 @@ void PathfindingGrid::preprocess(const std::vector<std::vector<sf::Vector2f>>& s
             sf::Vector2f cellWorldPos = gridToWorld({ x, y });
 
             // Check if this cell center is inside any of the static obstacles
-            bool cellIsBlocked = false;
-            for (const auto& obstaclePolygon : staticObstacles) {
-                if (CollisionUtils::pointInPolygon(cellWorldPos, obstaclePolygon)) {
-                    cellIsBlocked = true;
-                    break;
-                }
-            }
+            bool cellIsBlocked = CollisionUtils::isInsideBlockedPolygon(cellWorldPos, staticObstacles);
 
             if (cellIsBlocked) {
                 walkableGrid[y * gridWidth + x] = false;

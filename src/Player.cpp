@@ -14,7 +14,7 @@ Player::Player(GameManager& gameManager) // Modified constructor
     m_currentVehicle(nullptr), frameWidth(0), frameHeight(0), currentFrame(0),
     sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
     m_money(PlayerMoney), m_health(MaxHealth), m_armor(MaxArmor),
-    m_currentWeaponName("Bazooka"), m_maxWeaponAmmo(0),
+    m_currentWeaponName("Minigun"), m_maxWeaponAmmo(0),
     m_wantedLevel(0)
 {
     sf::Texture& texture = ResourceManager::getInstance().getTexture("player");
@@ -41,7 +41,7 @@ Player::Player(GameManager& gameManager) // Modified constructor
     { "Fists",   AmmoSetting{0, 0} },
     { "Pistol",  AmmoSetting{12, 60} },
     { "Rifle",   AmmoSetting{30, 180} },
-    { "Minigun", AmmoSetting{100, 1000} },
+    { "Minigun", AmmoSetting{1000, 1000} },
     { "Bazooka", AmmoSetting{5, 5} },
     { "Knife",   AmmoSetting{0, 1} },
     { "Grenade", AmmoSetting{3, 10} }
@@ -142,13 +142,7 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
 
             sf::Vector2f nextPos = sprite.getPosition() + movement * speed * dt;
 
-            bool collision = false;
-            for (const auto& poly : blockedPolygons) {
-                if (CollisionUtils::pointInPolygon(nextPos, poly)) {
-                    collision = true;
-                    break;
-                }
-            }
+            bool collision = CollisionUtils::isInsideBlockedPolygon(nextPos, blockedPolygons);
 
             if (!collision) {
                 sprite.move(movement * speed * dt);

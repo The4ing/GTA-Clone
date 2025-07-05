@@ -114,15 +114,10 @@ void PoliceTank::updateMovement(float dt, const std::vector<std::vector<sf::Vect
                 sf::Vector2f newPos = getPosition() + forwardVec * m_speed * dt;
 
                 // Basic collision for tanks (they might destroy some minor obstacles)
-                bool collision = false;
-                // For now, same simple collision as PoliceCar
-                for (const auto& poly : blockedPolygons) {
-                    if (CollisionUtils::pointInPolygon(newPos, poly)) {
-                        collision = true;
-                        m_currentPath.clear();
-                        m_currentPathIndex = 0;
-                        break;
-                    }
+                bool collision = CollisionUtils::isInsideBlockedPolygon(newPos, blockedPolygons);
+                if (collision) {
+                    m_currentPath.clear();
+                    m_currentPathIndex = 0;
                 }
                 if (!collision) {
                     Vehicle::setPosition(newPos);

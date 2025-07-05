@@ -174,10 +174,5 @@ std::vector<std::unique_ptr<Store>> GameFactory::createStores(const std::vector<
 
 
 bool GameFactory::isBlocked(const sf::Vector2f& pos, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    for (const auto& polygon : blockedPolygons) {
-        if (CollisionUtils::pointInPolygon(pos, polygon)) {
-            return true;
-        }
-    }
-    return false;
+    return CollisionUtils::isInsideBlockedPolygon(pos, blockedPolygons);
 }
