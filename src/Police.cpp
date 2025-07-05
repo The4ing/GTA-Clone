@@ -10,6 +10,7 @@
 #include <iostream>     // For std::cerr (error logging)
 #include <cstdlib>
 #include "PatrolZone.h"
+#include <vector>
 #include "SoundManager.h"
 
 Police::Police(GameManager & gameManager, PoliceWeaponType weaponType) :
@@ -455,11 +456,19 @@ void Police::takeDamage(int amount) {
         return;
     health -= amount;
     if (health < 0) health = 0;
-    SoundManager::getInstance().playSound("NPC_hurt");
+
     if (health == 0) {
+        static const std::vector<std::string> deathSounds = {
+    "Death1", "Death2", "Death3", "Death4"};
+        SoundManager::getInstance().playRandomSound(deathSounds, 0.95f, 1.05f);
         dying = true;
         deathTimer = 0.f;
         animationManager->setAnimation("Dying", false);
+    }
+    else {
+        static const std::vector<std::string> hurtSounds = {
+              "hurt1", "hurt2", "hurt3", "hurt4"};
+        SoundManager::getInstance().playRandomSound(hurtSounds, 0.95f, 1.05f);
     }
 }
 

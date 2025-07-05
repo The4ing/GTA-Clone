@@ -3,12 +3,15 @@
 #include <string>
 #include <list>
 #include "ResourceManager.h"
+#include <vector>
 
 class SoundManager {
 public:
     static SoundManager& getInstance();
 
-    void playSound(const std::string& name);
+    void playSound(const std::string& name, float pitch = 1.f);
+    void playRandomSound(const std::vector<std::string>& names,
+        float minPitch = 1.f, float maxPitch = 1.f);
     void setVolume(float volume);
     float getVolume() const;
     void removeStoppedSounds();

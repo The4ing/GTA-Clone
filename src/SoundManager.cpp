@@ -1,5 +1,7 @@
 #include "SoundManager.h"
 #include "ResourceManager.h" // Ensure ResourceManager is included
+#include <cstdlib>
+#include <vector>
 
 SoundManager& SoundManager::getInstance() {
     static SoundManager instance;
@@ -8,13 +10,27 @@ SoundManager& SoundManager::getInstance() {
 
 SoundManager::SoundManager() : volume(100.f) {}
 
-void SoundManager::playSound(const std::string& name) {
+void SoundManager::playSound(const std::string& name, float pitch) {
     removeStoppedSounds(); // Clean up sounds that have finished playing
 
     // Create a new sound and add it to the list
     sounds.emplace_back(ResourceManager::getInstance().getSoundBuffer(name));
     sounds.back().setVolume(volume);
+    sounds.back().setPitch(pitch);
     sounds.back().play();
+}
+
+void SoundManager::playRandomSound(const std::vector<std::string>& names,
+    float minPitch, float maxPitch) {
+    if (names.empty()) return;
+
+    int index = std::rand() % names.size();
+    float pitch = minPitch;
+    if (maxPitch > minPitch) {
+        float t = static_cast<float>(std::rand()) / RAND_MAX;
+        pitch = minPitch + t * (maxPitch - minPitch);
+    }
+    playSound(names[index], pitch);
 }
 
 void SoundManager::setVolume(float vol) {
