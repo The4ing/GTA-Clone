@@ -42,7 +42,7 @@ void Store::open(Player& player) {
         },
         {
             "Armor", 20, sf::IntRect(0, 425, 225, 280),
-            [](Player& p) { p.setArmor(100,20),p.decreaseMoney(20); }
+            [](Player& p) { p.setArmor(100),p.decreaseMoney(20); }
         },
           
         {

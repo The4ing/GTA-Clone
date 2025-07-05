@@ -13,7 +13,7 @@ Player::Player(GameManager& gameManager) // Modified constructor
     : m_gameManager(gameManager), // Store GameManager reference
     m_currentVehicle(nullptr), frameWidth(0), frameHeight(0), currentFrame(0),
     sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
-    m_money(PlayerMoney), m_health(MaxHealth), m_armor(100),
+    m_money(PlayerMoney), m_health(MaxHealth), m_armor(MaxArmor),
     m_currentWeaponName("Bazooka"), m_maxWeaponAmmo(0),
     m_wantedLevel(0)
 {
@@ -357,9 +357,7 @@ void Player::increaseSpeed(bool ShopItem) {
 void Player::AddAmmo() {
     
 }
-void Player::AddAmmo() {
-    
-}
+
 
 PlayerShooter& Player::getShooter() {
     return *m_shooter;
