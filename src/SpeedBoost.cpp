@@ -12,7 +12,7 @@ std::string SpeedBoost::getType() const {
 }
 
 void SpeedBoost::applyEffect(Player& player) {
-    //player.increaseSpeed();
+    player.increaseSpeed(false);
     collect();
 }
 
