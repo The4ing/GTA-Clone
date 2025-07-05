@@ -51,7 +51,7 @@ public:
     const Inventory& getInventory() const;
 
     void heal(int amount);
-    void increaseSpeed();
+    void increaseSpeed(bool ShopItem);
     void AddAmmo();
     bool tryBuyAmmo(const std::string& weaponName, int amountToAdd, int price);
     void decreaseMoney(int priceItem);
