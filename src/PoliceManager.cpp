@@ -589,7 +589,7 @@ void PoliceManager::update(float dt, Player& player, const std::vector<std::vect
         }
     }
     m_staticPoliceOfficers.erase(std::remove_if(m_staticPoliceOfficers.begin(), m_staticPoliceOfficers.end(),
-        [](const std::unique_ptr<Police>& p) { return p->isDead(); }),
+        [](const std::unique_ptr<Police>& p) { return p->needsCleanup; }),
         m_staticPoliceOfficers.end());
 
     for (auto& car : m_staticPoliceCars) {
@@ -653,7 +653,7 @@ void PoliceManager::updatePoliceOfficers(float dt, Player& player, const std::ve
         unit->update(dt, player, blockedPolygons);
     }
     m_policeOfficers.erase(std::remove_if(m_policeOfficers.begin(), m_policeOfficers.end(),
-        [](const std::unique_ptr<Police>& p) { return p->isDead() || p->needsCleanup; }), // Also remove if needsCleanup
+        [](const std::unique_ptr<Police>& p) { return p->needsCleanup; }),
         m_policeOfficers.end());
 
     for (const auto& unit : m_policeOfficers) {
