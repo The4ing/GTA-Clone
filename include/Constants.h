@@ -22,7 +22,7 @@ const float BasicSpeed = 50.f;
 const int MaxHealth = 100;
 
 const int MaxMoney = 100;
-const int PlayerMoney = 15;
+const int PlayerMoney = 20;
 
 enum CurrentWepapon {
     W_Fists = -1,
