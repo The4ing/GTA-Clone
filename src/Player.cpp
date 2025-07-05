@@ -43,7 +43,7 @@ Player::Player(GameManager& gameManager) // Modified constructor
     { "Rifle",   AmmoSetting{30, 180} },
     { "Minigun", AmmoSetting{100, 1000} },
     { "Bazooka", AmmoSetting{5, 5} },
-    { "Knife",   AmmoSetting{0, 0} },
+    { "Knife",   AmmoSetting{0, 1} },
     { "Grenade", AmmoSetting{3, 10} }
     };
     m_maxWeaponAmmo = WeaponsAmmo[m_currentWeaponName].MaxAmmo;
