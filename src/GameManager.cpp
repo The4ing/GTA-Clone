@@ -119,6 +119,18 @@ void GameManager::run()
 #endif
         }
 
+        /*--- PAUSED ---*/
+        else if (currentState == GameState::Paused) {
+            // No game world updates. Only pause menu updates (if any) and drawing.
+            pauseMenu.update(deltaTime); // For potential animations in menu
+
+            window.clear(); // Clear window or draw the frozen background
+            window.setView(window.getDefaultView()); // Use default view for UI
+            window.draw(frozenBackgroundSprite); // Draw the captured game screen
+            pauseMenu.draw(window); // Draw the pause menu on top
+            window.display();
+        }
+
         /*‑‑‑ INVENTORY ‑‑‑*/
         else if (currentState == GameState::Inventory) {
             window.clear();
@@ -152,35 +164,71 @@ void GameManager::processEvents() {
     while (window.pollEvent(event)) {
         if (event.type == sf::Event::Closed)
             window.close();
+
         if (event.type == sf::Event::Resized) {
             float w = static_cast<float>(event.size.width);
             float h = static_cast<float>(event.size.height);
+            window.setView(sf::View(sf::FloatRect(0.f, 0.f, w, h)));
 
-            window.setView(sf::View(sf::FloatRect(0.f, 0.f, w, h))); // חובה לעדכן גם את ה-View!
-
-            if (m_hud) {
-                m_hud->updateElementPositions(w, h);  // ← חשוב!
-            }
+            if (m_hud) m_hud->updateElementPositions(w, h);
             updatePressStartPosition();
         }
 
+        // Escape key release: reset flag
+        if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Escape) {
+            wasEscapePressedLastFrame = false;
+        }
 
         if (event.type == sf::Event::KeyPressed) {
             if (m_isAwaitingFirstPlayerMove && currentState == GameState::Playing) {
-                // Check for movement keys or any action key that should start the game
-                if (event.key.code != sf::Keyboard::F11) { // Ignore fullscreen toggle
-                    std::cout << "First player move detected, game is now active." << std::endl; // For debugging
+                if (event.key.code != sf::Keyboard::F11) {
+                    std::cout << "First player move detected, game is now active." << std::endl;
                     m_isAwaitingFirstPlayerMove = false;
                 }
             }
 
             if (event.key.code == sf::Keyboard::F11)
                 setFullscreen(!isFullscreen);
-            if (currentState == GameState::Playing && (event.key.code == sf::Keyboard::I ||
-                event.key.code == sf::Keyboard::E)) {
-                // שמור את המצב הנוכחי של המשחק לתמונה
+
+            // ESC - toggle pause menu only on fresh press
+            if (event.key.code == sf::Keyboard::Escape && !wasEscapePressedLastFrame) {
+                wasEscapePressedLastFrame = true;
+
+                if (currentState == GameState::Playing) {
+                    frozenBackgroundTexture.clear();
+                    frozenBackgroundTexture.setView(gameView);
+                    renderFrozenGame(frozenBackgroundTexture);
+                    frozenBackgroundTexture.display();
+                    frozenBackgroundSprite.setTexture(frozenBackgroundTexture.getTexture());
+                    frozenBackgroundSprite.setPosition(0, 0);
+                    frozenBackgroundSprite.setScale(
+                        float(window.getSize().x) / frozenBackgroundTexture.getSize().x,
+                        float(window.getSize().y) / frozenBackgroundTexture.getSize().y
+                    );
+
+                    currentState = GameState::Paused;
+                    pauseMenu.open();
+                    std::cout << "Game Paused. Opening Pause Menu." << std::endl;
+                }
+                else if (currentState == GameState::Paused) {
+                    // Let pauseMenu handle internal logic (ESC inside)
+                }
+                else if (currentState == GameState::Inventory || currentState == GameState::Store) {
+                    for (auto& s : store) {
+                        s->setIsOpen(false);
+                        s->setPlayerClose(false);
+                    }
+                    currentState = GameState::Playing;
+                    m_playingFrameCount = 0;
+                }
+            }
+
+            // Inventory / Store logic
+            else if (currentState == GameState::Playing &&
+                (event.key.code == sf::Keyboard::I || event.key.code == sf::Keyboard::E)) {
+
                 frozenBackgroundTexture.clear();
-                frozenBackgroundTexture.setView(gameView); // חשוב מאוד!
+                frozenBackgroundTexture.setView(gameView);
                 renderFrozenGame(frozenBackgroundTexture);
                 frozenBackgroundTexture.display();
                 frozenBackgroundSprite.setTexture(frozenBackgroundTexture.getTexture());
@@ -189,55 +237,37 @@ void GameManager::processEvents() {
                     float(window.getSize().x) / frozenBackgroundTexture.getSize().x,
                     float(window.getSize().y) / frozenBackgroundTexture.getSize().y
                 );
-                m_playingFrameCount = 0; // Reset frame count when leaving playing state
+
+                m_playingFrameCount = 0;
                 if (event.key.code == sf::Keyboard::I) {
                     currentState = GameState::Inventory;
                 }
                 else if (event.key.code == sf::Keyboard::E) {
                     for (auto& s : store) {
                         if (s->getPlayerClose()) {
-
                             currentState = GameState::Store;
                             break;
                         }
                     }
                 }
+            }
 
-            }
-            else if ((currentState == GameState::Inventory || currentState == GameState::Store)
-                && event.key.code == sf::Keyboard::Escape) {
-                for (auto& s : store) {
-                    s->setIsOpen(false);
-                    s->setPlayerClose(false);
-                }
-                currentState = GameState::Playing; // m_playingFrameCount will naturally be 0 or start counting if it was reset
-            }
-            // Enter/Exit Vehicle LogicAdd commentMore actionsAdd commentMore actions
+            // Enter / Exit vehicle
             if (currentState == GameState::Playing && event.key.code == sf::Keyboard::F) {
-                if (player && carManager) { // Ensure player and carManager exist
+                if (player && carManager) {
                     if (player->isInVehicle()) {
-                        // Player is in a vehicle, so exit
                         Vehicle* currentVehicle = player->getCurrentVehicle();
-                        player->exitVehicle(); // Player handles its state change
-                        if (currentVehicle) {
-                            currentVehicle->setDriver(nullptr); // Vehicle no longer has a driver
-                        }
+                        player->exitVehicle();
+                        if (currentVehicle) currentVehicle->setDriver(nullptr);
                     }
                     else {
-                        // Player is on foot, try to enter a nearby vehicle
-                        Vehicle* closestVehicle = nullptr;
-                        float minDistanceSq = std::numeric_limits<float>::max();
-                        const float enterRadius = 75.f; // Max distance to enter a vehicle
-                        const float enterRadiusSq = enterRadius * enterRadius;
-
-                        sf::Vector2f playerPos = player->getPosition();
-
                         Vehicle* closestOverallVehicle = nullptr;
                         float minOverallDistanceSq = std::numeric_limits<float>::max();
+                        sf::Vector2f playerPos = player->getPosition();
+                        const float enterRadiusSq = 75.f * 75.f;
 
-                        // Check regular cars from CarManager
                         if (carManager) {
-                            for (auto& car : carManager->getVehicles()) { // car is Vehicle&
+                            for (auto& car : carManager->getVehicles()) {
                                 if (car.getDriver() == nullptr) {
                                     float distSq = distanceSquared(playerPos, car.getPosition());
                                     if (distSq < enterRadiusSq && distSq < minOverallDistanceSq) {
@@ -248,57 +278,84 @@ void GameManager::processEvents() {
                             }
                         }
 
-                        // Check police cars from PoliceManager
                         if (policeManager) {
-                            for (const auto& policeCarUniquePtr : policeManager->getPoliceCars()) {
-                                PoliceCar* policeCarCand = policeCarUniquePtr.get();
-                                if (policeCarCand->getDriver() == nullptr) {
-                                    float distSq = distanceSquared(playerPos, policeCarCand->getPosition());
+                            for (const auto& pc : policeManager->getPoliceCars()) {
+                                PoliceCar* policeCar = pc.get();
+                                if (policeCar->getDriver() == nullptr) {
+                                    float distSq = distanceSquared(playerPos, policeCar->getPosition());
                                     if (distSq < enterRadiusSq && distSq < minOverallDistanceSq) {
-                                        if (player->getWantedLevel() >= 3) {
-                                            // Player cannot enter a new police car if wanted level is 3+
+                                        if (player->getWantedLevel() >= 3)
                                             continue;
-                                        }
                                         minOverallDistanceSq = distSq;
-                                        closestOverallVehicle = policeCarCand;
+                                        closestOverallVehicle = policeCar;
                                     }
                                 }
                             }
                         }
 
                         if (closestOverallVehicle) {
-                            PoliceCar* policeCarScript = dynamic_cast<PoliceCar*>(closestOverallVehicle);
-
-                            if (policeCarScript) {
-                                // If it's a police car, and we've selected it,
-                                // it implies player's wanted level was < 3 (due to the check in the loop).
-                                if (player->getWantedLevel() < 3) {
-                                    if (!policeCarScript->m_playerCausedWantedIncrease) {
-                                        player->setWantedLevel(3);
-                                        policeCarScript->m_playerCausedWantedIncrease = true;
-                                    }
-                                    policeCarScript->setIsAmbient(false); // Make it non-ambient
+                            PoliceCar* policeCar = dynamic_cast<PoliceCar*>(closestOverallVehicle);
+                            if (policeCar && player->getWantedLevel() < 3) {
+                                if (!policeCar->m_playerCausedWantedIncrease) {
+                                    player->setWantedLevel(3);
+                                    policeCar->m_playerCausedWantedIncrease = true;
                                 }
-                                // If player's wanted level was already >= 3, this police car wouldn't have been chosen.
+                                policeCar->setIsAmbient(false);
                             }
-
                             player->enterVehicle(closestOverallVehicle);
                             closestOverallVehicle->setDriver(player.get());
                         }
                     }
                 }
             }
-            if (currentState == GameState::Playing && event.key.code == sf::Keyboard::E) {
-
-            }
-
         }
 
+        // MENU / PAUSED states
         if (currentState == GameState::Menu) {
             menu->update(event);
         }
+        else if (currentState == GameState::Paused) {
+            pauseMenu.handleEvent(event);
+            PauseMenu::MenuAction action = pauseMenu.getAndClearAction();
+
+            if (action == PauseMenu::MenuAction::RequestNewGame) {
+                currentState = GameState::Menu;
+                if (menu) menu->reset();
+                std::cout << "Transitioning to Main Menu for New Game." << std::endl;
+            }
+            else if (action == PauseMenu::MenuAction::RequestOpenMap) {
+                if (player && mapTexture) {
+                    pauseMenu.prepareMapScreen(*mapTexture, player->getPosition(), window.getSize());
+                }
+                else {
+                    std::cerr << "GameManager: Cannot open map. Player or mapTexture missing." << std::endl;
+                }
+            }
+            else if (action == PauseMenu::MenuAction::RequestOpenStats) {
+                if (player) {
+                    PauseMenu::PlayerGameStats stats;
+                    stats.gameTime = m_gameTime;
+                    stats.kills = player->getKills();
+                    stats.money = player->getMoney();
+                    stats.wantedLevel = player->getWantedLevel();
+                    stats.collectedWeapons = player->getInventory().getCollectedWeaponNames();
+                    pauseMenu.prepareStatsScreen(stats);
+                }
+                else {
+                    std::cerr << "GameManager: Cannot open stats. Player missing." << std::endl;
+                }
+            }
+            else {
+                if (!pauseMenu.isOpen() && currentState == GameState::Paused) {
+                    currentState = GameState::Playing;
+                    std::cout << "Resuming Game from Pause Menu." << std::endl;
+                    m_playingFrameCount = 0;
+                }
+            }
+        }
     }
 }
+
 
 
 void GameManager::renderFrozenGame(sf::RenderTarget& target) {

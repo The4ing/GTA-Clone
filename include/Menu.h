@@ -12,9 +12,10 @@ public:
     int getSelectedIndex() const;
     bool isOptionChosen() const;
     std::string getSelectedOption() const;
+    void reset(); // Added reset method
 
 private:
-    
+
 
     sf::RenderWindow& window;
     sf::Font font;

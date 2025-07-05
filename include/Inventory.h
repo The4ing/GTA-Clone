@@ -16,10 +16,11 @@ class Inventory {
 public:
     Inventory();
 
-    void addItem(const std::string& name, const sf::Texture& texture );
+    void addItem(const std::string& name, const sf::Texture& texture);
     bool useItem(const std::string& name);
     int getCount(const std::string& name) const;
     const std::unordered_map<std::string, InventoryItem>& getAllItems() const;
+    std::vector<std::string> getCollectedWeaponNames() const; // Added for stats
 
     const sf::Texture* getItemTexture(const std::string& name) const;
 
