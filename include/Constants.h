@@ -24,6 +24,9 @@ const int MaxHealth = 100;
 const int MaxMoney = 100;
 const int PlayerMoney = 20;
 
+const int MaxArmor = 100;
+
+
 enum CurrentWepapon {
     W_Fists = -1,
     W_Pistol,
