@@ -496,10 +496,9 @@ int Player::getWantedLevel() const {
     return m_wantedLevel;
 }
 
-void Player::setArmor(int armor,int price)
+void Player::setArmor(int armor)
 {
-    if (price > m_money)
-        return;
+    
     m_armor += armor;
     if (m_armor > MaxArmor)
         m_armor = MaxArmor;
