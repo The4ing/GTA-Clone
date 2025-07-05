@@ -144,10 +144,8 @@ bool Pedestrian::checkCollision(const sf::Vector2f& currentPos, const sf::Vector
         float t = i / float(steps);
         sf::Vector2f interpPos = currentPos + (nextPos - currentPos) * t;
 
-        for (const auto& poly : blockedPolygons) {
-            if (CollisionUtils::pointInPolygon(interpPos, poly)) {
-                return true;
-            }
+        if (CollisionUtils::isInsideBlockedPolygon(interpPos, blockedPolygons)) {
+            return true;
         }
     }
     return false;

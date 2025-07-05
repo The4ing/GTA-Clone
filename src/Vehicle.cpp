@@ -98,13 +98,10 @@ void Vehicle::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blo
             };
 
             for (const auto& point : nextVehiclePoints) {
-                for (const auto& poly : blockedPolygons) {
-                    if (CollisionUtils::pointInPolygon(point, poly)) {
-                        collisionDetected = true;
-                        break;
-                    }
+                if (CollisionUtils::isInsideBlockedPolygon(point, blockedPolygons)) {
+                    collisionDetected = true;
+                    break;
                 }
-                if (collisionDetected) break;
             }
         }
 

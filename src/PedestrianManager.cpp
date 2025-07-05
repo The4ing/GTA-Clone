@@ -44,11 +44,6 @@ sf::Vector2f PedestrianManager::generateValidPosition(const std::vector<std::vec
 }
 
 bool PedestrianManager::isBlocked(const sf::Vector2f& pos, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) const {
-    float radius = 10.f;
-    for (const auto& poly : blockedPolygons) {
-        if (CollisionUtils::pointInPolygon(pos, poly))
-            return true;
-    }
-    return false;
+    return CollisionUtils::isInsideBlockedPolygon(pos, blockedPolygons);
 }
 

@@ -582,14 +582,8 @@ bool Police::canSeePlayer(const Player& player, const std::vector<std::vector<sf
 
         sf::Vector2f testPoint = selfPos + directionToPlayer * fraction;
 
-        for (const auto& polygon : obstacles) {
-            if (CollisionUtils::pointInPolygon(testPoint, polygon)) {
-                // To prevent player's own collision shape from occluding if they are the target.
-                // This needs more sophisticated handling if player is also an "obstacle".
-                // For now, any obstruction blocks.
-                // std::cout << "Police " << this << ": LOS blocked at point (" << testPoint.x << "," << testPoint.y << ")" << std::endl;
-                return false;
-            }
+        if (CollisionUtils::isInsideBlockedPolygon(testPoint, obstacles)) {
+            return false;
         }
     }
     // std::cout << "Police " << this << ": Player SEEN!" << std::endl;

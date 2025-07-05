@@ -596,7 +596,7 @@ void GameManager::buildBlockedPolyTree() {
         }
         blockedPolyTree.insert(sf::FloatRect(minX, minY, maxX - minX, maxY - minY), poly);
     }
-
+    CollisionUtils::setBlockedPolyTree(&blockedPolyTree);
 }
 
 
