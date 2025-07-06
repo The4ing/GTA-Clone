@@ -438,6 +438,23 @@ bool PoliceManager::isInsideBlockedPolygon(const sf::Vector2f& point, const std:
 // Initialize static members for pathfinding throttling
 int s_pathfindingCallsThisFrame = 0;
 const int S_MAX_PATHFINDING_CALLS_PER_FRAME = 10; // Increased slightly, can be tuned
+// When the wanted level changes a large number of units might try to retreat
+// at once.  Calculating retreat paths for all of them in the same frame causes
+// noticeable stalls.  Limit how many units are processed per frame.
+const int MAX_RETREATS_PER_FRAME = 3;
+
+static bool isValidSpawnPosition(const sf::Vector2f& pos, const GameManager& gameManager) {
+    if (pos.x < 0 || pos.x >= MAP_WIDTH || pos.y < 0 || pos.y >= MAP_HEIGHT)
+        return false;
+    if (gameManager.isPositionBlocked(pos))
+        return false;
+    if (auto grid = gameManager.getPathfindingGrid()) {
+        sf::Vector2i gp = grid->worldToGrid(pos);
+        if (!grid->isCellWalkable(gp.x, gp.y))
+            return false;
+    }
+    return true;
+}
 
 PoliceManager::PoliceManager(GameManager& gameManager)
     : m_gameManager(gameManager),
@@ -504,7 +521,7 @@ void PoliceManager::spawnStaticPoliceUnits(const sf::FloatRect& mapBounds, float
                 std::uniform_real_distribution<float> distX(x, std::min(x + gridSize, mapBounds.left + mapBounds.width));
                 std::uniform_real_distribution<float> distY(y, std::min(y + gridSize, mapBounds.top + mapBounds.height));
                 sf::Vector2f spawnPos(distX(rng), distY(rng));
-                if (!isInsideBlockedPolygon(spawnPos, blockedPolygons)) {
+                if (isValidSpawnPosition(spawnPos, m_gameManager)) {
                     spawnPolice(spawnPos, PoliceWeaponType::BATON, true);
                     break;
                 }
@@ -515,7 +532,7 @@ void PoliceManager::spawnStaticPoliceUnits(const sf::FloatRect& mapBounds, float
                 std::uniform_real_distribution<float> distX(x, std::min(x + gridSize, mapBounds.left + mapBounds.width));
                 std::uniform_real_distribution<float> distY(y, std::min(y + gridSize, mapBounds.top + mapBounds.height));
                 sf::Vector2f spawnPos(distX(rng), distY(rng));
-                if (!isInsideBlockedPolygon(spawnPos, blockedPolygons)) {
+                if (isValidSpawnPosition(spawnPos, m_gameManager)) {
                     spawnPolice(spawnPos, PoliceWeaponType::PISTOL, true);
                     break;
                 }
@@ -526,7 +543,7 @@ void PoliceManager::spawnStaticPoliceUnits(const sf::FloatRect& mapBounds, float
                 std::uniform_real_distribution<float> distX(x, std::min(x + gridSize, mapBounds.left + mapBounds.width));
                 std::uniform_real_distribution<float> distY(y, std::min(y + gridSize, mapBounds.top + mapBounds.height));
                 sf::Vector2f spawnPos(distX(rng), distY(rng));
-                if (!isInsideBlockedPolygon(spawnPos, blockedPolygons)) {
+                if (isValidSpawnPosition(spawnPos, m_gameManager)) {
                     spawnPoliceCar(spawnPos, true);
                     break;
                 }
@@ -717,25 +734,8 @@ sf::Vector2f findOffScreenSpawnPosition(const sf::View& gameView, const sf::Vect
         extendedViewRect.height += 2 * minSpawnDistFromScreenEdge;
 
         if (!extendedViewRect.contains(spawnPos)) { // It's sufficiently off-screen
-             // Check map boundaries
-            if (spawnPos.x < 0 || spawnPos.x >= MAP_WIDTH || spawnPos.y < 0 || spawnPos.y >= MAP_HEIGHT) {
-                continue; // Outside map
-            }
-            // Check if blocked by static geometry (only if not helicopter/tank which might not care)
-            // For simplicity, we'll check for all types for now.
-            bool blocked = false;
-            for (const auto& poly : blockedPolygons) {
-                if (CollisionUtils::pointInPolygon(spawnPos, poly)) {
-                    blocked = true;
-                    break;
-                }
-            }
-            if (!blocked) {
-                 // Optional: Check if path exists to player from this spawn point
-                 // This is more complex and might be slow. For now, we skip it.
-                 // if (gameManager.getPathfindingGrid() && gameManager.getPathfindingGrid()->isWalkable(spawnPos)) {
-                    return spawnPos;
-                 // }
+            if (isValidSpawnPosition(spawnPos, gameManager)) {
+                return spawnPos;
             }
         }
     }
@@ -864,34 +864,34 @@ void PoliceManager::managePolicePopulation(int wantedLevel, const sf::Vector2f& 
     int pistolOfficersToRetreat = std::max(0, countDynamicPoliceByType(PoliceWeaponType::PISTOL) - m_desiredPistolOfficers);
     int policeCarsToRetreat = std::max(0, countDynamicPoliceCars() - m_desiredPoliceCars);
     // Similar logic for helicopters and tanks if they need to retreat instead of just vanishing.
-
+    int retreated = 0;
     // Make Baton Officers retreat
-    for (auto& officer : m_policeOfficers) { // Iterate through all dynamic officers
-        if (batonOfficersToRetreat <= 0) break;
+    for (auto& officer : m_policeOfficers) {
+        if (batonOfficersToRetreat <= 0 || retreated >= MAX_RETREATS_PER_FRAME) break;
         if (!officer->isStatic() && officer->getWeaponType() == PoliceWeaponType::BATON && !officer->isRetreating()) {
-            sf::Vector2f retreatTarget = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
-            officer->startRetreating(retreatTarget);
+            officer->needsCleanup = true; // Remove instantly to avoid heavy pathfinding
             batonOfficersToRetreat--;
+            retreated++;
         }
     }
-
+    retreated = 0;
     // Make Pistol Officers retreat
-    for (auto& officer : m_policeOfficers) { // Iterate through all dynamic officers
-        if (pistolOfficersToRetreat <= 0) break;
+    for (auto& officer : m_policeOfficers) {
+        if (pistolOfficersToRetreat <= 0 || retreated >= MAX_RETREATS_PER_FRAME) break;
         if (!officer->isStatic() && officer->getWeaponType() == PoliceWeaponType::PISTOL && !officer->isRetreating()) {
-            sf::Vector2f retreatTarget = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
-            officer->startRetreating(retreatTarget);
+            officer->needsCleanup = true;
             pistolOfficersToRetreat--;
+            retreated++;
         }
     }
-
+    retreated = 0;
     // Make Police Cars retreat
-    for (auto& car : m_policeCars) { // Iterate through all dynamic cars
-        if (policeCarsToRetreat <= 0) break;
+    for (auto& car : m_policeCars) {
+        if (policeCarsToRetreat <= 0 || retreated >= MAX_RETREATS_PER_FRAME) break;
         if (!car->isStatic() && !car->isRetreating() && !car->isAmbient()) {
-            sf::Vector2f retreatTarget = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
-            car->startRetreating(retreatTarget);
+            car->needsCleanup = true;
             policeCarsToRetreat--;
+            retreated++;
         }
     }
     // Note: Helicopters and Tanks currently don't have a retreat mechanic implemented beyond despawning when out of sight or destroyed.
