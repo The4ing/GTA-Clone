@@ -178,7 +178,7 @@ void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<s
         // Non-ambient (aggressive) behavior:
         updateChaseBehavior(dt, player, blockedPolygons);
 
-        if (m_bumpCooldown <= 0.f && attemptRunOverPlayer(player)) {
+        if (m_bumpCooldown <= 0.f && attemptRunOverPlayer(player, blockedPolygons)) {
             player.takeDamage(25);
             m_bumpCooldown = 3.f;
         }
@@ -331,7 +331,7 @@ void PoliceCar::updateChaseBehavior(float dt, Player& player, const std::vector<
     }
 }
 
-bool PoliceCar::attemptRunOverPlayer(Player& player) {
+bool PoliceCar::attemptRunOverPlayer(Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     sf::Vector2f policePos = getPosition();
     sf::Vector2f playerPos = player.getPosition();
 
@@ -341,15 +341,13 @@ bool PoliceCar::attemptRunOverPlayer(Player& player) {
     float combinedRadii = (m_sprite.getGlobalBounds().width / 2.f) + player.getCollisionRadius();
 
     if (distSq < (combinedRadii * combinedRadii) * 0.8f) {
-        // ?????! ???? ?? ?????
         sf::Vector2f pushDir = playerPos - policePos;
         float length = std::sqrt(pushDir.x * pushDir.x + pushDir.y * pushDir.y);
         if (length != 0.f)
             pushDir /= length;
 
-        float pushStrength = 45.f; // ??? ??????? ????? – ???? ????? ?????
-
-        player.setPosition(playerPos + pushDir * pushStrength);
+        float pushStrength = m_speed * 0.5f;
+        player.applyKnockback(pushDir * pushStrength, 0.4f);
         player.takeDamage(25); // ?? ?? ??? ???
 
         return true;

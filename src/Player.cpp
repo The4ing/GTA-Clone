@@ -111,6 +111,22 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
     }
     else {
         // שחקן הולך ברגל
+
+        if (m_knockbackTimer > 0.f) {
+            sf::Vector2f nextPos = sprite.getPosition() + m_knockbackVelocity * dt;
+            bool collision = CollisionUtils::isInsideBlockedPolygon(nextPos, blockedPolygons);
+            if (!collision) {
+                sprite.setPosition(nextPos);
+            }
+            else {
+                m_knockbackTimer = 0.f;
+                m_knockbackVelocity = { 0.f, 0.f };
+            }
+            m_knockbackTimer -= dt;
+            playAnimation("Hurt", true);
+            return;
+        }
+
         sf::Vector2f movement(0.f, 0.f);
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
@@ -396,6 +412,10 @@ void Player::AddAmmo() {
 
 }
 
+void Player::applyKnockback(const sf::Vector2f& velocity, float duration) {
+    m_knockbackVelocity = velocity;
+    m_knockbackTimer = duration;
+}
 
 PlayerShooter& Player::getShooter() {
     return *m_shooter;

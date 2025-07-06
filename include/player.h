@@ -66,6 +66,7 @@ public:
     void incrementKills() { ++killCount; } 
 
     PlayerShooter& getShooter();
+    void applyKnockback(const sf::Vector2f& velocity, float duration);
 
 private:
     Vehicle* m_currentVehicle;
@@ -98,6 +99,8 @@ private:
     Inventory inventory;
     int Bullets = 0;
     float speedBoostTimer = 0.f;
+    sf::Vector2f m_knockbackVelocity = { 0.f, 0.f };
+    float m_knockbackTimer = 0.f;
     std::string currentAnimationName;
     std::unique_ptr<AnimationManager> animationManager;
     std::unordered_map<std::string, AmmoSetting> WeaponsAmmo;

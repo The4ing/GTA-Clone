@@ -39,7 +39,7 @@ private:
     enum class CarState { Chasing, AmbientDriving, Retreating };
     CarState m_carState = CarState::AmbientDriving;
     void updateChaseBehavior(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
-    bool attemptRunOverPlayer(Player& player);
+    bool attemptRunOverPlayer(Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     bool m_isStatic = false; // Flag to mark static police cars
     GameManager& m_gameManager;
     bool m_isAmbient = true;
