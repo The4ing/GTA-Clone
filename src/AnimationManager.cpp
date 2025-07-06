@@ -31,8 +31,8 @@ void AnimationManager::initAnimations() {
     addAnimation("BazookaWalkShoot", { 10, 10, 11, 8 });
 }
 
-void AnimationManager::setAnimation(const std::string& name, bool shouldLoop, bool isPingPong) {
-    if (currentAnim != name) {
+void AnimationManager::setAnimation(const std::string& name, bool shouldLoop, bool isPingPong, bool forceReset) {
+    if (currentAnim != name || forceReset) {
         currentAnim = name;
         currentFrame = 0;
         animTimer = 0.f;
@@ -45,7 +45,7 @@ void AnimationManager::setAnimation(const std::string& name, bool shouldLoop, bo
 
 void AnimationManager::update(float dt) {
     if (currentAnim.empty()) return;
-  
+
     animTimer += dt;
     if (animTimer >= animDelay) {
         animTimer -= animDelay;
@@ -96,7 +96,7 @@ void AnimationManager::updateSpriteRect() {
 
     sprite.setTextureRect(sf::IntRect(left, top, frameWidth, frameHeight));
 
-    
+
 }
 
 int AnimationManager::countFrames(const AnimationRange& ar)const {

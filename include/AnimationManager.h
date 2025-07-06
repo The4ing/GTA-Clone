@@ -34,7 +34,7 @@ public:
     bool isAnimationFinished() const;
     void addAnimation(const std::string& name, AnimationRange range);
     // ???? ?-setAnimation ??????? ?? ????? ????
-    void setAnimation(const std::string& name, bool shouldLoop = true, bool isPingPong = false);
+    void setAnimation(const std::string& name, bool shouldLoop = true, bool isPingPong = false, bool forceReset = false);
     void update(float dt);
 
 private:

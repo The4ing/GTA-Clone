@@ -19,7 +19,7 @@ Police::Police(GameManager & gameManager, PoliceWeaponType weaponType) :
     pathfinder(*gameManager.getPathfindingGrid()),
     state(PoliceState::Idle),
     currentPathIndex(0), repathTimer(0.f), pathFailCooldown(0.f),
-    fireCooldownTimer(0.f), meleeCooldownTimer(0.f), 
+    fireCooldownTimer(0.f), meleeCooldownTimer(0.f),
     m_assignedZone(nullptr) // Initialize assigned zone
     // animationTimer(0.f), animationSpeed(0.005f), currentFrame(0) // Likely handled by AnimationManager
 {
@@ -65,8 +65,8 @@ void Police::handleShooting(Player& player, float dt) {
         aimDir /= aimDirLen;
     }
 
-//    float angle = std::atan2(aimDir.y, aimDir.x) * 180.f / M_PI;
-   // sprite.setRotation(angle + 90.f);
+    //    float angle = std::atan2(aimDir.y, aimDir.x) * 180.f / M_PI;
+       // sprite.setRotation(angle + 90.f);
 
     float baseAngle = std::atan2(aimDir.y, aimDir.x);
     sprite.setRotation(baseAngle * 180.f / M_PI + 90.f);
@@ -88,7 +88,7 @@ void Police::handleShooting(Player& player, float dt) {
 void Police::handleMeleeAttack(Player& player, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     sf::Vector2f playerPosition = player.getPosition();
     sf::Vector2f aimDir = playerPosition - getPosition();
-     float distance = std::hypot(aimDir.x, aimDir.y);
+    float distance = std::hypot(aimDir.x, aimDir.y);
     float angle = std::atan2(aimDir.y, aimDir.x) * 180.f / M_PI;
     sprite.setRotation(angle + 90.f); // Face the player
 
@@ -177,6 +177,15 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
         }
         else {
             handleMeleeAttack(player, dt, blockedPolygons);
+            // If the attack animation is finished, but still in melee state (e.g. cooldown), revert to idle.
+            if (animationManager->isAnimationFinished() && meleeCooldownTimer > 0.f) {
+                // Choose an appropriate idle animation. Assuming "Idle_NoWeapon" or a baton-specific idle.
+                // If a baton officer is always "no weapon" when not attacking, "Idle_NoWeapon" is fine.
+                // If they have a specific "Baton_Idle" animation, that would be better.
+                // For now, let's use "Idle_NoWeapon" as a placeholder if "Baton_Idle" isn't defined.
+                // We need to ensure "Idle_NoWeapon" is a looping animation.
+                animationManager->setAnimation("Idle_NoWeapon", true);
+            }
             animationManager->update(dt);
             return; // Skip movement while melee attacking
         }
@@ -348,23 +357,23 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
 
     animationManager->update(dt);
     if (state == PoliceState::Retreating) {
-            if (!currentPath.empty() && currentPathIndex < currentPath.size()) {
-                sf::Vector2f nextWaypoint = currentPath[currentPathIndex];
-                moveToward(nextWaypoint, dt); // Movement logic is reused
+        if (!currentPath.empty() && currentPathIndex < currentPath.size()) {
+            sf::Vector2f nextWaypoint = currentPath[currentPathIndex];
+            moveToward(nextWaypoint, dt); // Movement logic is reused
 
-                float distanceToWaypoint = std::hypot(nextWaypoint.x - getPosition().x, nextWaypoint.y - getPosition().y);
-                if (distanceToWaypoint < PATHFINDING_GRID_SIZE / 2.0f) {
-                    currentPathIndex++;
-                }
-                if (currentPathIndex >= currentPath.size()) { // Reached end of retreat path
-                    needsCleanup = true;
-                    // std::cout << "Police " << this << " reached retreat destination. Marking for cleanup." << std::endl;
-                }
+            float distanceToWaypoint = std::hypot(nextWaypoint.x - getPosition().x, nextWaypoint.y - getPosition().y);
+            if (distanceToWaypoint < PATHFINDING_GRID_SIZE / 2.0f) {
+                currentPathIndex++;
             }
-            else { // No path or path finished, but not yet marked for cleanup (e.g. if path failed)
-                needsCleanup = true; // Mark for cleanup anyway if stuck without a path while retreating
-                // std::cout << "Police " << this << " has no retreat path or finished. Marking for cleanup." << std::endl;
+            if (currentPathIndex >= currentPath.size()) { // Reached end of retreat path
+                needsCleanup = true;
+                // std::cout << "Police " << this << " reached retreat destination. Marking for cleanup." << std::endl;
             }
+        }
+        else { // No path or path finished, but not yet marked for cleanup (e.g. if path failed)
+            needsCleanup = true; // Mark for cleanup anyway if stuck without a path while retreating
+            // std::cout << "Police " << this << " has no retreat path or finished. Marking for cleanup." << std::endl;
+        }
         animationManager->setAnimation("Walk_NoWeapon", true); // Use walking animation for retreating
         animationManager->update(dt);
         return; // Don't process other states if retreating
@@ -372,7 +381,7 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
 }
 
 void Police::startRetreating(const sf::Vector2f& retreatTarget) {
-        if (state == PoliceState::Retreating) return; // Already retreating
+    if (state == PoliceState::Retreating) return; // Already retreating
 
     state = PoliceState::Retreating;
     targetPos = retreatTarget; // The actual off-screen target
@@ -461,7 +470,7 @@ void Police::takeDamage(int amount) {
 
     if (health == 0) {
         static const std::vector<std::string> deathSounds = {
-    "Death1", "Death2", "Death3", "Death4"};
+    "Death1", "Death2", "Death3", "Death4" };
         SoundManager::getInstance().playRandomSound(deathSounds, 0.95f, 1.05f);
         dying = true;
         deathTimer = 0.f;
@@ -469,7 +478,7 @@ void Police::takeDamage(int amount) {
     }
     else {
         static const std::vector<std::string> hurtSounds = {
-              "hurt1", "hurt2", "hurt3", "hurt4"};
+              "hurt1", "hurt2", "hurt3", "hurt4" };
         SoundManager::getInstance().playRandomSound(hurtSounds, 0.95f, 1.05f);
     }
 }
