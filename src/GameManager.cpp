@@ -20,6 +20,7 @@
 #include "ResourceManager.h"
 #include "Slideshow.h"
 #include "Vehicle.h"
+#include "PoliceCar.h"
 
 // Uncomment to time‑profile את 10 הפריימים הראשונים
 // #define DEBUG_TIMING
@@ -281,7 +282,7 @@ void GameManager::processEvents() {
                         if (policeManager) {
                             for (const auto& pc : policeManager->getPoliceCars()) {
                                 PoliceCar* policeCar = pc.get();
-                                if (policeCar->getDriver() == nullptr) {
+                                if (policeCar->getDriver() == nullptr && !policeCar->hasOfficerInside()) {
                                     float distSq = distanceSquared(playerPos, policeCar->getPosition());
                                     if (distSq < enterRadiusSq && distSq < minOverallDistanceSq) {
                                         if (player->getWantedLevel() >= 3)
@@ -304,6 +305,8 @@ void GameManager::processEvents() {
                             }
                             player->enterVehicle(closestOverallVehicle);
                             closestOverallVehicle->setDriver(player.get());
+                            if (policeCar)
+                                policeCar->setIsStatic(false);
                         }
                     }
                 }
@@ -449,6 +452,13 @@ void GameManager::update(float dt) {
                         playerVehicle->stop();
                         aiVehicle.stop();
                     }
+                }
+            }
+        }
+        if (policeManager && pedestrianManager) {
+            for (const auto& car : policeManager->getPoliceCars()) {
+                for (const auto& ped : pedestrianManager->getPedestrians()) {
+                    car->attemptRunOverPedestrian(*ped);
                 }
             }
         }

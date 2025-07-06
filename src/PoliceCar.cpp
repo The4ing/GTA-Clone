@@ -6,7 +6,8 @@
 #include "CollisionUtils.h" // For collision checks if needed
 #include <cmath>        // For std::hypot, std::atan2, M_PI
 #include <iostream>     // For debugging
-#include "PatrolZone.h" 
+#include "PatrolZone.h"
+#include "Pedestrian.h"
 
 PoliceCar::PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition)
     : Vehicle(), // Call base Vehicle constructor
@@ -41,6 +42,9 @@ PoliceCar::PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition
     // If Vehicle class has speed, set it there. Otherwise, use m_speed from PoliceCar.h
     // this->speed = m_speed; // Example if Vehicle has a public 'speed' member
     m_carState = CarState::AmbientDriving; // Default state
+    m_currentSpeed = m_speed;
+    m_bumpCount = 0;
+    m_requestOfficerExit = false;
 }
 bool PoliceCar::isRetreating() const {
         return m_carState == CarState::Retreating;
@@ -75,7 +79,7 @@ void PoliceCar::startRetreating(const sf::Vector2f& retreatTarget) {
 
 void PoliceCar::setIsAmbient(bool isAmbient) {
     m_isAmbient = isAmbient;
-    if (m_isAmbient && m_carState != CarState::Retreating) { // Don't switch to ambient if retreatingAdd commentMore actions
+    if (m_isAmbient && m_carState != CarState::Retreating) { // Don't switch to ambient if retreating
         m_carState = CarState::AmbientDriving;
     }
     else if (!m_isAmbient && m_carState == CarState::AmbientDriving) {
@@ -89,8 +93,11 @@ bool PoliceCar::isAmbient() const {
 
 
 void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    // Always call Vehicle::update for basic movement processing, collision response from Vehicle side etc.
-    Vehicle::update(dt, blockedPolygons); // Base vehicle logicAdd commentMore actions
+    if (m_isStatic && !hasDriver()) {
+        return;
+    }
+
+    Vehicle::update(dt, blockedPolygons);
 
     if (m_carState == CarState::Retreating) {
         m_repathTimer += dt; // Similar to chase, path to retreat target
@@ -122,7 +129,7 @@ void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<s
             if (distanceToWaypoint > 0.01f) direction /= distanceToWaypoint;
 
             sf::Vector2f currentPos = getPosition();
-            float moveStep = m_speed * dt; // Use car's speed
+            float moveStep = m_currentSpeed * dt;
             sf::Vector2f nextPosCandidate = currentPos + direction * std::min(moveStep, distanceToWaypoint);
 
             // Basic collision check for retreating cars as well
@@ -179,7 +186,7 @@ void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<s
         updateChaseBehavior(dt, player, blockedPolygons);
 
         if (m_bumpCooldown <= 0.f && attemptRunOverPlayer(player, blockedPolygons)) {
-            player.takeDamage(25);
+            player.takeDamage(static_cast<int>(m_currentSpeed / 2.f));
             m_bumpCooldown = 3.f;
         }
     }
@@ -196,6 +203,32 @@ void PoliceCar::setPatrolZone(PatrolZone* zone) {
 PatrolZone* PoliceCar::getPatrolZone() const {
     return m_assignedZone;
 }
+
+bool PoliceCar::attemptRunOverPedestrian(Pedestrian& ped) {
+    sf::Vector2f policePos = getPosition();
+    sf::Vector2f npcPos = ped.getPosition();
+
+    float distSq = (policePos.x - npcPos.x) * (policePos.x - npcPos.x) +
+        (policePos.y - npcPos.y) * (policePos.y - npcPos.y);
+
+    float combinedRadii = (m_sprite.getGlobalBounds().width / 2.f) + ped.getCollisionRadius();
+
+    if (distSq < (combinedRadii * combinedRadii) * 0.8f) {
+        ped.startBackingUp();
+        ped.takeDamage(25);
+        return true;
+    }
+    return false;
+}
+
+bool PoliceCar::readyForOfficerExit() const {
+    return m_requestOfficerExit;
+}
+
+void PoliceCar::clearOfficerExitRequest() {
+    m_requestOfficerExit = false;
+}
+
 
 bool PoliceCar::canSeePlayer(const Player& player, const std::vector<std::vector<sf::Vector2f>>& obstacles) {
     sf::Vector2f selfPos = getPosition(); // Vehicle::getPosition()
@@ -288,7 +321,7 @@ void PoliceCar::updateChaseBehavior(float dt, Player& player, const std::vector<
         // This part needs to integrate with Vehicle's movement system if it exists,
         // or directly control m_sprite. For now, direct m_sprite control:
         sf::Vector2f currentPos = getPosition();
-        float moveStep = m_speed * dt;
+        float moveStep = m_currentSpeed * dt;
         sf::Vector2f nextPosCandidate = currentPos + direction * std::min(moveStep, distanceToWaypoint);
 
         // Basic future collision check (can be improved with Vehicle's system or CollisionUtils)
@@ -346,9 +379,14 @@ bool PoliceCar::attemptRunOverPlayer(Player& player, const std::vector<std::vect
         if (length != 0.f)
             pushDir /= length;
 
-        float pushStrength = m_speed * 0.5f;
+        float pushStrength = m_currentSpeed * 0.5f;
         player.applyKnockback(pushDir * pushStrength, 0.4f);
-        player.takeDamage(25); // ?? ?? ??? ???
+        player.takeDamage(static_cast<int>(m_currentSpeed / 2.f));
+        if (m_currentSpeed > 10.f)
+            m_currentSpeed *= 0.6f;
+        if (m_currentSpeed < 20.f)
+            m_requestOfficerExit = true;
+        m_bumpCount++;
 
         return true;
     }
