@@ -86,6 +86,21 @@ private:
 
     std::vector<sf::Vector2i> activeChunks;
     float spawnCooldown = 0.f;
+
+    // For staggering spawns/despawns
+    int m_targetBatonOfficers;
+    int m_targetPistolOfficers;
+    int m_targetPoliceCars;
+    int m_targetPoliceHelicopters;
+    int m_targetPoliceTanks;
+
+    // Note: m_desired*Officers variables might be repurposed or removed if m_target* fully replaces them.
+    // For now, let's assume m_desired* were for immediate calculation within managePolicePopulation,
+    // and m_target* are the persistent goals we are moving towards.
+
+    int m_unitsToProcessPerFrame; // How many units (spawn or despawn) to handle in one adjustment cycle.
+    float m_populationAdjustmentCooldown; // Timer to control frequency of population adjustments.
+    static constexpr float POPULATION_ADJUST_INTERVAL = 0.25f; // Adjust population every X seconds.
 };
 
 */
@@ -171,12 +186,11 @@ private:
     float m_policeHelicopterSpawnTimer = 0.f;
     float m_policeTankSpawnTimer = 0.f;
 
-    int m_desiredBatonOfficers = 0;
-    int m_desiredPistolOfficers = 0;
-    int m_desiredPoliceCars = 0;
-    int m_desiredPoliceHelicopters = 0;
-    int m_desiredPoliceTanks = 0;
-
+    // int m_desiredBatonOfficers = 0; // Replaced by m_targetBatonOfficers etc.
+    // int m_desiredPistolOfficers = 0;
+    // int m_desiredPoliceCars = 0;
+    // int m_desiredPoliceHelicopters = 0;
+    // int m_desiredPoliceTanks = 0;
 
     int m_numSeeingPlayer = 0;
     float m_timePlayerNotSeen = 0.0f;

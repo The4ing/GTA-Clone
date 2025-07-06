@@ -9,6 +9,8 @@
 #include "PatrolZone.h" // Include for PatrolZone type
 #include "RoadSegment.h"
 #include "CollisionUtils.h"
+#include "PathfindingGrid.h" // For isWalkable checks
+#include <cmath> // For M_PI, cos, sin
 
 // Initialize static members for pathfinding throttling
 int s_pathfindingCallsThisFrame = 0;
@@ -18,7 +20,14 @@ PoliceManager::PoliceManager(GameManager& gameManager)
     : m_gameManager(gameManager),
     m_numSeeingPlayer(0),
     m_timePlayerNotSeen(0.0f),
-    m_wantedReductionCooldownTimer(0.0f) {
+    m_wantedReductionCooldownTimer(0.0f),
+    m_targetBatonOfficers(0),
+    m_targetPistolOfficers(0),
+    m_targetPoliceCars(0),
+    m_targetPoliceHelicopters(0),
+    m_targetPoliceTanks(0),
+    m_unitsToProcessPerFrame(2), // Process up to 2 units (spawn or despawn) per adjustment cycle
+    m_populationAdjustmentCooldown(0.0f) {
     // Seed for random number generation
     // generator.seed(std::random_device{}()); // This was commented out, ensure it's initialized if used.
 }
@@ -572,9 +581,11 @@ void PoliceManager::update(float dt, Player& player, const std::vector<std::vect
     int wantedLevel = player.getWantedLevel();
     // We need the game view to determine off-screen spawn locations
     // This assumes GameManager has a method like getView() or getGameView()
-    // For now, I'll pass it through update. This might need a cleaner solution.
-    managePolicePopulation(wantedLevel, player.getPosition(), m_gameManager.getGameView(), blockedPolygons);
-
+    m_populationAdjustmentCooldown -= dt;
+    if (m_populationAdjustmentCooldown <= 0.f) {
+        managePolicePopulation(wantedLevel, player.getPosition(), m_gameManager.getGameView(), blockedPolygons);
+        m_populationAdjustmentCooldown = POPULATION_ADJUST_INTERVAL; // Reset cooldown
+    }
 
     updatePoliceOfficers(dt, player, blockedPolygons);
     updatePoliceCars(dt, player, blockedPolygons);
@@ -699,9 +710,10 @@ void PoliceManager::updatePoliceTanks(float dt, Player& player, const std::vecto
 sf::Vector2f findOffScreenSpawnPosition(const sf::View& gameView, const sf::Vector2f& playerPos, float minSpawnDistFromPlayer, float minSpawnDistFromScreenEdge, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons, GameManager& gameManager) {
     sf::FloatRect viewRect(gameView.getCenter() - gameView.getSize() / 2.f, gameView.getSize());
     std::mt19937 rng(std::random_device{}());
+    PathfindingGrid* pfGrid = gameManager.getPathfindingGrid(); // Get the grid
 
     for (int attempts = 0; attempts < 20; ++attempts) { // Try multiple times to find a spot
-        float angle = std::uniform_real_distribution<float>(0, 2 * M_PI)(rng);
+        float angle = std::uniform_real_distribution<float>(0, 2 * static_cast<float>(M_PI))(rng);
         // Spawn further away than just the screen edge
         float distance_from_player = std::uniform_real_distribution<float>(minSpawnDistFromPlayer, minSpawnDistFromPlayer + 200.f)(rng);
 
@@ -721,181 +733,187 @@ sf::Vector2f findOffScreenSpawnPosition(const sf::View& gameView, const sf::Vect
             if (spawnPos.x < 0 || spawnPos.x >= MAP_WIDTH || spawnPos.y < 0 || spawnPos.y >= MAP_HEIGHT) {
                 continue; // Outside map
             }
-            // Check if blocked by static geometry (only if not helicopter/tank which might not care)
-            // For simplicity, we'll check for all types for now.
-            bool blocked = false;
-            for (const auto& poly : blockedPolygons) {
+
+            // OPTIMIZATION: Use PathfindingGrid for initial check
+            if (pfGrid && !pfGrid->isWalkable(spawnPos)) {
+                continue; // Position is not walkable according to the pathfinding grid
+            }
+
+            // Original, more expensive check (can be kept for finer detail or removed if pfGrid is sufficient)
+            // For now, let's assume pfGrid is good enough to replace the direct polygon check for spawning.
+            // If issues arise with units spawning in visually awkward (but pathable) spots, this can be re-enabled.
+            /*
+            bool blockedByPolygon = false;
+            for (const auto& poly : blockedPolygons) { // This is the expensive part
                 if (CollisionUtils::pointInPolygon(spawnPos, poly)) {
-                    blocked = true;
+                    blockedByPolygon = true;
                     break;
                 }
             }
-            if (!blocked) {
-                 // Optional: Check if path exists to player from this spawn point
-                 // This is more complex and might be slow. For now, we skip it.
-                 // if (gameManager.getPathfindingGrid() && gameManager.getPathfindingGrid()->isWalkable(spawnPos)) {
-                    return spawnPos;
-                 // }
+            if (blockedByPolygon) {
+                continue;
             }
+            */
+
+            // If we reach here, the spot is considered valid
+            return spawnPos;
         }
     }
     // Fallback: if no good off-screen spot found, spawn near player but try to be outside immediate view
-    // This part of fallback might need refinement or could just spawn at playerPos + offset if all else fails
-    float fallbackAngle = std::uniform_real_distribution<float>(0, 2 * M_PI)(rng);
-    return playerPos + sf::Vector2f(std::cos(fallbackAngle) * (viewRect.width / 2 + minSpawnDistFromScreenEdge),
-                                   std::sin(fallbackAngle) * (viewRect.height / 2 + minSpawnDistFromScreenEdge));
+    float fallbackAngle = std::uniform_real_distribution<float>(0, 2 * static_cast<float>(M_PI))(rng);
+    sf::Vector2f fallbackPos = playerPos + sf::Vector2f(std::cos(fallbackAngle) * (viewRect.width / 2.f + minSpawnDistFromScreenEdge), // Added .f for literals
+                                   std::sin(fallbackAngle) * (viewRect.height / 2.f + minSpawnDistFromScreenEdge)); // Added .f for literals
+
+    // Ensure fallback is within map bounds and walkable if possible
+    fallbackPos.x = std::max(0.f, std::min(fallbackPos.x, (float)MAP_WIDTH -1.f));
+    fallbackPos.y = std::max(0.f, std::min(fallbackPos.y, (float)MAP_HEIGHT-1.f));
+
+    if (pfGrid && !pfGrid->isWalkable(fallbackPos)) {
+        // If even fallback is not walkable, this is tricky.
+        // Potentially log this, or try a slightly different fallback.
+        // For now, return the potentially unwalkable fallback. The unit's AI might struggle.
+        // std::cerr << "Warning: Fallback spawn position (" << fallbackPos.x << ", " << fallbackPos.y << ") is not walkable." << std::endl;
+    }
+    return fallbackPos;
 }
 
 
 void PoliceManager::managePolicePopulation(int wantedLevel, const sf::Vector2f& playerPos, const sf::View& gameView, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons)
 {
-    m_desiredBatonOfficers = 0;
-    m_desiredPistolOfficers = 0;
-    m_desiredPoliceCars = 0;
-    m_desiredPoliceHelicopters = 0;
-    m_desiredPoliceTanks = 0;
-
-    // Determine desired number of DYNAMIC units based on wanted level
+    // --- Part A: Determine Target Population ---
+    // (The existing switch statement to set m_desired* variables will now set m_target* variables)
     switch (wantedLevel) {
-    case 0: // No dynamic units at 0 stars
-        m_desiredBatonOfficers = 0;
-        m_desiredPistolOfficers = 0;
-        m_desiredPoliceCars = 0;
-        m_desiredPoliceHelicopters = 0;
-        m_desiredPoliceTanks = 0;
+    case 0:
+        m_targetBatonOfficers = 0; m_targetPistolOfficers = 0; m_targetPoliceCars = 0;
+        m_targetPoliceHelicopters = 0; m_targetPoliceTanks = 0;
         break;
     case 1:
-        m_desiredBatonOfficers = 2;
-        m_desiredPistolOfficers = 0;
-        m_desiredPoliceCars = 0;
+        m_targetBatonOfficers = 2; m_targetPistolOfficers = 0; m_targetPoliceCars = 0;
+        m_targetPoliceHelicopters = 0; m_targetPoliceTanks = 0;
         break;
     case 2:
-        m_desiredBatonOfficers = 3;
-        m_desiredPistolOfficers = 2;
-        m_desiredPoliceCars = 1;
+        m_targetBatonOfficers = 3; m_targetPistolOfficers = 2; m_targetPoliceCars = 1;
+        m_targetPoliceHelicopters = 0; m_targetPoliceTanks = 0;
         break;
     case 3:
-        m_desiredBatonOfficers = 2;
-        m_desiredPistolOfficers = 3;
-        m_desiredPoliceCars = 2;
-        m_desiredPoliceHelicopters = 0; // Helicopters start at 4 stars in this setup
+        m_targetBatonOfficers = 2; m_targetPistolOfficers = 3; m_targetPoliceCars = 2;
+        m_targetPoliceHelicopters = 0; m_targetPoliceTanks = 0;
         break;
     case 4:
-        m_desiredPistolOfficers = 4; // More pistol officers
-        m_desiredPoliceCars = 3;
-        m_desiredPoliceHelicopters = 1;
-        m_desiredBatonOfficers = 1; // Fewer baton officers at higher levels
+        m_targetPistolOfficers = 4; m_targetPoliceCars = 3; m_targetPoliceHelicopters = 1;
+        m_targetBatonOfficers = 1; m_targetPoliceTanks = 0;
         break;
     case 5:
-        m_desiredPistolOfficers = 5;
-        m_desiredPoliceCars = 3;
-        m_desiredPoliceHelicopters = 2;
-        m_desiredPoliceTanks = 1;
-        m_desiredBatonOfficers = 0;
+        m_targetPistolOfficers = 5; m_targetPoliceCars = 3; m_targetPoliceHelicopters = 2;
+        m_targetPoliceTanks = 1; m_targetBatonOfficers = 0;
         break;
     default: // For wanted levels > 5
-        m_desiredPistolOfficers = 6;
-        m_desiredPoliceCars = 4;
-        m_desiredPoliceHelicopters = 2;
-        m_desiredPoliceTanks = 2;
-        m_desiredBatonOfficers = 0;
+        m_targetPistolOfficers = 6; m_targetPoliceCars = 4; m_targetPoliceHelicopters = 2;
+        m_targetPoliceTanks = 2; m_targetBatonOfficers = 0;
         break;
     }
+
+    // --- Part B: Process Spawns/Despawns (staggered) ---
+    int processedThisCycle = 0;
 
     const float minSpawnDistFromPlayer = std::max(gameView.getSize().x, gameView.getSize().y) * 0.6f;
     const float minSpawnDistFromScreenEdge = 50.f;
 
     // --- Spawning Logic (Dynamic Units Only) ---
-    // Count only DYNAMIC officers for these checks
-    int currentDynamicBatonOfficers = 0;
-    int currentDynamicPistolOfficers = 0;
-    for (const auto& officer : m_policeOfficers) {
-        if (!officer->isStatic()) {
-            if (officer->getWeaponType() == PoliceWeaponType::BATON) currentDynamicBatonOfficers++;
-            else if (officer->getWeaponType() == PoliceWeaponType::PISTOL) currentDynamicPistolOfficers++;
-        }
-    }
-
-    int currentDynamicPoliceCars = 0;
-    for (const auto& car : m_policeCars) {
-        if (!car->isStatic()) {
-            currentDynamicPoliceCars++;
-        }
-    }
-    // Helicopter and Tank counts are assumed to be only dynamic already.
-
-    // Spawn Baton Officers if needed
-    if (countDynamicPoliceByType(PoliceWeaponType::BATON) < m_desiredBatonOfficers && m_batonOfficerSpawnTimer <= 0.f) {
+    // Baton Officers
+    int currentDynamicBatonOfficers = countDynamicPoliceByType(PoliceWeaponType::BATON);
+    if (currentDynamicBatonOfficers < m_targetBatonOfficers && m_batonOfficerSpawnTimer <= 0.f && processedThisCycle < m_unitsToProcessPerFrame) {
         sf::Vector2f spawnPos = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
         spawnPolice(spawnPos, PoliceWeaponType::BATON, false);
         m_batonOfficerSpawnTimer = SPAWN_COOLDOWN_SECONDS;
+        processedThisCycle++;
     }
 
-    // Spawn Pistol Officers if needed
-    if (countDynamicPoliceByType(PoliceWeaponType::PISTOL) < m_desiredPistolOfficers && m_pistolOfficerSpawnTimer <= 0.f) {
+    // Pistol Officers
+    int currentDynamicPistolOfficers = countDynamicPoliceByType(PoliceWeaponType::PISTOL);
+    if (currentDynamicPistolOfficers < m_targetPistolOfficers && m_pistolOfficerSpawnTimer <= 0.f && processedThisCycle < m_unitsToProcessPerFrame) {
         sf::Vector2f spawnPos = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
         spawnPolice(spawnPos, PoliceWeaponType::PISTOL, false);
         m_pistolOfficerSpawnTimer = SPAWN_COOLDOWN_SECONDS;
+        processedThisCycle++;
     }
 
-    // Spawn Police Cars if needed
-    if (countDynamicPoliceCars() < m_desiredPoliceCars && m_policeCarSpawnTimer <= 0.f) {
+    // Police Cars
+    int currentDynamicPoliceCars = countDynamicPoliceCars();
+    if (currentDynamicPoliceCars < m_targetPoliceCars && m_policeCarSpawnTimer <= 0.f && processedThisCycle < m_unitsToProcessPerFrame) {
         sf::Vector2f spawnPos = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
         spawnPoliceCar(spawnPos, false);
         m_policeCarSpawnTimer = SPAWN_COOLDOWN_SECONDS;
+        processedThisCycle++;
     }
 
-    // Spawn Helicopters if needed
-    if (countPoliceHelicopters() < m_desiredPoliceHelicopters && m_policeHelicopterSpawnTimer <= 0.f) {
+    // Helicopters
+    if (countPoliceHelicopters() < m_targetPoliceHelicopters && m_policeHelicopterSpawnTimer <= 0.f && processedThisCycle < m_unitsToProcessPerFrame) {
         sf::Vector2f spawnPos = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer + 100.f, minSpawnDistFromScreenEdge + 50.f, {}, m_gameManager);
         spawnPoliceHelicopter(spawnPos);
         m_policeHelicopterSpawnTimer = SPAWN_COOLDOWN_SECONDS * 2;
+        processedThisCycle++;
     }
 
-    // Spawn Tanks if needed
-    if (countPoliceTanks() < m_desiredPoliceTanks && m_policeTankSpawnTimer <= 0.f) {
+    // Tanks
+    if (countPoliceTanks() < m_targetPoliceTanks && m_policeTankSpawnTimer <= 0.f && processedThisCycle < m_unitsToProcessPerFrame) {
         sf::Vector2f spawnPos = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer + 50.f, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
         spawnPoliceTank(spawnPos);
         m_policeTankSpawnTimer = SPAWN_COOLDOWN_SECONDS * 3;
+        processedThisCycle++;
     }
 
     // --- Despawning Logic (Retreat for Dynamic Units Only) ---
-    int batonOfficersToRetreat = std::max(0, countDynamicPoliceByType(PoliceWeaponType::BATON) - m_desiredBatonOfficers);
-    int pistolOfficersToRetreat = std::max(0, countDynamicPoliceByType(PoliceWeaponType::PISTOL) - m_desiredPistolOfficers);
-    int policeCarsToRetreat = std::max(0, countDynamicPoliceCars() - m_desiredPoliceCars);
-    // Similar logic for helicopters and tanks if they need to retreat instead of just vanishing.
+    if (processedThisCycle >= m_unitsToProcessPerFrame) {
+        return; // Max units processed for this cycle
+    }
 
-    // Make Baton Officers retreat
-    for (auto& officer : m_policeOfficers) { // Iterate through all dynamic officers
-        if (batonOfficersToRetreat <= 0) break;
-        if (!officer->isStatic() && officer->getWeaponType() == PoliceWeaponType::BATON && !officer->isRetreating()) {
-            sf::Vector2f retreatTarget = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
-            officer->startRetreating(retreatTarget);
-            batonOfficersToRetreat--;
+    // Baton Officers to Retreat
+    currentDynamicBatonOfficers = countDynamicPoliceByType(PoliceWeaponType::BATON); // Recount in case one was just spawned
+    if (currentDynamicBatonOfficers > m_targetBatonOfficers && processedThisCycle < m_unitsToProcessPerFrame) {
+        for (auto& officer : m_policeOfficers) {
+            if (!officer->isStatic() && officer->getWeaponType() == PoliceWeaponType::BATON && !officer->isRetreating()) {
+                sf::Vector2f retreatTarget = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
+                officer->startRetreating(retreatTarget);
+                processedThisCycle++;
+                break;
+            }
         }
     }
 
-    // Make Pistol Officers retreat
-    for (auto& officer : m_policeOfficers) { // Iterate through all dynamic officers
-        if (pistolOfficersToRetreat <= 0) break;
-        if (!officer->isStatic() && officer->getWeaponType() == PoliceWeaponType::PISTOL && !officer->isRetreating()) {
-            sf::Vector2f retreatTarget = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
-            officer->startRetreating(retreatTarget);
-            pistolOfficersToRetreat--;
+    // Pistol Officers to Retreat
+    if (processedThisCycle >= m_unitsToProcessPerFrame) return;
+    currentDynamicPistolOfficers = countDynamicPoliceByType(PoliceWeaponType::PISTOL); // Recount
+    if (currentDynamicPistolOfficers > m_targetPistolOfficers && processedThisCycle < m_unitsToProcessPerFrame) {
+        for (auto& officer : m_policeOfficers) {
+            if (!officer->isStatic() && officer->getWeaponType() == PoliceWeaponType::PISTOL && !officer->isRetreating()) {
+                sf::Vector2f retreatTarget = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
+                officer->startRetreating(retreatTarget);
+                processedThisCycle++;
+                break;
+            }
         }
     }
 
-    // Make Police Cars retreat
-    for (auto& car : m_policeCars) { // Iterate through all dynamic cars
-        if (policeCarsToRetreat <= 0) break;
-        if (!car->isStatic() && !car->isRetreating() && !car->isAmbient()) {
-            sf::Vector2f retreatTarget = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
-            car->startRetreating(retreatTarget);
-            policeCarsToRetreat--;
+    // Police Cars to Retreat
+    if (processedThisCycle >= m_unitsToProcessPerFrame) return;
+    currentDynamicPoliceCars = countDynamicPoliceCars(); // Recount
+    if (currentDynamicPoliceCars > m_targetPoliceCars && processedThisCycle < m_unitsToProcessPerFrame) {
+        for (auto& car : m_policeCars) {
+            if (!car->isStatic() && !car->isRetreating() && !car->isAmbient()) {
+                sf::Vector2f retreatTarget = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
+                car->startRetreating(retreatTarget);
+                processedThisCycle++;
+                break;
+            }
         }
     }
-    // Note: Helicopters and Tanks currently don't have a retreat mechanic implemented beyond despawning when out of sight or destroyed.
-    // If they also need to "retreat", similar logic would be added for them.
+
+    // Note: Helicopters and Tanks currently don't have a specific "retreat" command here.
+    // They are typically managed by being destroyed or flying off-screen leading to cleanup.
+    // If active despawning is needed for them when counts are too high, it would be more complex:
+    // e.g., find a non-critical, far-away unit and remove it.
+    // For now, their population decreases primarily through attrition or existing cleanup mechanisms.
 }
 
 
