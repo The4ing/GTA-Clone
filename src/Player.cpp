@@ -154,101 +154,139 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
             bool isShootAnim = currentAnimationName.find("Throw") != std::string::npos ||
                 currentAnimationName.find("Shoot") != std::string::npos ||
                 currentAnimationName.find("Attack") != std::string::npos;
-            shootingAnimPlaying = isShootAnim && !animationManager->isAnimationFinished();
+            // This variable is no longer needed here due to new logic structure
+            // shootingAnimPlaying = isShootAnim && !animationManager->isAnimationFinished();
         }
 
         if (isDead) {
-            playAnimation("HurtDie");
+            playAnimation("HurtDie", false); // loop = false
         }
         else if (isHit) {
-            playAnimation("Hurt");
+            playAnimation("Hurt", false); // loop = false
         }
         else {
-            if (isShooting && !shootingAnimPlaying) {
+            // Handle shooting first, as it takes precedence and can interrupt other animations
+            if (isShooting) {
+                bool shootActionTaken = true; // Flag to indicate a shooting animation was triggered
                 if (m_currentWeaponName == "Fists") {
-                    playAnimation("BatAttack", false);
+                    playAnimation("BatAttack", false, false, true); // loop, pingpong, forceRestart
                 }
                 else if (m_currentWeaponName == "Pistol") {
-                    playAnimation("PistolShoot", false);
+                    playAnimation("PistolShoot", false, false, true);
                     m_shooter->shoot(m_currentWeaponName);
                 }
                 else if (m_currentWeaponName == "Rifle") {
-                    playAnimation("RifleShoot", false);
+                    playAnimation("RifleShoot", false, false, true);
                     m_shooter->shoot(m_currentWeaponName);
-
                 }
                 else if (m_currentWeaponName == "Minigun") {
-                    playAnimation("MinigunShoot", false);
+                    playAnimation("MinigunShoot", false, false, true);
                     m_shooter->shoot(m_currentWeaponName);
                 }
                 else if (m_currentWeaponName == "Bazooka") {
-                    playAnimation("BazookaShoot", false);
+                    playAnimation("BazookaShoot", false, false, true);
                     m_shooter->shoot(m_currentWeaponName);
                 }
                 else if (m_currentWeaponName == "Knife") {
-                    playAnimation("KnifeAttack", false);
+                    playAnimation("KnifeAttack", false, false, true);
                     SoundManager::getInstance().playSound("KnifeAttack");
                 }
                 else if (m_currentWeaponName == "Grenade") {
-                    playAnimation("ThrowGrenade", false);
+                    playAnimation("ThrowGrenade", false, false, true);
                     SoundManager::getInstance().playSound("ThrowGrenade");
                 }
+                else {
+                    shootActionTaken = false; // No valid weapon for shooting animation
+                }
+                // If a shoot action was taken, we typically don't want to immediately switch to idle/walk
+                // The animationManager->update(dt) will handle frame progression.
+                // The next block will check if an action animation is playing.
             }
-            else if (shootingAnimPlaying) {
-                // המשך ניגון של אנימציית ירי - לא עושים כלום
+
+            // Check if an action animation (shoot, attack, throw, etc.) is currently playing
+            bool isActionAnimationPlaying = false;
+            if (!currentAnimationName.empty() && animationManager) { // Ensure animationManager is valid
+                bool isAction = currentAnimationName.find("Throw") != std::string::npos ||
+                               currentAnimationName.find("Shoot") != std::string::npos ||
+                               currentAnimationName.find("Attack") != std::string::npos;
+                if (isAction && !animationManager->isAnimationFinished()) {
+                    isActionAnimationPlaying = true;
+                }
             }
-            else {
+
+            // If no action animation is playing (or one just finished), then set idle or walking animations
+            if (!isActionAnimationPlaying) {
                 if (m_currentWeaponName == "Fists") {
                     if (isMoving)
-                        playAnimation("Idle_NoWeapon");
+                        playAnimation("Idle_NoWeapon", true); // loop = true
                     else {
                         setSpecificFrame(0, 0);
+                        // Note: returning here skips animationManager->update(dt) for this frame if not moving with fists.
+                        // This might be intentional to freeze on a specific frame.
+                        // If animation should always update, remove this return.
+                        // For now, preserving original behavior.
                         return;
                     }
                 }
                 else if (m_currentWeaponName == "Pistol") {
                     if (isMoving)
-                        playAnimation("PistolWalk");
+                        playAnimation("PistolWalk", true); // loop = true
                     else {
                         setSpecificFrame(6, 10);
-                        return;
+                        return; // Preserving original behavior
                     }
                 }
                 else if (m_currentWeaponName == "Rifle") {
                     if (isMoving)
-                        playAnimation("RifleWalk");
+                        playAnimation("RifleWalk", true); // loop = true
                     else {
                         setSpecificFrame(5, 5);
-                        return;
+                        return; // Preserving original behavior
                     }
                 }
                 else if (m_currentWeaponName == "Minigun") {
                     if (isMoving)
-                        playAnimation("MinigunWalk");
+                        playAnimation("MinigunWalk", true); // loop = true
                     else {
                         setSpecificFrame(8, 1);
-                        return;
+                        return; // Preserving original behavior
                     }
                 }
                 else if (m_currentWeaponName == "Bazooka") {
                     if (isMoving)
-                        playAnimation("BazookaWalk");
+                        playAnimation("BazookaWalk", true); // loop = true
                     else {
                         setSpecificFrame(9, 9);
-                        return;
+                        return; // Preserving original behavior
                     }
                 }
                 else if (m_currentWeaponName == "Knife") {
-                    playAnimation("Idle_NoWeapon");
+                     // Knife uses Idle_NoWeapon for both moving and idle if not attacking
+                    if (isMoving)
+                        playAnimation("Idle_NoWeapon", true); // loop = true
+                    else
+                         playAnimation("Idle_NoWeapon", true); // loop = true, or specific frame for knife idle?
+                                                            // Original was playAnimation("Idle_NoWeapon", true);
+                                                            // For consistency with other idle (non-moving) states that set specific frames,
+                                                            // this might need a specific knife idle frame if desired.
+                                                            // Sticking to original playAnimation call for now.
                 }
                 else if (m_currentWeaponName == "Grenade") {
-                    playAnimation("Idle_NoWeapon");
+                    // Grenade uses Idle_NoWeapon for both moving and idle if not throwing
+                     if (isMoving)
+                        playAnimation("Idle_NoWeapon", true); // loop = true
+                    else
+                        playAnimation("Idle_NoWeapon", true); // loop = true
                 }
             }
+            // If isActionAnimationPlaying is true, we do nothing here, letting the action animation continue.
+            // animationManager->update(dt) will advance its frame.
         }
     }
 
-    animationManager->update(dt);
+    if (animationManager) { // Ensure animationManager is valid before updating
+        animationManager->update(dt);
+    }
 }
 
 
@@ -401,9 +439,9 @@ void Player::AddWeapon(const std::string name) {
 
 
 
-void Player::playAnimation(const std::string& animName, bool loop, bool pingpong) {
+void Player::playAnimation(const std::string& animName, bool loop, bool pingpong = false, bool forceRestart = false) {
     if (!animationManager) return;
-    if (currentAnimationName != animName) {
+    if (currentAnimationName != animName || forceRestart) {
         animationManager->setAnimation(animName, loop, pingpong);
         currentAnimationName = animName;
     }
