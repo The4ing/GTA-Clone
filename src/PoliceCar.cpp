@@ -44,10 +44,11 @@ PoliceCar::PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition
     m_carState = CarState::AmbientDriving; // Default state
     m_currentSpeed = m_speed;
     m_bumpCount = 0;
+    m_playerHitCount = 0; // Initialize player hit count
     m_requestOfficerExit = false;
 }
 bool PoliceCar::isRetreating() const {
-        return m_carState == CarState::Retreating;
+    return m_carState == CarState::Retreating;
 }
 
 void PoliceCar::startRetreating(const sf::Vector2f& retreatTarget) {
@@ -93,7 +94,13 @@ bool PoliceCar::isAmbient() const {
 
 
 void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    if (m_isStatic && !hasDriver()) {
+    // If car is static (e.g., officer exited) and not retreating, it should not update its movement.
+    // The existing !hasDriver() check is for empty static cars (e.g. parked).
+    // We also need to stop it if m_isStatic is true due to officer exiting, even if it technically still "has" an officer slot (that's now empty).
+    if (m_isStatic && m_carState != CarState::Retreating) {
+        // If it became static because officer exited, m_hasOfficerInside would be false.
+        // If it was a pre-placed static car, hasDriver() (from Vehicle) would be false.
+        // The key is m_isStatic being true and not in Retreating state.
         return;
     }
 
@@ -122,7 +129,7 @@ void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<s
         }
 
         if (!m_currentPath.empty() && m_currentPathIndex < m_currentPath.size()) {
-                sf::Vector2f nextWaypoint = m_currentPath[m_currentPathIndex];
+            sf::Vector2f nextWaypoint = m_currentPath[m_currentPathIndex];
             // Simplified movement logic (similar to chase, but towards m_currentTargetPosition)
             sf::Vector2f direction = nextWaypoint - getPosition();
             float distanceToWaypoint = std::hypot(direction.x, direction.y);
@@ -179,14 +186,14 @@ void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<s
     }
 
     if (m_carState == CarState::AmbientDriving) {
-            // Ambient behavior logic (currently relies on Vehicle::update or simple driving)
+        // Ambient behavior logic (currently relies on Vehicle::update or simple driving)
     }
     else if (m_carState == CarState::Chasing) {
         // Non-ambient (aggressive) behavior:
         updateChaseBehavior(dt, player, blockedPolygons);
 
         if (m_bumpCooldown <= 0.f && attemptRunOverPlayer(player, blockedPolygons)) {
-            player.takeDamage(static_cast<int>(m_currentSpeed / 2.f));
+            player.takeDamage(static_cast<int>(m_currentSpeed / 4.f));
             m_bumpCooldown = 3.f;
         }
     }
@@ -197,7 +204,7 @@ void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<s
 }
 
 void PoliceCar::setPatrolZone(PatrolZone* zone) {
-        m_assignedZone = zone;
+    m_assignedZone = zone;
 }
 
 PatrolZone* PoliceCar::getPatrolZone() const {
@@ -279,6 +286,19 @@ bool PoliceCar::canSeePlayer(const Player& player, const std::vector<std::vector
 }
 
 void PoliceCar::updateChaseBehavior(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+    // If the car is not meant to be static (i.e., officer hasn't exited permanently),
+    // ensure it tries to chase at its designated full speed.
+    // The speed might have been temporarily reduced by a bump.
+    if (!m_isStatic) {
+        m_currentSpeed = m_speed; // Restore to full chasing speed
+    }
+    else {
+        // If it's static (officer out), it shouldn't be chasing.
+        // This state should ideally be prevented by the main update loop,
+        // but as a safeguard:
+        return;
+    }
+
     m_repathTimer += dt;
     sf::Vector2f playerPosition = player.getPosition();
 
@@ -379,14 +399,17 @@ bool PoliceCar::attemptRunOverPlayer(Player& player, const std::vector<std::vect
         if (length != 0.f)
             pushDir /= length;
 
-        float pushStrength = m_currentSpeed * 0.5f;
+        float pushStrength = m_currentSpeed;//* 0.75f; // Increased knockback strength
         player.applyKnockback(pushDir * pushStrength, 0.4f);
-        player.takeDamage(static_cast<int>(m_currentSpeed / 2.f));
+        player.takeDamage(static_cast<int>(m_currentSpeed / 4.f)); // Damage calculation remains the same
         if (m_currentSpeed > 10.f)
             m_currentSpeed *= 0.6f;
-        if (m_currentSpeed < 20.f)
+
+        m_playerHitCount++; // Increment player-specific hit count
+        if (m_playerHitCount >= 1) { // Officer exits after 1 hit
             m_requestOfficerExit = true;
-        m_bumpCount++;
+        }
+        // m_bumpCount++;
 
         return true;
     }
