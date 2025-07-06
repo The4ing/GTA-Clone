@@ -70,7 +70,8 @@ public:
 private:
     Vehicle* m_currentVehicle;
     void setSpecificFrame(int row, int col);
-    void playAnimation(const std::string& animName, bool loop = true, bool pingpong = false);
+    void playAnimation(const std::string& animName, bool loop = true, bool pingpong = false, bool forceRestart = false);
+
 
     sf::Sprite  sprite;
     float       speed = 50.f;
