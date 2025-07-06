@@ -13,9 +13,10 @@ PauseMenu::PauseMenu() : m_isOpen(false), selectedIndex(0), selectedOption(MenuO
     // This is a common pattern; adjust if your ResourceManager API differs.
     // Example: font = ResourceManager::getInstance().getFont("Miskan.ttf");
     // For now, direct loading with fallback:
-    if (!font.loadFromFile("resources/Miskan.ttf")) {
-        std::cerr << "Error loading font: resources/Miskan.ttf. Pause menu text might not display correctly." << std::endl;
-    }
+    //if (!font.loadFromFile("resources/Miskan.ttf")) {
+    //    std::cerr << "Error loading font: resources/Miskan.ttf. Pause menu text might not display correctly." << std::endl;
+    //}
+    font = ResourceManager::getInstance().getFont("main");
 
     menuItems = { "Resume Game", "Start New Game", "Map", "Stats", "Volume Up", "Volume Down", "Mute", "Exit" };
 
@@ -32,7 +33,7 @@ PauseMenu::PauseMenu() : m_isOpen(false), selectedIndex(0), selectedOption(MenuO
     // Centering will be done in draw() to adapt to window size
 
     menuText.setFont(font);
-    menuText.setCharacterSize(30); // Adjust size as needed
+    menuText.setCharacterSize(50); // Adjust size as needed
     menuText.setFillColor(sf::Color::White);
 
     background.setFillColor(sf::Color(0, 0, 0, 170));
@@ -43,14 +44,14 @@ PauseMenu::PauseMenu() : m_isOpen(false), selectedIndex(0), selectedOption(MenuO
     confirmDialogBackground.setOutlineThickness(2.f);
 
     confirmDialogText.setFont(font);
-    confirmDialogText.setCharacterSize(24);
+    confirmDialogText.setCharacterSize(50);
     confirmDialogText.setFillColor(sf::Color::White);
 
     confirmOptionText.setFont(font);
-    confirmOptionText.setCharacterSize(28);
+    confirmOptionText.setCharacterSize(50);
 
     volumeLevelText.setFont(font);
-    volumeLevelText.setCharacterSize(22); // Smaller text for status
+    volumeLevelText.setCharacterSize(35); // Smaller text for status
     volumeLevelText.setFillColor(sf::Color::White);
 }
 
@@ -148,6 +149,7 @@ void PauseMenu::draw(sf::RenderTarget& target) {
 
             // Draw instructions in the default view (or a HUD view)
             sf::Text mapInstructions("Map - Arrows/WASD: Pan | +/- or Scroll: Zoom | ESC: Close", font, 18);
+            mapInstructions.setCharacterSize(50);
             mapInstructions.setFillColor(sf::Color::White);
             // Position at bottom-center or bottom-left
             sf::FloatRect instrBounds = mapInstructions.getLocalBounds();
@@ -176,6 +178,7 @@ void PauseMenu::draw(sf::RenderTarget& target) {
             float valueOffsetX = 300.f; // X offset for values from labels
 
             sf::Text statsTitleText("Player Statistics", font, 40);
+            statsTitleText.setCharacterSize(45);
             statsTitleText.setFillColor(sf::Color::White);
             statsTitleText.setStyle(sf::Text::Bold);
             sf::FloatRect titleBounds = statsTitleText.getLocalBounds();
@@ -186,11 +189,13 @@ void PauseMenu::draw(sf::RenderTarget& target) {
 
             auto drawStatLine = [&](const std::string& label, const std::string& valueStr) {
                 sf::Text statLabel(label, font, 26);
+                statLabel.setCharacterSize(45);
                 statLabel.setFillColor(sf::Color(210, 210, 210)); // Light gray for labels
                 statLabel.setPosition(leftMargin, currentY);
                 target.draw(statLabel);
 
                 sf::Text statValue(valueStr, font, 26);
+                statValue.setCharacterSize(45);
                 statValue.setFillColor(sf::Color::White);
                 statValue.setPosition(leftMargin + valueOffsetX, currentY);
                 target.draw(statValue);
@@ -210,6 +215,7 @@ void PauseMenu::draw(sf::RenderTarget& target) {
 
             currentY += lineSpacing * 0.2f; // Small gap
             sf::Text weaponsTitle("Collected Weapons:", font, 26);
+            weaponsTitle.setCharacterSize(45);
             weaponsTitle.setFillColor(sf::Color(210, 210, 210));
             weaponsTitle.setPosition(leftMargin, currentY);
             target.draw(weaponsTitle);
@@ -217,6 +223,7 @@ void PauseMenu::draw(sf::RenderTarget& target) {
 
             if (displayedStats.collectedWeapons.empty()) {
                 sf::Text noWeaponsText("None", font, 24);
+                noWeaponsText.setCharacterSize(45);
                 noWeaponsText.setFillColor(sf::Color::White);
                 noWeaponsText.setPosition(leftMargin + 30.f, currentY); // Indent a bit
                 target.draw(noWeaponsText);
@@ -232,6 +239,7 @@ void PauseMenu::draw(sf::RenderTarget& target) {
                         }
                         else if (currentY > target.getSize().y - lineSpacing * 2.f) { // Check if too low on screen
                             sf::Text moreWeaponsText("...and more", font, 20);
+                            moreWeaponsText.setCharacterSize(45);
                             moreWeaponsText.setFillColor(sf::Color(128, 128, 128));
                             moreWeaponsText.setPosition(leftMargin + 30.f, currentY);
                             target.draw(moreWeaponsText);
@@ -247,6 +255,7 @@ void PauseMenu::draw(sf::RenderTarget& target) {
                     }
 
                     sf::Text weaponText("- " + displayedStats.collectedWeapons[i], font, 22);
+                    weaponText.setCharacterSize(45);
                     weaponText.setFillColor(sf::Color::White);
                     weaponText.setPosition(leftMargin + 30.f, currentY);
                     target.draw(weaponText);
@@ -256,6 +265,7 @@ void PauseMenu::draw(sf::RenderTarget& target) {
             // Reset Y for instruction text
             currentY = target.getSize().y - 50.f;
             sf::Text statsInstructions("ESC to Close", font, 18);
+            statsInstructions.setCharacterSize(45);
             statsInstructions.setFillColor(sf::Color::White);
             sf::FloatRect instrBoundsStats = statsInstructions.getLocalBounds();
             statsInstructions.setOrigin(instrBoundsStats.left + instrBoundsStats.width / 2.0f, 0.f);
