@@ -24,11 +24,27 @@ void PathfindingGrid::preprocess(const std::vector<std::vector<sf::Vector2f>>& s
     std::cout << "PathfindingGrid: Starting preprocessing with " << staticObstacles.size() << " obstacles." << std::endl;
     for (int y = 0; y < gridHeight; ++y) {
         for (int x = 0; x < gridWidth; ++x) {
-            // Calculate the world coordinates of the center of the current grid cell
-            sf::Vector2f cellWorldPos = gridToWorld({ x, y });
+            // Sample the center and corners of the cell.  Using multiple sample
+                // points reduces the chance that a thin obstacle will be missed when
+                // only checking the center.
+            sf::Vector2f cellCenter = gridToWorld({ x, y });
+            float left = mapOrigin.x + static_cast<float>(x) * gridSize;
+            float top = mapOrigin.y + static_cast<float>(y) * gridSize;
+            std::array<sf::Vector2f, 5> points = {
+                          cellCenter,
+                          sf::Vector2f(left, top),
+                          sf::Vector2f(left + gridSize, top),
+                          sf::Vector2f(left, top + gridSize),
+                          sf::Vector2f(left + gridSize, top + gridSize)
+            };
 
-            // Check if this cell center is inside any of the static obstacles
-            bool cellIsBlocked = CollisionUtils::isInsideBlockedPolygon(cellWorldPos, staticObstacles);
+            bool cellIsBlocked = false;
+            for (const auto& p : points) {
+                if (CollisionUtils::isInsideBlockedPolygon(p, staticObstacles)) {
+                    cellIsBlocked = true;
+                    break;
+                }
+            }
 
             if (cellIsBlocked) {
                 walkableGrid[y * gridWidth + x] = false;
