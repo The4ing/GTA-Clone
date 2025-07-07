@@ -90,4 +90,5 @@ private:
 
     int m_playingFrameCount = 0; // Counter for initial playing frames diagnostics
     bool m_isAwaitingFirstPlayerMove; // Added for the new feature
+    int m_prevWantedLevel = 0; // Track previous wanted level for dispatch sound
 };

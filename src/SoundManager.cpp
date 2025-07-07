@@ -35,6 +35,8 @@ void SoundManager::playRandomSound(const std::vector<std::string>& names,
     playSound(names[index], pitch);
 }
 
+
+
 // This is the primary method to change the target volume.
 // It also handles applying the volume to currently playing sounds if not muted.
 void SoundManager::setVolume(float vol) {
@@ -112,4 +114,24 @@ void SoundManager::removeStoppedSounds() {
     sounds.remove_if([](const sf::Sound& s) {
         return s.getStatus() == sf::Sound::Stopped;
         });
+}
+
+void SoundManager::playWantedLoop(float volumeLevel) {
+    if (m_wantedLoop.getStatus() != sf::Sound::Playing) {
+        m_wantedLoop.setBuffer(ResourceManager::getInstance().getSoundBuffer("wanted"));
+        m_wantedLoop.setLoop(true);
+        m_wantedLoop.play();
+    }
+    float effectiveVol = muted ? 0.f : volumeLevel;
+    m_wantedLoop.setVolume(effectiveVol);
+}
+
+void SoundManager::stopWantedLoop() {
+    if (m_wantedLoop.getStatus() == sf::Sound::Playing) {
+        m_wantedLoop.stop();
+    }
+}
+
+bool SoundManager::isWantedLoopPlaying() const {
+    return m_wantedLoop.getStatus() == sf::Sound::Playing;
 }

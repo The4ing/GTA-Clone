@@ -40,7 +40,8 @@ PoliceManager::PoliceManager(GameManager& gameManager)
     : m_gameManager(gameManager),
     m_numSeeingPlayer(0),
     m_timePlayerNotSeen(0.0f),
-    m_wantedReductionCooldownTimer(0.0f) {
+    m_wantedReductionCooldownTimer(0.0f),
+    m_prevWantedLevel(0) {
     // Seed for random number generation
     // generator.seed(std::random_device{}()); // This was commented out, ensure it's initialized if used.
 }
@@ -167,6 +168,10 @@ void PoliceManager::update(float dt, Player& player, const std::vector<std::vect
     if (m_policeTankSpawnTimer > 0.f) m_policeTankSpawnTimer -= dt;             // Added
 
     int wantedLevel = player.getWantedLevel();
+    if (wantedLevel < m_prevWantedLevel) {
+        retreatAllCars(player, blockedPolygons);
+    }
+    m_prevWantedLevel = wantedLevel;
     // We need the game view to determine off-screen spawn locations
     // This assumes GameManager has a method like getView() or getGameView()
     // For now, I'll pass it through update. This might need a cleaner solution.
@@ -215,6 +220,7 @@ void PoliceManager::update(float dt, Player& player, const std::vector<std::vect
         m_timePlayerNotSeen += dt;
         if (m_timePlayerNotSeen >= TIME_TO_START_WANTED_REDUCTION && m_wantedReductionCooldownTimer <= 0.f) {
             player.setWantedLevel(player.getWantedLevel() - 1);
+            SoundManager::getInstance().playSound("notWanted");
             std::cout << "Wanted level reduced to: " << player.getWantedLevel() << std::endl;
             m_timePlayerNotSeen = 0.0f; // Reset timer after reduction
             m_wantedReductionCooldownTimer = WANTED_REDUCTION_COOLDOWN_SECONDS; // Start cooldown
@@ -371,7 +377,7 @@ void PoliceManager::managePolicePopulation(int wantedLevel, const sf::Vector2f& 
         break;
     case 4:
         m_desiredPistolOfficers = 4; // More pistol officers
-        m_desiredPoliceCars = 3;
+        m_desiredPoliceCars = 0;//change to 3
         m_desiredPoliceHelicopters = 1;
         m_desiredBatonOfficers = 1; // Fewer baton officers at higher levels
         break;
@@ -478,7 +484,8 @@ void PoliceManager::managePolicePopulation(int wantedLevel, const sf::Vector2f& 
     for (auto& car : m_policeCars) {
         if (policeCarsToRetreat <= 0 || retreated >= MAX_RETREATS_PER_FRAME) break;
         if (!car->isStatic() && !car->isRetreating() && !car->isAmbient()) {
-            car->needsCleanup = true;
+            sf::Vector2f retreatPos = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
+            car->startRetreating(retreatPos);
             policeCarsToRetreat--;
             retreated++;
         }
@@ -487,6 +494,25 @@ void PoliceManager::managePolicePopulation(int wantedLevel, const sf::Vector2f& 
     // If they also need to "retreat", similar logic would be added for them.
 }
 
+
+void PoliceManager::retreatAllCars(Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+    const sf::View& view = m_gameManager.getGameView();
+    sf::Vector2f playerPos = player.getPosition();
+
+    auto issueRetreat = [&](std::unique_ptr<PoliceCar>& car) {
+        if (car->getDriver() == &player || car->isRetreating())
+            return;
+        sf::Vector2f target = findOffScreenSpawnPosition(view, playerPos, 300.f, 150.f, blockedPolygons, m_gameManager);
+        car->startRetreating(target);
+        };
+
+    for (auto& car : m_policeCars) {
+        issueRetreat(car);
+    }
+    for (auto& car : m_staticPoliceCars) {
+        issueRetreat(car);
+    }
+}
 
 // Spawn functions for new units
 void PoliceManager::spawnPoliceHelicopter(const sf::Vector2f& position) {

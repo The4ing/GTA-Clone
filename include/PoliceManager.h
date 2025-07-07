@@ -184,5 +184,9 @@ private:
 
     std::vector<sf::Vector2i> activeChunks;
     float spawnCooldown = 0.f;
+
+    int m_prevWantedLevel = 0;
+
+    void retreatAllCars(Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
 };
 

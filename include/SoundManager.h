@@ -19,6 +19,10 @@ public:
     bool isMuted() const;
     float getVolume() const;
     void removeStoppedSounds();
+    void playWantedLoop(float volume);
+    void stopWantedLoop();
+
+    bool isWantedLoopPlaying() const;
 
 private:
     SoundManager();
@@ -31,4 +35,5 @@ private:
     float volume;
     float volumeBeforeMute;
     bool muted;
+    sf::Sound m_wantedLoop;
 };

@@ -121,6 +121,7 @@ private:
     float radarTimer = 0.f;          // סופר את הזמן שהרדאר מוצג
     float radarCooldown = 0.f;       // סופר את הזמן בין הפעלות
     bool showRadar = false;
+    sf::Vector2f lastSeenPlayerPosition{}; // Stores player's position when radar activates
 
         // Vision parameters
     float m_visionDistance = 200.f;

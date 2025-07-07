@@ -62,8 +62,12 @@ void ResourceInitializer::loadGameResources() {
     rm.loadSoundBuffer("hurt4", "resources/sounds/hurt4.wav");
     rm.loadSoundBuffer("Death1", "resources/sounds/Death1.wav");
     rm.loadSoundBuffer("Death2", "resources/sounds/Death2.wav");
-    rm.loadSoundBuffer("Death3", "resources/sounds/Death3.wav"); 
+    rm.loadSoundBuffer("Death3", "resources/sounds/Death3.wav");
     rm.loadSoundBuffer("Death4", "resources/sounds/Death4.wav");
+    rm.loadSoundBuffer("notWanted", "resources/sounds/noWantedLevel.wav");
+    rm.loadSoundBuffer("wanted", "resources/sounds/wanted.wav");
+    rm.loadSoundBuffer("dispatch", "resources/sounds/dispatch.wav");
+ //   rm.loadSoundBuffer("gameplay", "resources/sounds/gameplay.wav");
     // rm.loadSoundBuffer("explosion", "resources/sounds/explosion.wav");
 
     //inventory 

@@ -21,7 +21,7 @@
 #include "Slideshow.h"
 #include "Vehicle.h"
 #include "PoliceCar.h"
-
+#include "SoundManager.h"
 // Uncomment to time‑profile את 10 הפריימים הראשונים
 // #define DEBUG_TIMING
 
@@ -58,6 +58,7 @@ GameManager::GameManager()
         std::cerr << "Error initializing start text: " << e.what() << '\n';
     }
     updatePressStartPosition();
+
 }
 
 /*‑‑‑‑‑  main loop  ‑‑‑‑‑*/
@@ -497,6 +498,18 @@ void GameManager::update(float dt) {
         data.maxAmmo = player->getMaxAmmo();
 
         m_hud->update(data, player->getWantedLevel(), m_gameTime);
+        int wantedLevel = player->getWantedLevel();
+        if (wantedLevel > 0) {
+            if (wantedLevel >= 1 && m_prevWantedLevel == 0) {
+                SoundManager::getInstance().playSound("dispatch");
+            }
+            float vol = std::min(100.f, wantedLevel * 20.f);
+            SoundManager::getInstance().playWantedLoop(vol);
+        }
+        else {
+            SoundManager::getInstance().stopWantedLoop();
+        }
+        m_prevWantedLevel = wantedLevel;
     }
 
     // --- 6. Store Proximity Check ---
@@ -759,6 +772,7 @@ void GameManager::startGameFullscreen() {
 
     currentState = GameState::Playing;
     m_isAwaitingFirstPlayerMove = true; // Start in the 'awaiting input' state
+   // SoundManager::getInstance().playSound("gameplay");
 }
 
 void GameManager::setFullscreen(bool fullscreen) {

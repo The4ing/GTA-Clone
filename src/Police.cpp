@@ -333,6 +333,7 @@ void Police::update(float dt, Player& player, const std::vector<std::vector<sf::
         if (canSeePlayer(player, blockedPolygons)) {
             showRadar = true;
             radarTimer = 3.f; // הרדאר יוצג ל־3 שניות
+            lastSeenPlayerPosition = player.getPosition();
         }
     }
 
@@ -452,10 +453,20 @@ bool Police::moveToward(const sf::Vector2f& target, float dt) {
 void Police::draw(sf::RenderTarget& window) {
 
     if (showRadar) {
-        sf::CircleShape radar(10.f); // קוטר הרדאר
-        radar.setFillColor(sf::Color(255, 0, 0, 180)); // אדום שקוף
-        radar.setOrigin(10.f, 10.f);
-        radar.setPosition(getPosition().x, getPosition().y - 25.f); // מעט מעל הראש
+        sf::Vector2f toPlayer = lastSeenPlayerPosition - getPosition();
+        float angleDeg = 0.f;
+        if (std::abs(toPlayer.x) > 0.001f || std::abs(toPlayer.y) > 0.001f)
+            angleDeg = std::atan2(toPlayer.y, toPlayer.x) * 180.f / M_PI;
+
+        sf::ConvexShape radar;
+        radar.setPointCount(3);
+        radar.setPoint(0, sf::Vector2f(0.f, -6.f));
+        radar.setPoint(1, sf::Vector2f(12.f, 0.f));
+        radar.setPoint(2, sf::Vector2f(0.f, 6.f));
+        radar.setFillColor(sf::Color(255, 0, 0, 180));
+        radar.setOrigin(0.f, 0.f);
+        radar.setPosition(getPosition().x, getPosition().y - 25.f);
+        radar.setRotation(angleDeg);
         window.draw(radar);
     }
     window.draw(sprite);
