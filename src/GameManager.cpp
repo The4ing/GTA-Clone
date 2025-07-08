@@ -253,7 +253,26 @@ void GameManager::processEvents() {
                     }
                 }
             }
+            // Quick Map access
+            else if (currentState == GameState::Playing && event.key.code == sf::Keyboard::M) {
+                frozenBackgroundTexture.clear();
+                frozenBackgroundTexture.setView(gameView);
+                renderFrozenGame(frozenBackgroundTexture);
+                frozenBackgroundTexture.display();
+                frozenBackgroundSprite.setTexture(frozenBackgroundTexture.getTexture());
+                frozenBackgroundSprite.setPosition(0, 0);
+                frozenBackgroundSprite.setScale(
+                    float(window.getSize().x) / frozenBackgroundTexture.getSize().x,
+                    float(window.getSize().y) / frozenBackgroundTexture.getSize().y
+                );
 
+                currentState = GameState::Paused;
+                pauseMenu.open();
+                if (player && mapTexture) {
+                    pauseMenu.prepareMapScreen(*mapTexture, player->getPosition(), window.getSize());
+                }
+                m_playingFrameCount = 0;
+            }
             // Enter / Exit vehicle
             if (currentState == GameState::Playing && event.key.code == sf::Keyboard::F) {
                 if (player && carManager) {
