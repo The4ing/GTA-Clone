@@ -51,6 +51,12 @@ PoliceCar::PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition
     m_playerHitCount = 0; // Initialize player hit count
     m_requestOfficerExit = false;
 }
+
+PoliceCar::~PoliceCar() {
+    m_sirenSound.stop();
+    SoundManager::getInstance().unregisterExternalSound(&m_sirenSound);
+}
+
 bool PoliceCar::isRetreating() const {
     return m_carState == CarState::Retreating;
 }

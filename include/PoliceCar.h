@@ -14,6 +14,7 @@ class Pedestrian;
 class PoliceCar : public Vehicle {
 public:
     PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition);
+    ~PoliceCar();
 
     void setPatrolZone(PatrolZone* zone);
     PatrolZone* getPatrolZone() const;

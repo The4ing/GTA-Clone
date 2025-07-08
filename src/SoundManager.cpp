@@ -12,6 +12,17 @@ SoundManager& SoundManager::getInstance() {
 // Initialize volume to a non-zero default, e.g., 70%.
 SoundManager::SoundManager() : volume(70.f), volumeBeforeMute(70.f), muted(false) {}
 
+void SoundManager::registerExternalSound(sf::Sound* sound) {
+    if (sound &&
+        std::find(m_externalSounds.begin(), m_externalSounds.end(), sound) == m_externalSounds.end()) {
+        m_externalSounds.push_back(sound);
+    }
+}
+
+void SoundManager::unregisterExternalSound(sf::Sound* sound) {
+    m_externalSounds.remove(sound);
+}
+
 void SoundManager::playSound(const std::string& name, float pitch) {
     removeStoppedSounds();
 
@@ -121,6 +132,13 @@ void SoundManager::pauseAll() {
         if (s.getStatus() == sf::Sound::Playing)
             s.pause();
     }
+    for (auto* ext : m_externalSounds) {
+        if (ext && ext->getStatus() == sf::Sound::Playing)
+            ext->pause();
+    }
+    if (m_wantedLoop.getStatus() == sf::Sound::Playing)
+        m_wantedLoop.pause();
+    std::cout << "paused all sounds";
 }
 
 void SoundManager::resumeAll() {
@@ -128,12 +146,19 @@ void SoundManager::resumeAll() {
         if (s.getStatus() == sf::Sound::Paused)
             s.play();
     }
+    for (auto* ext : m_externalSounds) {
+        if (ext && ext->getStatus() == sf::Sound::Paused)
+            ext->play();
+    }
+    if (m_wantedLoop.getStatus() == sf::Sound::Paused)
+        m_wantedLoop.play();
 }
 
 void SoundManager::playWantedLoop(float volumeLevel) {
     if (m_wantedLoop.getStatus() != sf::Sound::Playing) {
         m_wantedLoop.setBuffer(ResourceManager::getInstance().getSoundBuffer("wanted"));
         m_wantedLoop.setLoop(true);
+        SoundManager::getInstance().registerExternalSound(&m_sirenSound);
         m_wantedLoop.play();
     }
     float effectiveVol = muted ? 0.f : volumeLevel;

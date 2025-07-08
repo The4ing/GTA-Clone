@@ -24,11 +24,14 @@ PoliceHelicopter::PoliceHelicopter(GameManager& gameManager, const sf::Vector2f&
     m_speed = 60.f;
     m_engineSound.setBuffer(ResourceManager::getInstance().getSoundBuffer("helicopterMove"));
     m_engineSound.setLoop(true);
+    SoundManager::getInstance().registerExternalSound(&m_engineSound);
     m_engineSound.play();
     // std::cout << "PoliceHelicopter spawned at: " << startPosition.x << ", " << startPosition.y << std::endl;
 }
 PoliceHelicopter::~PoliceHelicopter() {
+    std::cout << "[PoliceHelicopter] Destroyed at " << this << std::endl;
     m_engineSound.stop();
+    SoundManager::getInstance().unregisterExternalSound(&m_engineSound);
 }
 
 void PoliceHelicopter::update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& /*worldBoundaries*/) {

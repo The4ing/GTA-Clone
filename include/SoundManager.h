@@ -23,6 +23,8 @@ public:
     void stopWantedLoop();
     void pauseAll();
     void resumeAll();
+    void registerExternalSound(sf::Sound* sound);
+    void unregisterExternalSound(sf::Sound* sound);
     bool isWantedLoopPlaying() const;
 
 private:
@@ -37,4 +39,5 @@ private:
     float volumeBeforeMute;
     bool muted;
     sf::Sound m_wantedLoop;
+    std::list<sf::Sound*> m_externalSounds;
 };

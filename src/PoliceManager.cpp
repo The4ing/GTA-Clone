@@ -276,27 +276,47 @@ void PoliceManager::updatePoliceOfficers(float dt, Player& player, const std::ve
 }
 
 void PoliceManager::updatePoliceHelicopters(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+    const sf::View& view = m_gameManager.getGameView();
+    const sf::Vector2f viewCenter = view.getCenter();
+    const float viewRadius = std::max(view.getSize().x, view.getSize().y) * 0.5f;
+    const float cleanupDistance = viewRadius + 400.f; // מרחק שמעבר לו נחשיב את המסוק כרחוק
+
     for (auto& heli : m_policeHelicopters) {
-        if (player.getWantedLevel() < 4 && !heli->isRetreating()) {
-            const sf::View& view = m_gameManager.getGameView();
-            sf::Vector2f dir = heli->getPosition() - view.getCenter();
-            float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
-            if (len == 0.f) dir = { 1.f,0.f }; else dir /= len;
-            sf::Vector2f target = view.getCenter() + dir * (std::max(view.getSize().x, view.getSize().y) + 200.f);
-            heli->startRetreating(target);
+        if (player.getWantedLevel() < 4) {
+            // התחלת נסיגה אם עוד לא התחיל
+            if (!heli->isRetreating()) {
+                sf::Vector2f dir = heli->getPosition() - viewCenter;
+                float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+                if (len == 0.f) dir = { 1.f, 0.f }; else dir /= len;
+                sf::Vector2f target = viewCenter + dir * (viewRadius + 300.f);
+                heli->startRetreating(target);
+            }
+
+            // בדוק אם התרחק מספיק — אם כן, סמן למחיקה
+            sf::Vector2f distVec = heli->getPosition() - viewCenter;
+            float dist = std::sqrt(distVec.x * distVec.x + distVec.y * distVec.y);
+            if (dist > cleanupDistance) {
+                heli->needsCleanup = true;
+            }
         }
+
         heli->update(dt, player, blockedPolygons);
     }
+
     m_policeHelicopters.erase(std::remove_if(m_policeHelicopters.begin(), m_policeHelicopters.end(),
-        [](const std::unique_ptr<PoliceHelicopter>& ph) { return ph->isDestroyed() || ph->needsCleanup; }),
+        [](const std::unique_ptr<PoliceHelicopter>& ph) {
+            return ph->isDestroyed() || ph->needsCleanup;
+        }),
         m_policeHelicopters.end());
 
+    m_numSeeingPlayer = 0; // reset count
     for (const auto& heli : m_policeHelicopters) {
         if (!heli->isDestroyed() && heli->canSeePlayer(player, blockedPolygons)) {
             m_numSeeingPlayer++;
         }
     }
 }
+
 
 void PoliceManager::updatePoliceTanks(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     for (auto& tank : m_policeTanks) {

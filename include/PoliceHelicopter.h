@@ -33,7 +33,6 @@ public:
     void startRetreating(const sf::Vector2f& target);
     bool isRetreating() const { return m_isRetreating; }
     bool needsCleanup = false;
-    static constexpr float DESPAWN_DISTANCE = 1500.f; // Distance threshold for cleanup
 
 private:
     void updateAttackBehavior(float dt, Player& player);
