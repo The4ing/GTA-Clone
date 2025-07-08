@@ -26,7 +26,10 @@ class Bullet : public MovingObject {
 public:
     Bullet();
     sf::Vector2f m_startPos; // for debug drawing
-    void init(const sf::Vector2f& startPos, const sf::Vector2f& direction, BulletType type = BulletType::Default);
+    void init(const sf::Vector2f& startPos, const sf::Vector2f& direction,
+        BulletType type = BulletType::Default,
+        bool firedByPlayer = false,
+        bool ignoreBlocked = false);
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) override;
     void draw(sf::RenderTarget& target) override;
 
@@ -42,7 +45,8 @@ public:
     bool checkCollision(const std::vector<std::vector<sf::Vector2f>>& blockedPolygons,
         const std::vector<Pedestrian*>& npcs,
         const std::vector<Police*>& police,
-        const std::vector<Vehicle*>& cars);
+        const std::vector<Vehicle*>& cars,
+        Player& player);
 
     void setType(BulletType type);
     bool isActive() const;
@@ -60,6 +64,8 @@ private:
     float m_damage = 10.f;
     float m_explosionRadius = 0.f;
     bool m_active = false;
+    bool m_firedByPlayer = false;
+    bool m_ignoreBlocked = false;
 
     void applyExplosionDamage(const std::vector<Pedestrian*>& npcs,
         const std::vector<Police*>& police,

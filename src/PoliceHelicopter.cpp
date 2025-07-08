@@ -116,7 +116,7 @@ void PoliceHelicopter::updateAttackBehavior(float dt, Player& player) {
             sinA * aimDir.x + cosA * aimDir.y);
         aimDir = rotated;
 
-        m_gameManager.addBullet(getPosition(), aimDir, BulletType::TankShell);
+        m_gameManager.addBullet(getPosition(), aimDir, BulletType::TankShell, false, true); // 'true' could indicate it's from an enemy / powerful source
         std::uniform_real_distribution<float> delay(-FIRE_RATE_VARIATION, FIRE_RATE_VARIATION);
         m_fireCooldownTimer = FIRE_RATE + delay(m_rng);
         SoundManager::getInstance().playSound("helicopterShot");
@@ -159,4 +159,31 @@ void PoliceHelicopter::move(const sf::Vector2f& direction, float dt) {
 
 float PoliceHelicopter::getSpeed() const {
     return m_speed;
+}
+
+bool PoliceHelicopter::canSeePlayer(const Player& player, const std::vector<std::vector<sf::Vector2f>>& obstacles) {
+    sf::Vector2f selfPos = getPosition();
+    sf::Vector2f playerPos = player.getPosition();
+    sf::Vector2f dir = playerPos - selfPos;
+    float distance = std::hypot(dir.x, dir.y);
+    const float VISION_DISTANCE = 500.f;
+    const float FOV = 180.f;
+    if (distance > VISION_DISTANCE)
+        return false;
+    if (distance > 0.001f) {
+        float angleRad = (m_sprite.getRotation() - 90.f) * static_cast<float>(M_PI) / 180.f;
+        sf::Vector2f forward(std::cos(angleRad), std::sin(angleRad));
+        sf::Vector2f dirNorm = dir / distance;
+        float dot = std::clamp(forward.x * dirNorm.x + forward.y * dirNorm.y, -1.f, 1.f);
+        float angleBetween = std::acos(dot);
+        if (angleBetween > (FOV / 2.f) * static_cast<float>(M_PI) / 180.f)
+            return false;
+    }
+    const int LOS_POINTS = 3;
+    for (int i = 1; i <= LOS_POINTS; ++i) {
+        sf::Vector2f testPoint = selfPos + dir * (static_cast<float>(i) / LOS_POINTS);
+        if (CollisionUtils::isInsideBlockedPolygon(testPoint, obstacles))
+            return false;
+    }
+    return true;
 }

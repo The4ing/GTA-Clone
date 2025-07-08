@@ -32,7 +32,10 @@ enum class GameState {
 class GameManager {
 public:
     GameManager();
-    void addBullet(const sf::Vector2f& startPos, const sf::Vector2f& direction, BulletType type = BulletType::Default);
+    void addBullet(const sf::Vector2f& startPos, const sf::Vector2f& direction,
+        BulletType type = BulletType::Default,
+        bool fromPlayer = false,
+        bool ignoreBlocked = false);
 
     void run();
     PathfindingGrid* getPathfindingGrid() const;

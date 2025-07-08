@@ -439,7 +439,7 @@ void GameManager::update(float dt) {
                 carPtrs.push_back(&v);
         }
 
-        player->getShooter().update(dt, blockedPolygons, npcPtrs, policePtrs, carPtrs);
+        player->getShooter().update(dt, blockedPolygons, npcPtrs, policePtrs, carPtrs, *player);
 
         // Vehicle-to-Vehicle collision (Player-driven vs AI)
         if (player->isInVehicle() && carManager) {
@@ -817,10 +817,11 @@ void GameManager::setFullscreen(bool fullscreen) {
 
 }
 
-void GameManager::addBullet(const sf::Vector2f& startPos, const sf::Vector2f& direction, BulletType type) {
+void GameManager::addBullet(const sf::Vector2f& startPos, const sf::Vector2f& direction,
+    BulletType type, bool fromPlayer, bool ignoreBlocked) {
     Bullet* bullet = bulletPool.getBullet();
     if (bullet) {
-        bullet->init(startPos, direction, type);
+        bullet->init(startPos, direction, type, fromPlayer, ignoreBlocked);
     }
 }
 

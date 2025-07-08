@@ -22,6 +22,7 @@ public:
 
     bool isDestroyed() const;
     void takeDamage(int amount);
+    bool canSeePlayer(const Player& player, const std::vector<std::vector<sf::Vector2f>>& obstacles);
 
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) override;
     void onCollision(GameObject& other) override;

@@ -79,7 +79,7 @@ void Police::handleShooting(Player& player, float dt) {
             accuracyOffset = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.f * maxOffset;
         }
         sf::Vector2f bulletDir(std::cos(baseAngle + accuracyOffset), std::sin(baseAngle + accuracyOffset));
-        m_gameManager.addBullet(getPosition() + bulletDir * 20.f, bulletDir);
+        m_gameManager.addBullet(getPosition() + bulletDir * 20.f, bulletDir, BulletType::Pistol);
         fireCooldownTimer = PISTOL_FIRE_RATE;
         animationManager->setAnimation("Walk_Gun_1", false); // Placeholder, use actual shooting animation
     }

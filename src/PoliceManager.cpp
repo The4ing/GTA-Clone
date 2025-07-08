@@ -284,10 +284,9 @@ void PoliceManager::updatePoliceHelicopters(float dt, Player& player, const std:
         m_policeHelicopters.end());
 
     for (const auto& heli : m_policeHelicopters) {
-        // Assuming PoliceHelicopter has canSeePlayer. If not, this needs to be added.
-        // if (!heli->isDestroyed() && heli->canSeePlayer(player, blockedPolygons)) {
-        //     m_numSeeingPlayer++;
-        // }
+        if (!heli->isDestroyed() && heli->canSeePlayer(player, blockedPolygons)) {
+            m_numSeeingPlayer++;
+        }
     }
 }
 

@@ -102,7 +102,7 @@ void PlayerShooter::shoot(const std::string& weaponName) {
     sf::Vector2f dir(std::cos(angleRad), std::sin(angleRad));
 
     // Initialize the bullet with its starting position and direction
-    bullet->init(startPos, dir, weaponToBullet(weaponName));
+    bullet->init(startPos, dir, weaponToBullet(weaponName), true, false);
 
     // Play shooting sound
    // SoundManager::getInstance().playSound("gunshot");
@@ -112,11 +112,12 @@ void PlayerShooter::update(float dt,
     const std::vector<std::vector<sf::Vector2f>>& blockedPolygons,
     const std::vector<Pedestrian*>& npcs,
     const std::vector<Police*>& police,
-    const std::vector<Vehicle*>& vehicles) {
+    const std::vector<Vehicle*>& vehicles,
+    Player& player) {
     for (auto& bptr : m_pool.getAllBullets()) {
         if (!bptr->isActive()) continue;
         bptr->update(dt, blockedPolygons);
-        if (bptr->checkCollision(blockedPolygons, npcs, police, vehicles)) {
+        if (bptr->checkCollision(blockedPolygons, npcs, police, vehicles, player)) {
             //SoundManager::getInstance().playSound("gunshot");
         }
     }

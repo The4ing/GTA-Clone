@@ -17,7 +17,8 @@ public:
         const std::vector<std::vector<sf::Vector2f>>& blockedPolygons,
         const std::vector<Pedestrian*>& npcs,
         const std::vector<Police*>& police,
-        const std::vector<Vehicle*>& vehicles);
+        const std::vector<Vehicle*>& vehicles,
+        Player& player);
 
 
 private:

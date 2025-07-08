@@ -6,11 +6,14 @@
 Bullet::Bullet() {
 }
 
-void Bullet::init(const sf::Vector2f& startPos, const sf::Vector2f& direction, BulletType type) {
+void Bullet::init(const sf::Vector2f& startPos, const sf::Vector2f& direction,
+    BulletType type, bool firedByPlayer, bool ignoreBlocked) {
     m_startPos = startPos;
     m_position = startPos;
     m_direction = direction;
     m_active = true;
+    m_firedByPlayer = firedByPlayer;
+    m_ignoreBlocked = ignoreBlocked;
     setType(type);
     m_sprite.setPosition(m_position);
 
@@ -23,7 +26,7 @@ void Bullet::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
     if (!m_active) return;
 
     sf::Vector2f nextPos = m_position + m_direction * m_speed * dt;
-    if (CollisionUtils::isInsideBlockedPolygon(nextPos, blockedPolygons)) {
+    if (!m_ignoreBlocked && CollisionUtils::isInsideBlockedPolygon(nextPos, blockedPolygons)) {
         m_active = false;
         return;
     }
@@ -80,10 +83,11 @@ void Bullet::collideWithPresent(Present& present) {
 bool Bullet::checkCollision(const std::vector<std::vector<sf::Vector2f>>& blockedPolygons,
     const std::vector<Pedestrian*>& npcs,
     const std::vector<Police*>& police,
-    const std::vector<Vehicle*>& cars) {
+    const std::vector<Vehicle*>& cars,
+    Player& player) {
     if (!m_active) return false;
 
-    if (CollisionUtils::isInsideBlockedPolygon(m_position, blockedPolygons)) {
+    if (!m_ignoreBlocked && CollisionUtils::isInsideBlockedPolygon(m_position, blockedPolygons)) {
         m_active = false;
         applyExplosionDamage(npcs, police, cars);
         return true;
@@ -99,14 +103,19 @@ bool Bullet::checkCollision(const std::vector<std::vector<sf::Vector2f>>& blocke
     }
 
     for (auto* cop : police) {
-        if (cop && !cop->isDead() && m_sprite.getGlobalBounds().intersects(cop->getCollisionBounds())) {
+        if (m_firedByPlayer && cop && !cop->isDead() && m_sprite.getGlobalBounds().intersects(cop->getCollisionBounds())) {
             cop->takeDamage(static_cast<int>(m_damage));
             m_active = false;
             applyExplosionDamage(npcs, police, cars);
             return true;
         }
     }
-
+    if (!m_firedByPlayer && m_sprite.getGlobalBounds().intersects(player.getCollisionBounds())) {
+        player.takeDamage(static_cast<int>(m_damage));
+        m_active = false;
+        applyExplosionDamage(npcs, police, cars);
+        return true;
+    }
     for (const auto* car : cars) {
         if (car && m_sprite.getGlobalBounds().intersects(car->getSprite().getGlobalBounds())) {
             m_active = false;
@@ -201,6 +210,8 @@ void Bullet::applyExplosionDamage(const std::vector<Pedestrian*>& npcs,
 
     for (auto* cop : police) {
         if (!cop)
+            continue;
+        if (!m_firedByPlayer)
             continue;
         float dx = cop->getPosition().x - m_position.x;
         float dy = cop->getPosition().y - m_position.y;
