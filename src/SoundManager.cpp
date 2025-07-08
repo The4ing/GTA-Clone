@@ -158,7 +158,7 @@ void SoundManager::playWantedLoop(float volumeLevel) {
     if (m_wantedLoop.getStatus() != sf::Sound::Playing) {
         m_wantedLoop.setBuffer(ResourceManager::getInstance().getSoundBuffer("wanted"));
         m_wantedLoop.setLoop(true);
-        SoundManager::getInstance().registerExternalSound(&m_sirenSound);
+       // SoundManager::getInstance().registerExternalSound(&m_sirenSound);
         m_wantedLoop.play();
     }
     float effectiveVol = muted ? 0.f : volumeLevel;

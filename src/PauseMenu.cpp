@@ -72,7 +72,6 @@ void PauseMenu::close() {
     m_isOpen = false;
     showingMap = false;
     showingStats = false;
-    SoundManager::getInstance().resumeAll();
     std::cout << "PauseMenu closed." << std::endl; // For debugging
     // Consider resuming game-specific sounds/music here
 }
@@ -507,6 +506,7 @@ void PauseMenu::selectCurrent() {
     case MenuOption::Resume:
         // m_currentAction = MenuAction::Resume; // GameManager primarily uses isOpen() for resume
         close();
+        SoundManager::getInstance().resumeAll();
         break;
     case MenuOption::NewGame:
         // Instead of immediate action, show confirmation
