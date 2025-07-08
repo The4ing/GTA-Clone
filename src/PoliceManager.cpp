@@ -277,10 +277,18 @@ void PoliceManager::updatePoliceOfficers(float dt, Player& player, const std::ve
 
 void PoliceManager::updatePoliceHelicopters(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     for (auto& heli : m_policeHelicopters) {
+        if (player.getWantedLevel() < 4 && !heli->isRetreating()) {
+            const sf::View& view = m_gameManager.getGameView();
+            sf::Vector2f dir = heli->getPosition() - view.getCenter();
+            float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
+            if (len == 0.f) dir = { 1.f,0.f }; else dir /= len;
+            sf::Vector2f target = view.getCenter() + dir * (std::max(view.getSize().x, view.getSize().y) + 200.f);
+            heli->startRetreating(target);
+        }
         heli->update(dt, player, blockedPolygons);
     }
     m_policeHelicopters.erase(std::remove_if(m_policeHelicopters.begin(), m_policeHelicopters.end(),
-        [](const std::unique_ptr<PoliceHelicopter>& ph) { return ph->isDestroyed(); }),
+        [](const std::unique_ptr<PoliceHelicopter>& ph) { return ph->isDestroyed() || ph->needsCleanup; }),
         m_policeHelicopters.end());
 
     for (const auto& heli : m_policeHelicopters) {

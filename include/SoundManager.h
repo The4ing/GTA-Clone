@@ -21,7 +21,8 @@ public:
     void removeStoppedSounds();
     void playWantedLoop(float volume);
     void stopWantedLoop();
-
+    void pauseAll();
+    void resumeAll();
     bool isWantedLoopPlaying() const;
 
 private:

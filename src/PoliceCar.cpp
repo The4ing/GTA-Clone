@@ -8,6 +8,7 @@
 #include <iostream>     // For debugging
 #include "PatrolZone.h"
 #include "Pedestrian.h"
+#include "SoundManager.h"
 
 PoliceCar::PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition)
     : Vehicle(), // Call base Vehicle constructor
@@ -37,6 +38,9 @@ PoliceCar::PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition
     // Vehicle class should handle its internal position state.
     // If PoliceCar uses its own m_sprite directly for position:
     m_sprite.setPosition(startPosition);
+    m_sirenSound.setBuffer(ResourceManager::getInstance().getSoundBuffer("wanted"));
+    m_sirenSound.setLoop(true);
+    m_sirenSound.play();
 
 
     // If Vehicle class has speed, set it there. Otherwise, use m_speed from PoliceCar.h
@@ -97,6 +101,16 @@ void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<s
     // If car is static (e.g., officer exited) and not retreating, it should not update its movement.
     // The existing !hasDriver() check is for empty static cars (e.g. parked).
     // We also need to stop it if m_isStatic is true due to officer exiting, even if it technically still "has" an officer slot (that's now empty).
+    float distanceToPlayer = std::hypot(player.getPosition().x - getPosition().x,
+        player.getPosition().y - getPosition().y);
+    const float maxSirenDist = 600.f;
+    float vol = 0.f;
+    if (distanceToPlayer < maxSirenDist) {
+        vol = (1.f - distanceToPlayer / maxSirenDist) * SoundManager::getInstance().getVolume();
+        if (SoundManager::getInstance().isMuted()) vol = 0.f;
+    }
+    m_sirenSound.setVolume(vol);
+
     if (m_isStatic && m_carState != CarState::Retreating) {
         // If it became static because officer exited, m_hasOfficerInside would be false.
         // If it was a pre-placed static car, hasDriver() (from Vehicle) would be false.

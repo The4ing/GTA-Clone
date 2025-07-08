@@ -30,10 +30,15 @@ public:
     void collideWithPresent(Present& present) override;
     void move(const sf::Vector2f& direction, float dt) override;
     float getSpeed() const override;
+    void startRetreating(const sf::Vector2f& target);
+    bool isRetreating() const { return m_isRetreating; }
+    bool needsCleanup = false;
 
 private:
     void updateAttackBehavior(float dt, Player& player);
     void updateMovement(float dt, const sf::Vector2f& targetPosition);
+    bool m_isRetreating = false;
+
 
     GameManager& m_gameManager;
     sf::Sprite m_sprite;

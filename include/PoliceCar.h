@@ -2,6 +2,7 @@
 #include "Vehicle.h"
 #include "Pathfinder.h"
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <vector>
 #include "Constants.h"
 
@@ -52,6 +53,7 @@ private:
     bool m_hasOfficerInside = true;
     GameManager& m_gameManager;
     bool m_isAmbient = true;
+    sf::Sound m_sirenSound;
 
     Pathfinder m_pathfinder;
     sf::Sprite m_sprite;

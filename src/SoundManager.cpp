@@ -116,6 +116,20 @@ void SoundManager::removeStoppedSounds() {
         });
 }
 
+void SoundManager::pauseAll() {
+    for (auto& s : sounds) {
+        if (s.getStatus() == sf::Sound::Playing)
+            s.pause();
+    }
+}
+
+void SoundManager::resumeAll() {
+    for (auto& s : sounds) {
+        if (s.getStatus() == sf::Sound::Paused)
+            s.play();
+    }
+}
+
 void SoundManager::playWantedLoop(float volumeLevel) {
     if (m_wantedLoop.getStatus() != sf::Sound::Playing) {
         m_wantedLoop.setBuffer(ResourceManager::getInstance().getSoundBuffer("wanted"));

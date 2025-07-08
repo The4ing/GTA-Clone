@@ -503,8 +503,8 @@ void GameManager::update(float dt) {
             if (wantedLevel >= 1 && m_prevWantedLevel == 0) {
                 SoundManager::getInstance().playSound("dispatch");
             }
-            float vol = std::min(100.f, wantedLevel * 20.f);
-            SoundManager::getInstance().playWantedLoop(vol);
+            //float vol = std::min(100.f, wantedLevel * 20.f);
+           // SoundManager::getInstance().playWantedLoop(vol);
         }
         else {
             SoundManager::getInstance().stopWantedLoop();

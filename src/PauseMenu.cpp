@@ -64,6 +64,7 @@ void PauseMenu::open() {
     showingStats = false;
     showingNewGameConfirm = false; // Ensure confirm dialog is not shown on open
     updateVolumeDisplayText(); // Set initial volume display
+    SoundManager::getInstance().pauseAll();
     std::cout << "PauseMenu opened." << std::endl;
 }
 
@@ -71,6 +72,7 @@ void PauseMenu::close() {
     m_isOpen = false;
     showingMap = false;
     showingStats = false;
+    SoundManager::getInstance().resumeAll();
     std::cout << "PauseMenu closed." << std::endl; // For debugging
     // Consider resuming game-specific sounds/music here
 }
