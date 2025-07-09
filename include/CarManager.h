@@ -17,8 +17,8 @@ public:
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void draw(sf::RenderTarget& window);
 
-    std::vector<Vehicle>& getVehicles();
-    void addVehicle(const Vehicle& vehicle);
+    std::vector<std::unique_ptr<Vehicle>>& getVehicles();
+    void addVehicle(std::unique_ptr<Vehicle> vehicle);
 
     void setRoads(const std::vector<RoadSegment>& newRoads);
     void buildRoadTree();
@@ -40,7 +40,7 @@ private:
 
     std::vector<std::pair<const RoadSegment*, std::string>> rejectedRoads;  // debug
 
-    std::vector<Vehicle> vehicles;
+    std::vector<std::unique_ptr<Vehicle>> vehicles;
     QuadTree<Vehicle*> vehicleTree;
 
     std::vector<RoadSegment> roads;

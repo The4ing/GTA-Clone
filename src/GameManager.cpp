@@ -288,12 +288,13 @@ void GameManager::processEvents() {
                         const float enterRadiusSq = 75.f * 75.f;
 
                         if (carManager) {
-                            for (auto& car : carManager->getVehicles()) {
-                                if (car.getDriver() == nullptr) {
-                                    float distSq = distanceSquared(playerPos, car.getPosition());
+                            for (auto& carPtr : carManager->getVehicles()) {
+                                Vehicle* car = carPtr.get();
+                                if (car->getDriver() == nullptr) {
+                                    float distSq = distanceSquared(playerPos, car->getPosition());
                                     if (distSq < enterRadiusSq && distSq < minOverallDistanceSq) {
                                         minOverallDistanceSq = distSq;
-                                        closestOverallVehicle = &car;
+                                        closestOverallVehicle = car;
                                     }
                                 }
                             }
@@ -454,8 +455,8 @@ void GameManager::update(float dt) {
         }
         std::vector<Vehicle*> carPtrs;
         if (carManager) {
-            for (auto& v : carManager->getVehicles())
-                carPtrs.push_back(&v);
+            for (auto& vPtr : carManager->getVehicles())
+                carPtrs.push_back(vPtr.get());
         }
 
         player->getShooter().update(dt, blockedPolygons, npcPtrs, policePtrs, carPtrs, *player);
@@ -465,7 +466,8 @@ void GameManager::update(float dt) {
             Vehicle* playerVehicle = player->getCurrentVehicle();
             if (playerVehicle) {
                 sf::FloatRect playerBounds = playerVehicle->getSprite().getGlobalBounds();
-                for (auto& aiVehicle : carManager->getVehicles()) {
+                for (auto& aiVehiclePtr : carManager->getVehicles()) {
+                    Vehicle& aiVehicle = *aiVehiclePtr;
                     if (&aiVehicle == playerVehicle || aiVehicle.hasDriver())
                         continue;
                     if (playerBounds.intersects(aiVehicle.getSprite().getGlobalBounds())) {
@@ -486,8 +488,8 @@ void GameManager::update(float dt) {
                     tank->attemptRunOverPedestrian(*ped);
                 }
                 if (carManager) {
-                    for (auto& v : carManager->getVehicles()) {
-                        tank->attemptRunOverVehicle(v);
+                    for (auto& vPtr : carManager->getVehicles()) {
+                        tank->attemptRunOverVehicle(*vPtr);
                     }
                 }
                 if (player->isInVehicle()) {

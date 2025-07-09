@@ -8,6 +8,7 @@
 #include <algorithm> // std::shuffle
 #include <random>    // std::default_random_engine
 #include "PoliceManager.h" 
+#include <memory>
 using json = nlohmann::json;
 
 CarManager::CarManager(PoliceManager& policeMgr)
@@ -26,11 +27,11 @@ void CarManager::setRoads(const std::vector<RoadSegment>& newRoads) {
     roads = newRoads;
 }
 
-void CarManager::addVehicle(const Vehicle& vehicle) {
-    vehicles.push_back(vehicle);
+void CarManager::addVehicle(std::unique_ptr<Vehicle> vehicle) {
+    vehicles.push_back(std::move(vehicle));
 }
 
-std::vector<Vehicle>& CarManager::getVehicles() {
+std::vector<std::unique_ptr<Vehicle>>& CarManager::getVehicles() {
     return vehicles;
 }
 
@@ -47,13 +48,15 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
     bool turnFound;
 
     vehicleTree.clear();
-    for (auto& v : vehicles) {
+    for (auto& vPtr : vehicles) {
+        Vehicle& v = *vPtr;
         sf::Vector2f pos = v.getPosition();
         sf::FloatRect area(pos.x - 0.5f, pos.y - 0.5f, 1.f, 1.f);
-        vehicleTree.insert(area, &v);
+        vehicleTree.insert(area, vPtr.get());
     }
 
-    for (auto& vehicle : vehicles) {
+    for (auto& vehiclePtr : vehicles) {
+        Vehicle& vehicle = *vehiclePtr;
         // First, call the vehicle's own update method.
         // This handles player input if present, or basic AI movement (like Bezier curve execution if inTurn is true for AI).
         vehicle.update(dt, blockedPolygons);
@@ -194,7 +197,7 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
         }
     }
     vehicles.erase(std::remove_if(vehicles.begin(), vehicles.end(),
-        [](const Vehicle& v) { return v.isDestroyed(); }), vehicles.end());
+        [](const std::unique_ptr<Vehicle>& v) { return v->isDestroyed(); }), vehicles.end());
 }
 
 void CarManager::draw(sf::RenderTarget& window) {
@@ -220,7 +223,8 @@ void CarManager::draw(sf::RenderTarget& window) {
         }
     }
 
-    for (auto& vehicle : vehicles) {
+    for (auto& vehiclePtr : vehicles) {
+        Vehicle& vehicle = *vehiclePtr;
         // Highlight current road in blue
         const RoadSegment* current = vehicle.getCurrentRoad();
         if (current) {
@@ -301,15 +305,14 @@ void CarManager::spawnSingleVehicleOnRoad() {
             : road.bounds.left + offset;
     }
 
-    Vehicle car;
-    car.setTexture(ResourceManager::getInstance().getTexture("car"));
-    car.setPosition(laneCenter);
-    car.setScale(0.05f, 0.05f);
+    auto car = std::make_unique<Vehicle>();
+    car->setTexture(ResourceManager::getInstance().getTexture("car"));
+    car->setPosition(laneCenter);
+    car->setScale(0.05f, 0.05f);
     std::string actualDir = getActualLaneDirection(road, laneIndex);
-    car.setDirectionVec(actualDir);
-    car.setCurrentRoad(&road);
-    car.setCurrentLaneIndex(laneIndex);
-
+    car->setDirectionVec(actualDir);
+    car->setCurrentRoad(&road);
+    car->setCurrentLaneIndex(laneIndex);
     //addVehicle(car);
     //vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), &vehicles.back());
 
@@ -331,8 +334,8 @@ void CarManager::spawnSingleVehicleOnRoad() {
     }
     else {
         // Spawn a regular car
-        addVehicle(car);
-        vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), &vehicles.back());
+        addVehicle(std::move(car));
+        vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), vehicles.back().get());
         // std::cout << "Spawned REGULAR car at (" << laneCenter.x << ", " << laneCenter.y
         //           << ") on lane " << laneIndex << " direction: " << actualDir
         //           << " (road#" << roadIdx << ")\n";
