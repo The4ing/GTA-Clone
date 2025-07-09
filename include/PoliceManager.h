@@ -35,8 +35,6 @@ public:
     void draw(sf::RenderTarget& window);
     void damageClosestOfficer(const sf::Vector2f& pos, int amount);
 
-    void trySpawnRandomPoliceNear(const std::vector<sf::Vector2i>& activeChunks, const sf::Vector2f& playerPos);
-
     static bool canRequestPath();
     static void recordPathfindingCall();
     static void resetPathfindingCounter();
@@ -90,8 +88,6 @@ private:
     int m_numSeeingPlayer = 0;
     float m_timePlayerNotSeen = 0.0f;
     float m_wantedReductionCooldownTimer = 0.0f; // Cooldown between successive wanted level reductions
-
-    std::vector<sf::Vector2i> activeChunks;
     float spawnCooldown = 0.f;
 
     int m_prevWantedLevel = 0;

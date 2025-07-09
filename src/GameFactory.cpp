@@ -72,13 +72,6 @@ std::unique_ptr<PedestrianManager> GameFactory::createPedestrianManager(const st
     return pedestrianManager;
 }
 
-
-
-
-//std::unique_ptr<ChunkManager> GameFactory::createChunkManager() {
-//    return std::make_unique<ChunkManager>();
-//}
-
 std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons)
 {
     std::vector<std::unique_ptr<Present>> result;

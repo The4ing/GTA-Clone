@@ -10,7 +10,7 @@
 #include "CollisionUtils.h"
 #include "CarManager.h"
 
-static float distanceSquared(const sf::Vector2f& a, const sf::Vector2f& b) {
+static float distanceSquared(const sf::Vector2f & a, const sf::Vector2f & b) {
     float dx = a.x - b.x;
     float dy = a.y - b.y;
     return dx * dx + dy * dy;
@@ -68,7 +68,8 @@ void PoliceManager::spawnPolice(const sf::Vector2f& position, PoliceWeaponType w
         m_staticPoliceOfficers.push_back(std::move(newOfficer));
         // std::cout << "Spawned STATIC " << (weaponType == PoliceWeaponType::BATON ? "Baton Police" : "Pistol Police")
         //           << " at: (" << position.x << ", " << position.y << ")\n";
-    } else {
+    }
+    else {
         m_policeOfficers.push_back(std::move(newOfficer));
         // std::cout << "Spawned DYNAMIC " << (weaponType == PoliceWeaponType::BATON ? "Baton Police" : "Pistol Police")
         //           << " at: (" << position.x << ", " << position.y << ")\n";
@@ -84,7 +85,8 @@ void PoliceManager::spawnPoliceCar(const sf::Vector2f& position, bool isStatic) 
     if (isStatic) {
         m_staticPoliceCars.push_back(std::move(newCar));
         // std::cout << "Spawned STATIC AGGRESSIVE Police Car at: (" << position.x << ", " << position.y << ")\n";
-    } else {
+    }
+    else {
         m_policeCars.push_back(std::move(newCar));
         // std::cout << "Spawned DYNAMIC AGGRESSIVE Police Car at: (" << position.x << ", " << position.y << ")\n";
     }
@@ -133,7 +135,7 @@ void PoliceManager::spawnStaticPoliceUnits(const sf::FloatRect& mapBounds, float
         }
     }
     std::cout << "Spawned " << m_staticPoliceOfficers.size() << " static police officers and "
-              << m_staticPoliceCars.size() << " static police cars." << std::endl;
+        << m_staticPoliceCars.size() << " static police cars." << std::endl;
 }
 
 
@@ -199,7 +201,7 @@ void PoliceManager::update(float dt, Player& player, const std::vector<std::vect
         car->update(dt, player, blockedPolygons);
         if (!car->isDestroyed() && car->canSeePlayer(player, blockedPolygons)) {
             if (car->getDriver() != &player) {
-                 m_numSeeingPlayer++; // Static cars also contribute
+                m_numSeeingPlayer++; // Static cars also contribute
             }
         }
     }
@@ -247,7 +249,7 @@ void PoliceManager::updatePoliceCars(float dt, Player& player, const std::vector
         }
     }
     m_policeCars.erase(std::remove_if(m_policeCars.begin(), m_policeCars.end(),
-        [](const std::unique_ptr<PoliceCar>& pc) { return pc->isDestroyed() || pc->needsCleanup; }),m_policeCars.end());
+        [](const std::unique_ptr<PoliceCar>& pc) { return pc->isDestroyed() || pc->needsCleanup; }), m_policeCars.end());
 
     for (const auto& car : m_policeCars) {
         if (!car->isDestroyed() && !car->isRetreating() && car->canSeePlayer(player, blockedPolygons)) { // Don't count retreating cars
@@ -324,7 +326,7 @@ void PoliceManager::updatePoliceTanks(float dt, Player& player, const std::vecto
         tank->update(dt, player, blockedPolygons);
     }
     m_policeTanks.erase(std::remove_if(m_policeTanks.begin(), m_policeTanks.end(),
-        [](const std::unique_ptr<PoliceTank>& pt) { return pt->isDestroyed(); }),
+        [](const std::unique_ptr<PoliceTank>& pt) { return pt->isDestroyed() || pt->isReadyForCleanup(); }),
         m_policeTanks.end());
 
     for (const auto& tank : m_policeTanks) {
@@ -366,7 +368,7 @@ sf::Vector2f findOffScreenSpawnPosition(const sf::View& gameView, const sf::Vect
     // This part of fallback might need refinement or could just spawn at playerPos + offset if all else fails
     float fallbackAngle = std::uniform_real_distribution<float>(0, 2 * M_PI)(rng);
     return playerPos + sf::Vector2f(std::cos(fallbackAngle) * (viewRect.width / 2 + minSpawnDistFromScreenEdge),
-                                   std::sin(fallbackAngle) * (viewRect.height / 2 + minSpawnDistFromScreenEdge));
+        std::sin(fallbackAngle) * (viewRect.height / 2 + minSpawnDistFromScreenEdge));
 }
 
 
@@ -549,17 +551,55 @@ void PoliceManager::spawnPoliceHelicopter(const sf::Vector2f& position) {
 }
 
 void PoliceManager::spawnPoliceTank(const sf::Vector2f& position) {
-    sf::Vector2f spawnPos = position;
+    sf::Vector2f spawnPos = position; // Fallback position
+    const RoadSegment* chosenRoad = nullptr;
+    int chosenLaneIndex = 0;
+    float roadAngle = 0.f; // Default angle
+
     CarManager* cm = m_gameManager.getCarManager();
     if (cm && !cm->getRoads().empty()) {
         const auto& roads = cm->getRoads();
         int roadIdx = rand() % roads.size();
-        const RoadSegment& road = roads[roadIdx];
-        int laneIndex = rand() % std::max(1, road.lanes);
-        spawnPos = road.getLaneCenter(laneIndex);
+        chosenRoad = &roads[roadIdx];
+        chosenLaneIndex = rand() % std::max(1, chosenRoad->lanes);
+        spawnPos = chosenRoad->getLaneCenter(chosenLaneIndex);
+
+        // Determine angle from road direction
+        // Assuming tank sprite's front is oriented "upwards" (points to top of texture)
+        // and PoliceTank::updateMovement adds 90 degrees to its calculated angle.
+        // So, we need to subtract 90 from the world angle.
+        if (chosenRoad->direction == "up") { // World angle -90
+            roadAngle = -180.f; // Sprite rotation -90 - 90 = -180
+        }
+        else if (chosenRoad->direction == "down") { // World angle 90
+            roadAngle = 0.f;    // Sprite rotation 90 - 90 = 0
+        }
+        else if (chosenRoad->direction == "left") { // World angle 180
+            roadAngle = 90.f;   // Sprite rotation 180 - 90 = 90
+        }
+        else if (chosenRoad->direction == "right") { // World angle 0
+            roadAngle = -90.f;  // Sprite rotation 0 - 90 = -90
+        }
+        // std::cout << "Spawning tank on road: " << chosenRoad->direction << " world_angle_equivalent: " << roadAngle + 90.f << " sprite_angle: " << roadAngle << std::endl;
+
     }
-    m_policeTanks.push_back(std::make_unique<PoliceTank>(m_gameManager, spawnPos));
-    // std::cout << "Spawned Police Tank at: (" << position.x << ", " << position.y << ")\n";
+    else {
+        std::cerr << "PoliceManager: Could not find roads to spawn tank. Using fallback position." << std::endl;
+        // Fallback orientation: assuming "up" if tank sprite is up, so -90 to make it face right by default, or 0 if movement code handles it.
+        // Given the +90 in movement, if we want it to face "right" by default without a road, set to -90.
+        // If we want it to face "up" (sprite's natural orientation), set to 0.
+        // Let's assume facing "up" (sprite's default) is acceptable if no road.
+        roadAngle = 0.f;
+    }
+
+    auto newTank = std::make_unique<PoliceTank>(m_gameManager, spawnPos);
+    newTank->getSprite().setRotation(roadAngle); // Set initial rotation of the tank body
+    // Turret usually aims at player, so its initial rotation might be less critical here or set by its own logic.
+    // If the turret should also align with the road initially:
+    // newTank->getTurretSprite().setRotation(roadAngle); 
+
+    m_policeTanks.push_back(std::move(newTank));
+    // std::cout << "Spawned Police Tank at: (" << spawnPos.x << ", " << spawnPos.y << ") angle: " << roadAngle << "\n";
 }
 
 

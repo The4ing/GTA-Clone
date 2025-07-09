@@ -1,6 +1,5 @@
 #pragma once
 
-constexpr int CHUNK_SIZE = 512;
 const float STATIC_POLICE_GRID_SIZE = 500.0f; // Size of the grid for placing static police units
 constexpr int LOAD_RADIUS = 2;
 static constexpr float PATHFINDING_GRID_SIZE = 32.0f;

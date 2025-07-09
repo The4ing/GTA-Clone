@@ -47,6 +47,32 @@ PoliceTank::PoliceTank(GameManager& gameManager, const sf::Vector2f& startPositi
     m_speed = 10.f; // slower movement
 }
 
+bool PoliceTank::hasClearLineOfSight(const sf::Vector2f& targetPos, const QuadTree<std::vector<sf::Vector2f>>& blockedPolyTree) const {
+    sf::Vector2f startPos = getPosition();
+    sf::Vector2f direction = targetPos - startPos;
+    float distance = std::hypot(direction.x, direction.y);
+
+    if (distance == 0.f) {
+        return true; // Target is at the same position, clear LOS.
+    }
+
+    direction /= distance; // Normalize
+
+    const float stepSize = 10.0f; // Check every 10 pixels, adjust as needed for performance/accuracy
+    int numSteps = static_cast<int>(distance / stepSize);
+
+    for (int i = 1; i < numSteps; ++i) { // Start from step 1 to avoid checking inside self, end before target
+        sf::Vector2f currentPoint = startPos + direction * (i * stepSize);
+        if (CollisionUtils::isInsideBlockedPolygon(currentPoint, blockedPolyTree)) {
+            //std::cout << "LOS blocked at: " << currentPoint.x << "," << currentPoint.y << std::endl;
+            return false; // Obstructed
+        }
+    }
+    // Optionally, also check the target point itself if needed, though usually not for LOS.
+    // if (CollisionUtils::isInsideBlockedPolygon(targetPos, blockedPolyTree)) return false; 
+    return true; // Clear path
+}
+
 
 void PoliceTank::update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     Vehicle::update(dt, blockedPolygons); // Base vehicle update (if any)
@@ -62,44 +88,144 @@ void PoliceTank::update(float dt, Player& player, const std::vector<std::vector<
     m_turretSprite.setPosition(getPosition() + turretOffset);
 
     // ???? ?? ????? ???? ?????
-    sf::Vector2f direction = player.getPosition() - m_turretSprite.getPosition();
-    float angleRadians = std::atan2(direction.y, direction.x);
+    sf::Vector2f directionToPlayerForTurret = player.getPosition() - m_turretSprite.getPosition();
+    float angleRadians = std::atan2(directionToPlayerForTurret.y, directionToPlayerForTurret.x);
     float angleDegrees = angleRadians * 180.f / 3.14159f;
     m_turretSprite.setRotation(angleDegrees);
 
+    // Despawn check (moved from the end of updateAIBehavior to general update)
+    if (m_isRetreatingToDespawn && !m_readyForCleanup) { // only check if retreating and not already marked
+        const sf::View& gameView = m_gameManager.getGameView();
+        sf::FloatRect viewRect(gameView.getCenter() - gameView.getSize() / 2.f, gameView.getSize());
+        // Add a buffer, so it's truly off-screen
+        float buffer = 100.f; // Tank's approximate size or desired off-screen margin
+        viewRect.left -= buffer;
+        viewRect.top -= buffer;
+        viewRect.width += 2 * buffer;
+        viewRect.height += 2 * buffer;
+
+        if (!viewRect.contains(getPosition())) {
+            m_readyForCleanup = true;
+            // std::cout << "Tank is off-screen and ready for cleanup." << std::endl;
+        }
+    }
 }
 
 void PoliceTank::updateAIBehavior(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     m_repathTimer += dt;
-    m_targetPosition = player.getPosition();
+    int wantedLevel = player.getWantedLevel();
 
-    bool needsNewPath = m_currentPath.empty() || m_currentPathIndex >= m_currentPath.size();
-    if (!needsNewPath) {
-        float dx = m_targetPosition.x - m_currentPath.back().x; // Check against last point of current path's target
-        float dy = m_targetPosition.y - m_currentPath.back().y;
-        // Using a simpler threshold for tanks as they are slower and paths might be shorter/more direct
-        if ((dx * dx + dy * dy) > (PATHFINDING_GRID_SIZE * 4.0f) * (PATHFINDING_GRID_SIZE * 4.0f)) {
-            needsNewPath = true;
-        }
+    if (m_readyForCleanup) { // If already marked for cleanup, do nothing more in AI.
+        m_currentPath.clear(); // Stop any movement.
+        return;
     }
 
-    if (needsNewPath && m_repathTimer >= 2.0f && PoliceManager::canRequestPath()) { // Tanks repath less frequently
-        PoliceManager::recordPathfindingCall();
-        m_currentPath = m_pathfinder.findPath(getPosition(), m_targetPosition);
+    if (wantedLevel < 5 && !m_isRetreatingToDespawn) {
+        m_isRetreatingToDespawn = true;
+        m_hasLineOfSightToPlayer = false; // No longer interested in shooting player
+
+        sf::Vector2f playerPos = player.getPosition();
+        sf::Vector2f currentPos = getPosition();
+        sf::Vector2f directionAwayFromPlayer = currentPos - playerPos;
+        float distToPlayer = std::hypot(directionAwayFromPlayer.x, directionAwayFromPlayer.y);
+
+        if (distToPlayer < 10.f) { // If too close or on top, pick a random direction
+            float randomAngle = (static_cast<float>(rand()) / RAND_MAX) * 2.f * M_PI;
+            directionAwayFromPlayer = sf::Vector2f(std::cos(randomAngle), std::sin(randomAngle));
+        }
+        else {
+            directionAwayFromPlayer /= distToPlayer; // Normalize
+        }
+
+        // Define a far-off target point. This should ideally be outside the typical view + buffer.
+        // A large fixed distance should usually suffice.
+        float retreatDistance = 2000.f;
+        m_targetPosition = currentPos + directionAwayFromPlayer * retreatDistance;
+
+        m_currentPath.clear(); // Force repath
         m_currentPathIndex = 0;
-        m_repathTimer = 0.f;
-        if (m_currentPath.empty()) {
-            // std::cout << "PoliceTank failed to find path." << std::endl;
+        // std::cout << "Tank initiated retreat. Target: " << m_targetPosition.x << ", " << m_targetPosition.y << std::endl;
+        // Immediately try to find a path to the retreat point
+        if (PoliceManager::canRequestPath()) {
+            PoliceManager::recordPathfindingCall();
+            m_currentPath = m_pathfinder.findPath(getPosition(), m_targetPosition);
+            m_currentPathIndex = 0;
+            m_repathTimer = 0.f; // Reset repath timer as we just pathed
+            if (m_currentPath.empty()) {
+                // std::cout << "PoliceTank failed to find initial retreat path." << std::endl;
+            }
+        }
+        else {
+            m_repathTimer = 2.0f; // Set timer to try pathfinding soon
+        }
+
+    }
+
+    if (m_isRetreatingToDespawn) {
+        // If retreating, ensure we are pathfinding towards the retreat target
+        bool needsNewPath = m_currentPath.empty() || m_currentPathIndex >= m_currentPath.size();
+        // Could add a check: if current path's end is significantly different from m_targetPosition, needsNewPath = true.
+        // For simplicity, we rely on the initial path or subsequent repaths if it gets stuck.
+
+        if (needsNewPath && m_repathTimer >= 2.0f && PoliceManager::canRequestPath()) {
+            PoliceManager::recordPathfindingCall();
+            m_currentPath = m_pathfinder.findPath(getPosition(), m_targetPosition);
+            m_currentPathIndex = 0;
+            m_repathTimer = 0.f;
+            if (m_currentPath.empty()) {
+                // std::cout << "PoliceTank failed to find subsequent retreat path." << std::endl;
+                // If pathing fails, tank might get stuck. The off-screen check in update() is the ultimate cleanup.
+            }
+        }
+        else if (needsNewPath && m_repathTimer >= 2.0f) {
+            m_repathTimer = 0.f; // Reset timer to try again if path request was blocked
         }
     }
-    else if (needsNewPath && m_repathTimer >= 2.0f) {
-        m_repathTimer = 0.f;
+    else {
+        // Normal player tracking logic (not retreating)
+        m_targetPosition = player.getPosition(); // Target is the player
+        m_hasLineOfSightToPlayer = hasClearLineOfSight(m_targetPosition, m_gameManager.getBlockedPolyTree());
+
+        if (m_hasLineOfSightToPlayer) {
+            m_currentPath.clear(); // Stop movement if player is seen
+            m_currentPathIndex = 0;
+        }
+        else {
+            // Player not in LOS, pathfind to player
+            bool needsNewPath = m_currentPath.empty() || m_currentPathIndex >= m_currentPath.size();
+            if (!needsNewPath) {
+                float dx = m_targetPosition.x - m_currentPath.back().x;
+                float dy = m_targetPosition.y - m_currentPath.back().y;
+                if ((dx * dx + dy * dy) > (PATHFINDING_GRID_SIZE * 4.0f) * (PATHFINDING_GRID_SIZE * 4.0f)) {
+                    needsNewPath = true;
+                }
+            }
+
+            if (needsNewPath && m_repathTimer >= 2.0f && PoliceManager::canRequestPath()) {
+                PoliceManager::recordPathfindingCall();
+                m_currentPath = m_pathfinder.findPath(getPosition(), m_targetPosition);
+                m_currentPathIndex = 0;
+                m_repathTimer = 0.f;
+                if (m_currentPath.empty()) {
+                    // std::cout << "PoliceTank failed to find path to player (not in LOS)." << std::endl;
+                }
+            }
+            else if (needsNewPath && m_repathTimer >= 2.0f) {
+                m_repathTimer = 0.f;
+            }
+        }
     }
 
     updateMovement(dt, blockedPolygons);
 }
 
 void PoliceTank::updateMovement(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+    // If tank has LOS to player AND is NOT retreating, it should stop path-following movement.
+    // If it IS retreating, it should continue moving along its retreat path.
+    if (m_hasLineOfSightToPlayer && !m_isRetreatingToDespawn) {
+        return;
+    }
+
     if (!m_currentPath.empty() && m_currentPathIndex < m_currentPath.size()) {
         sf::Vector2f nextWaypoint = m_currentPath[m_currentPathIndex];
         sf::Vector2f directionToWaypoint = nextWaypoint - getPosition();
@@ -109,10 +235,10 @@ void PoliceTank::updateMovement(float dt, const std::vector<std::vector<sf::Vect
             directionToWaypoint /= distanceToWaypoint; // Normalize
 
             // Tank rotation (body)
+            // Note: Sprite rotation is set here. Angle is +90 because tank sprite faces "up".
             float targetAngle = std::atan2(directionToWaypoint.y, directionToWaypoint.x) * 180.f / M_PI + 90.f;
-            float currentAngle = Vehicle::getSprite().getRotation(); // Assuming Vehicle stores its sprite & rotation
+            float currentAngle = Vehicle::getSprite().getRotation();
             float angleDiff = targetAngle - currentAngle;
-            // Normalize angle difference to [-180, 180]
             while (angleDiff > 180.f) angleDiff -= 360.f;
             while (angleDiff < -180.f) angleDiff += 360.f;
 
@@ -125,17 +251,18 @@ void PoliceTank::updateMovement(float dt, const std::vector<std::vector<sf::Vect
             }
 
             // Move forward if mostly aligned
-            if (std::abs(angleDiff) < 45.f) { // Only move if somewhat facing the target
-                sf::Vector2f forwardVec(std::sin(currentAngle * M_PI / 180.f), -std::cos(currentAngle * M_PI / 180.f));
+            if (std::abs(angleDiff) < 45.f) {
+                // Use the actual current sprite rotation for the forward vector
+                float spriteAngleRad = (Vehicle::getSprite().getRotation() - 90.f) * M_PI / 180.f; // Convert to world angle
+                sf::Vector2f forwardVec(std::cos(spriteAngleRad), std::sin(spriteAngleRad));
                 sf::Vector2f newPos = getPosition() + forwardVec * m_speed * dt;
 
-                // Basic collision for tanks (they might destroy some minor obstacles)
-                bool collision = CollisionUtils::isInsideBlockedPolygon(newPos, blockedPolygons);
-                if (collision) {
-                    m_currentPath.clear();
+                // Use the QuadTree for collision checking, consistent with LOS
+                if (CollisionUtils::isInsideBlockedPolygon(newPos, m_gameManager.getBlockedPolyTree())) {
+                    m_currentPath.clear(); // Collision, stop and replan
                     m_currentPathIndex = 0;
                 }
-                if (!collision) {
+                else {
                     Vehicle::setPosition(newPos);
                 }
             }
@@ -144,7 +271,7 @@ void PoliceTank::updateMovement(float dt, const std::vector<std::vector<sf::Vect
         if (distanceToWaypoint < PATHFINDING_GRID_SIZE * 0.75f) { // Reached waypoint
             m_currentPathIndex++;
             if (m_currentPathIndex >= m_currentPath.size()) {
-                m_currentPath.clear();
+                m_currentPath.clear(); // Path completed
             }
         }
     }
@@ -171,21 +298,37 @@ void PoliceTank::aimAndFire(Player& player, float dt) {
         m_turretSprite.rotate(turretAngleDiff > 0 ? turretRotationThisFrame : -turretRotationThisFrame);
     }
 
-    // Firing logic
-    if (distanceToPlayer <= CANNON_RANGE && std::abs(turretAngleDiff) < 10.f && m_cannonCooldownTimer <= 0.f) { // Turret aligned
-        // std::cout << "Tank firing cannon!" << std::endl;
-        sf::Vector2f cannonTipOffset(50, 0); // Placeholder offset from tank center to cannon tip, depends on sprite
-        sf::Vector2f rotatedTip = sf::Vector2f(
-            cannonTipOffset.x * std::cos((currentTurretAngle - 90.f) * M_PI / 180.f) - cannonTipOffset.y * std::sin((currentTurretAngle - 90.f) * M_PI / 180.f),
-            cannonTipOffset.x * std::sin((currentTurretAngle - 90.f) * M_PI / 180.f) + cannonTipOffset.y * std::cos((currentTurretAngle - 90.f) * M_PI / 180.f)
-        );
-        sf::Vector2f projectileSpawnPos = getPosition() + rotatedTip;
-        sf::Vector2f fireDirection = directionToPlayer / distanceToPlayer;
+    // Firing logic: requires LOS, in range, turret aligned, and cooldown ready
+    if (m_hasLineOfSightToPlayer && distanceToPlayer <= CANNON_RANGE && std::abs(turretAngleDiff) < 10.f && m_cannonCooldownTimer <= 0.f) {
+        // std::cout << "Tank firing cannon! LOS confirmed." << std::endl;
 
-        // TODO: GameManager needs a method like addTankShell(position, direction)
-        // m_gameManager.addTankShell(projectileSpawnPos, fireDirection); 
-        // For now, let's use addBullet as a placeholder, assuming it can take a 'powerful' flag
-        m_gameManager.addBullet(projectileSpawnPos, fireDirection, BulletType::Bazooka); // ????
+        // Calculate projectile spawn position based on turret's current rotation and position
+        // Assuming cannonTipOffset is from the turret's origin/center
+        float turretAngleRad = (m_turretSprite.getRotation() - 90.f) * M_PI / 180.f; // Convert current turret sprite angle to world radians
+        // cannonTipOffset.x is along the barrel, Y is perpendicular (usually 0 for simple barrel)
+        sf::Vector2f cannonTipLocalOffset(50.f, 0.f); // Offset from turret's origin to its tip 
+
+        sf::Vector2f rotatedTip = sf::Vector2f(
+            cannonTipLocalOffset.x * std::cos(turretAngleRad) - cannonTipLocalOffset.y * std::sin(turretAngleRad),
+            cannonTipLocalOffset.x * std::sin(turretAngleRad) + cannonTipLocalOffset.y * std::cos(turretAngleRad)
+        );
+        // Projectile spawns from the turret's current visual position plus the rotated offset
+        sf::Vector2f projectileSpawnPos = m_turretSprite.getPosition() + rotatedTip;
+
+        // Fire direction should be from the actual spawn point towards the player target
+        sf::Vector2f fireDirection = playerPos - projectileSpawnPos;
+        float fireDirectionMagnitude = std::hypot(fireDirection.x, fireDirection.y);
+
+        if (fireDirectionMagnitude > 0.001f) { // Normalize, guard against zero vector if player is exactly at spawn
+            fireDirection /= fireDirectionMagnitude;
+        }
+        else {
+            // Fallback: fire along turret's current facing if player is exactly at projectileSpawnPos (very unlikely)
+            // This uses the already calculated turretAngleRad which is the direction the turret is pointing.
+            fireDirection = sf::Vector2f(std::cos(turretAngleRad), std::sin(turretAngleRad));
+        }
+
+        m_gameManager.addBullet(projectileSpawnPos, fireDirection, BulletType::TankShell); // Use TankShell type
         m_cannonCooldownTimer = CANNON_FIRE_RATE;
     }
 }

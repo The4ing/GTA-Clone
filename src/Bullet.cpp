@@ -141,11 +141,13 @@ void Bullet::setType(BulletType type) {
     }
     else if (type == BulletType::TankShell) {
         std::cout << "tank";
-        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
+        m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default")); // Consider a unique texture later
         texSize = m_sprite.getTexture()->getSize();
         m_sprite.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
+        m_sprite.setScale(0.1f, 0.05f); // Make it larger and somewhat shell-shaped
         m_damage = 100.f;
         m_explosionRadius = 100.f;
+        // Consider adding SoundManager::getInstance().playSound("tank_fire_sound");
     }
     else if (type == BulletType::Minigun) {
         m_sprite.setTexture(ResourceManager::getInstance().getTexture("bullet_default"));
