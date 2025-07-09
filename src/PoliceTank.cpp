@@ -8,6 +8,7 @@
 #include <iostream>
 #include "Pedestrian.h"
 #include "Vehicle.h"
+#include <algorithm>    
 
 PoliceTank::PoliceTank(GameManager& gameManager, const sf::Vector2f& startPosition)
     : Vehicle(),
@@ -384,4 +385,37 @@ bool PoliceTank::attemptRunOverVehicle(Vehicle& vehicle) {
         return true;
     }
     return false;
+}
+
+bool PoliceTank::canSeePlayer(const Player& player, const std::vector<std::vector<sf::Vector2f>>& obstacles) {
+    sf::Vector2f selfPos = getPosition();
+    sf::Vector2f playerPos = player.getPosition();
+    sf::Vector2f directionToPlayer = playerPos - selfPos;
+    float distanceToPlayer = std::hypot(directionToPlayer.x, directionToPlayer.y);
+
+    if (distanceToPlayer > m_visionDistance) {
+        return false;
+    }
+
+    if (distanceToPlayer > 0.001f) {
+        float unitAngleRad = (getSprite().getRotation() - 90.f) * static_cast<float>(M_PI) / 180.f;
+        sf::Vector2f forwardVector(std::cos(unitAngleRad), std::sin(unitAngleRad));
+        sf::Vector2f normalizedDirToPlayer = directionToPlayer / distanceToPlayer;
+        float dotProduct = forwardVector.x * normalizedDirToPlayer.x + forwardVector.y * normalizedDirToPlayer.y;
+        dotProduct = std::clamp(dotProduct, -1.f, 1.f);
+        float angleBetweenActualRad = std::acos(dotProduct);
+        float fovThresholdRad = (m_fieldOfViewAngle / 2.f) * static_cast<float>(M_PI) / 180.f;
+        if (angleBetweenActualRad > fovThresholdRad) {
+            return false;
+        }
+    }
+
+    const int LOS_SAMPLE_POINTS = 3;
+    for (int i = 1; i <= LOS_SAMPLE_POINTS; ++i) {
+        sf::Vector2f testPoint = selfPos + directionToPlayer * (static_cast<float>(i) / LOS_SAMPLE_POINTS);
+        if (CollisionUtils::isInsideBlockedPolygon(testPoint, obstacles)) {
+            return false;
+        }
+    }
+    return true;
 }

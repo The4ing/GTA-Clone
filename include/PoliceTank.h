@@ -23,6 +23,7 @@ public:
     bool attemptRunOverPedestrian(class Pedestrian& ped);
     bool attemptRunOverVehicle(class Vehicle& vehicle);
     bool isReadyForCleanup() const { return m_readyForCleanup; }
+    bool canSeePlayer(const Player& player, const std::vector<std::vector<sf::Vector2f>>& obstacles);
 
 private:
     void updateAIBehavior(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
@@ -51,7 +52,8 @@ private:
     float m_cannonCooldownTimer = 0.f;
     const float CANNON_FIRE_RATE = 5.0f;
     const float CANNON_RANGE = 400.f;
-
+    float m_visionDistance = 300.f;
+    float m_fieldOfViewAngle = 160.f; // Degrees
     // Despawning logic members
     bool m_isRetreatingToDespawn = false;
     bool m_readyForCleanup = false;

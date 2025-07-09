@@ -330,10 +330,9 @@ void PoliceManager::updatePoliceTanks(float dt, Player& player, const std::vecto
         m_policeTanks.end());
 
     for (const auto& tank : m_policeTanks) {
-        // Assuming PoliceTank has canSeePlayer.
-        // if (!tank->isDestroyed() && tank->canSeePlayer(player, blockedPolygons)) {
-        //    m_numSeeingPlayer++;
-        // }
+        if (!tank->isDestroyed() && tank->canSeePlayer(player, blockedPolygons)) {
+            m_numSeeingPlayer++;
+        }
     }
 }
 
