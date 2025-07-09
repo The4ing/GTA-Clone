@@ -16,7 +16,9 @@ PoliceTank::PoliceTank(GameManager& gameManager, const sf::Vector2f& startPositi
     m_pathfinder(*gameManager.getPathfindingGrid()),
     m_currentPathIndex(0),
     m_repathTimer(0.f),
-    m_targetPosition(startPosition) {
+    // m_targetPosition(startPosition) { // Replaced by m_currentTargetPosition
+    m_currentTargetPosition(startPosition),
+    m_tankState(TankState::Chasing) { // Initialize tank state
 
     std::cout << "tank has spawned";
 
@@ -45,7 +47,8 @@ PoliceTank::PoliceTank(GameManager& gameManager, const sf::Vector2f& startPositi
     m_turretSprite.setPosition(startPosition);
 
     m_health = 500;
-    m_speed = 10.f; // slower movement
+    m_baseSpeed = 10.f; // Use m_baseSpeed, m_currentSpeed initialized in header
+    m_currentSpeed = m_baseSpeed; // Initialize current speed
 }
 
 bool PoliceTank::hasClearLineOfSight(const sf::Vector2f& targetPos, const QuadTree<std::vector<sf::Vector2f>>& blockedPolyTree) const {
@@ -95,7 +98,7 @@ void PoliceTank::update(float dt, Player& player, const std::vector<std::vector<
     m_turretSprite.setRotation(angleDegrees);
 
     // Despawn check (moved from the end of updateAIBehavior to general update)
-    if (m_isRetreatingToDespawn && !m_readyForCleanup) { // only check if retreating and not already marked
+    if (m_tankState == TankState::Retreating && !m_readyForCleanup) { // only check if retreating and not already marked
         const sf::View& gameView = m_gameManager.getGameView();
         sf::FloatRect viewRect(gameView.getCenter() - gameView.getSize() / 2.f, gameView.getSize());
         // Add a buffer, so it's truly off-screen
@@ -116,171 +119,179 @@ void PoliceTank::updateAIBehavior(float dt, Player& player, const std::vector<st
     m_repathTimer += dt;
     int wantedLevel = player.getWantedLevel();
 
-    // Calculate distance to player each frame for movement decisions
-    m_distanceToPlayer = std::hypot(player.getPosition().x - getPosition().x,
-        player.getPosition().y - getPosition().y);
+    m_distanceToPlayer = std::hypot(player.getPosition().x - getPosition().x, player.getPosition().y - getPosition().y);
 
-    if (m_readyForCleanup) { // If already marked for cleanup, do nothing more in AI.
-        m_currentPath.clear(); // Stop any movement.
+    if (m_readyForCleanup) {
+        m_currentPath.clear();
         return;
     }
 
-    if (wantedLevel < 5 && !m_isRetreatingToDespawn) {
-        m_isRetreatingToDespawn = true;
+    // Determine current state: Chasing or Retreating
+    if (wantedLevel < 5 && m_tankState == TankState::Chasing) {
+        m_tankState = TankState::Retreating;
         m_hasLineOfSightToPlayer = false; // No longer interested in shooting player
 
         sf::Vector2f playerPos = player.getPosition();
         sf::Vector2f currentPos = getPosition();
         sf::Vector2f directionAwayFromPlayer = currentPos - playerPos;
-        float distToPlayer = std::hypot(directionAwayFromPlayer.x, directionAwayFromPlayer.y);
+        float distToPlayerVec = std::hypot(directionAwayFromPlayer.x, directionAwayFromPlayer.y);
 
-        if (distToPlayer < 10.f) { // If too close or on top, pick a random direction
+        if (distToPlayerVec < 10.f) { // If too close or on top, pick a random direction
             float randomAngle = (static_cast<float>(rand()) / RAND_MAX) * 2.f * M_PI;
             directionAwayFromPlayer = sf::Vector2f(std::cos(randomAngle), std::sin(randomAngle));
         }
-        else {
-            directionAwayFromPlayer /= distToPlayer; // Normalize
+        else if (distToPlayerVec > 0.001f) { // Normalize if not zero vector
+            directionAwayFromPlayer /= distToPlayerVec;
+        }
+        else { // Default to a random direction if exactly on player
+            float randomAngle = (static_cast<float>(rand()) / RAND_MAX) * 2.f * M_PI;
+            directionAwayFromPlayer = sf::Vector2f(std::cos(randomAngle), std::sin(randomAngle));
         }
 
-        // Define a far-off target point. This should ideally be outside the typical view + buffer.
-        // A large fixed distance should usually suffice.
-        float retreatDistance = 2000.f;
-        m_targetPosition = currentPos + directionAwayFromPlayer * retreatDistance;
+        float retreatDistance = 2000.f; // Define a far-off target point
+        m_currentTargetPosition = currentPos + directionAwayFromPlayer * retreatDistance;
 
-        m_currentPath.clear(); // Force repath
+        m_currentPath.clear();
         m_currentPathIndex = 0;
-        // std::cout << "Tank initiated retreat. Target: " << m_targetPosition.x << ", " << m_targetPosition.y << std::endl;
-        // Immediately try to find a path to the retreat point
-        if (PoliceManager::canRequestPath()) {
-            PoliceManager::recordPathfindingCall();
-            m_currentPath = m_pathfinder.findPath(getPosition(), m_targetPosition);
+        m_repathTimer = REPATH_COOLDOWN; // Force path attempt soon
+    }
+    else if (wantedLevel >= 5 && m_tankState == TankState::Retreating) {
+        // If wanted level goes back up, switch back to chasing (unless already despawning)
+        if (!m_readyForCleanup) {
+            m_tankState = TankState::Chasing;
+            m_currentPath.clear();
             m_currentPathIndex = 0;
-            m_repathTimer = 0.f; // Reset repath timer as we just pathed
-            if (m_currentPath.empty()) {
-                // std::cout << "PoliceTank failed to find initial retreat path." << std::endl;
-            }
+            m_repathTimer = REPATH_COOLDOWN; // Force path attempt soon
         }
-        else {
-            m_repathTimer = 2.0f; // Set timer to try pathfinding soon
-        }
-
     }
 
-    if (m_isRetreatingToDespawn) {
-        // If retreating, ensure we are pathfinding towards the retreat target
-        bool needsNewPath = m_currentPath.empty() || m_currentPathIndex >= m_currentPath.size();
-        // Could add a check: if current path's end is significantly different from m_targetPosition, needsNewPath = true.
-        // For simplicity, we rely on the initial path or subsequent repaths if it gets stuck.
 
-        if (needsNewPath && m_repathTimer >= 2.0f && PoliceManager::canRequestPath()) {
+    if (m_tankState == TankState::Retreating) {
+        // Pathfinding for retreating
+        bool needsNewPath = m_currentPath.empty() || m_currentPathIndex >= m_currentPath.size();
+        if (needsNewPath && m_repathTimer >= REPATH_COOLDOWN && PoliceManager::canRequestPath()) {
             PoliceManager::recordPathfindingCall();
-            m_currentPath = m_pathfinder.findPath(getPosition(), m_targetPosition);
+            m_currentPath = m_pathfinder.findPath(getPosition(), m_currentTargetPosition);
             m_currentPathIndex = 0;
             m_repathTimer = 0.f;
             if (m_currentPath.empty()) {
-                // std::cout << "PoliceTank failed to find subsequent retreat path." << std::endl;
-                // If pathing fails, tank might get stuck. The off-screen check in update() is the ultimate cleanup.
+                // std::cout << "PoliceTank failed to find retreat path. Will become ready for cleanup if off-screen." << std::endl;
+                // It might get stuck, but the off-screen check in update() will eventually clean it up.
             }
         }
-        else if (needsNewPath && m_repathTimer >= 2.0f) {
-            m_repathTimer = 0.f; // Reset timer to try again if path request was blocked
+        else if (needsNewPath && m_repathTimer >= REPATH_COOLDOWN) {
+            m_repathTimer = 0.f; // Throttled, reset to try again
         }
     }
-    else {
-        // Normal player tracking logic (not retreating)
-        m_targetPosition = player.getPosition(); // Target is the player
-        m_hasLineOfSightToPlayer = hasClearLineOfSight(m_targetPosition, m_gameManager.getBlockedPolyTree());
+    else { // TankState::Chasing
+        m_currentTargetPosition = player.getPosition();
+        m_hasLineOfSightToPlayer = hasClearLineOfSight(m_currentTargetPosition, m_gameManager.getBlockedPolyTree());
 
-        {
-            if (m_hasLineOfSightToPlayer) {
-                m_currentPath.clear(); // Stop movement if player is seen
-                m_currentPathIndex = 0;
-            }
-            else {
-            }
-            // Player not in LOS, pathfind to player
+        if (m_hasLineOfSightToPlayer && m_distanceToPlayer <= STOP_DISTANCE) {
+            m_currentPath.clear(); // Stop movement if player is seen and close enough
+            m_currentPathIndex = 0;
+        }
+        else {
+            // Pathfinding to player
             bool needsNewPath = m_currentPath.empty() || m_currentPathIndex >= m_currentPath.size();
-            if (!needsNewPath) {
-                float dx = m_targetPosition.x - m_currentPath.back().x;
-                float dy = m_targetPosition.y - m_currentPath.back().y;
-                if ((dx * dx + dy * dy) > (PATHFINDING_GRID_SIZE * 4.0f) * (PATHFINDING_GRID_SIZE * 4.0f)) {
+            if (!needsNewPath) { // Check if player moved significantly from path target
+                float dx = m_currentTargetPosition.x - m_currentPath.back().x;
+                float dy = m_currentTargetPosition.y - m_currentPath.back().y;
+                if ((dx * dx + dy * dy) > PLAYER_MOVE_THRESHOLD_FOR_REPATH_SQ) {
                     needsNewPath = true;
                 }
             }
 
-            if (needsNewPath && m_repathTimer >= 2.0f && PoliceManager::canRequestPath()) {
+            if (needsNewPath && m_repathTimer >= REPATH_COOLDOWN && PoliceManager::canRequestPath()) {
                 PoliceManager::recordPathfindingCall();
-                m_currentPath = m_pathfinder.findPath(getPosition(), m_targetPosition);
+                m_currentPath = m_pathfinder.findPath(getPosition(), m_currentTargetPosition);
                 m_currentPathIndex = 0;
                 m_repathTimer = 0.f;
                 if (m_currentPath.empty()) {
-                    // std::cout << "PoliceTank failed to find path to player (not in LOS)." << std::endl;
+                    // std::cout << "PoliceTank failed to find path to player." << std::endl;
                 }
             }
-            else if (needsNewPath && m_repathTimer >= 2.0f) {
-                m_repathTimer = 0.f;
+            else if (needsNewPath && m_repathTimer >= REPATH_COOLDOWN) {
+                m_repathTimer = 0.f; // Throttled
             }
         }
     }
 
-    updateMovement(dt, blockedPolygons);
+    updateTankMovementAsCar(dt, player, blockedPolygons); // Call new movement function
 }
 
-void PoliceTank::updateMovement(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    // Stop moving if tank has LOS to the player or is within STOP_DISTANCE
-    // while not retreating. Retreat movement ignores these checks.
-    if ((m_hasLineOfSightToPlayer || m_distanceToPlayer <= STOP_DISTANCE) && !m_isRetreatingToDespawn) {
+// OLD updateMovement function is now removed.
+
+void PoliceTank::updateTankMovementAsCar(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+    // If chasing and has LOS and is close enough, don't move.
+    if (m_tankState == TankState::Chasing && m_hasLineOfSightToPlayer && m_distanceToPlayer <= STOP_DISTANCE) {
+        m_currentSpeed = 0; // Stop
+        // Vehicle's update might still apply friction or other effects, so ensure speed is actively zeroed.
+        // Or, simply return here if no other movement logic (like rotation towards target) is desired while stopped.
         return;
     }
+    m_currentSpeed = m_baseSpeed; // Restore speed if not stopped by LOS/distance condition.
 
     if (!m_currentPath.empty() && m_currentPathIndex < m_currentPath.size()) {
         sf::Vector2f nextWaypoint = m_currentPath[m_currentPathIndex];
         sf::Vector2f directionToWaypoint = nextWaypoint - getPosition();
         float distanceToWaypoint = std::hypot(directionToWaypoint.x, directionToWaypoint.y);
 
-        if (distanceToWaypoint > 1.0f) { // If not already at waypoint
-            directionToWaypoint /= distanceToWaypoint; // Normalize
+        if (distanceToWaypoint > 0.01f) { // If not already very close to waypoint
+            sf::Vector2f normalizedDirection = directionToWaypoint / distanceToWaypoint; // Normalize
 
-            // Tank rotation (body)
-            // Note: Sprite rotation is set here. Angle is +90 because tank sprite faces "up".
-            float targetAngle = std::atan2(directionToWaypoint.y, directionToWaypoint.x) * 180.f / M_PI + 90.f;
-            float currentAngle = Vehicle::getSprite().getRotation();
-            float angleDiff = targetAngle - currentAngle;
-            while (angleDiff > 180.f) angleDiff -= 360.f;
-            while (angleDiff < -180.f) angleDiff += 360.f;
+            // --- Movement ---
+            sf::Vector2f currentPos = getPosition();
+            float moveStep = m_currentSpeed * dt;
+            sf::Vector2f nextPosCandidate = currentPos + normalizedDirection * std::min(moveStep, distanceToWaypoint);
 
-            float rotationThisFrame = m_rotationSpeed * dt;
-            if (std::abs(angleDiff) < rotationThisFrame) {
-                Vehicle::getSprite().setRotation(targetAngle);
+            // Collision check: For tank, using isInsideBlockedPolygon might be better than pointInPolygon.
+            // We can check the four corners of the tank's sprite.
+            // This requires getting sprite bounds and transforming points.
+            // For simplicity and closer match to PoliceCar, let's try a simpler check first,
+            // or adapt the existing Vehicle collision if it's robust.
+            // The Vehicle::update already has some collision logic for player-controlled vehicles.
+            // Here, we do a basic check for the new position.
+
+            bool collision = false;
+            // Use the QuadTree for collision checking, consistent with LOS
+            // Check a point slightly ahead, or use the vehicle's bounding box.
+            // For now, a simple point check for the next position:
+            if (CollisionUtils::isInsideBlockedPolygon(nextPosCandidate, m_gameManager.getBlockedPolyTree())) {
+                collision = true;
+                m_currentPath.clear();
+                m_currentPathIndex = 0;
+                // m_currentTargetPosition = sf::Vector2f(-1.f, -1.f); // Indicate path failure if needed by other logic
+                // std::cout << "PoliceTank: Collision with blocked polygon, clearing path." << std::endl;
             }
-            else {
-                Vehicle::getSprite().rotate(angleDiff > 0 ? rotationThisFrame : -rotationThisFrame);
-            }
 
-            // Move forward if mostly aligned
-            if (std::abs(angleDiff) < 45.f) {
-                // Use the actual current sprite rotation for the forward vector
-                float spriteAngleRad = (Vehicle::getSprite().getRotation() - 90.f) * M_PI / 180.f; // Convert to world angle
-                sf::Vector2f forwardVec(std::cos(spriteAngleRad), std::sin(spriteAngleRad));
-                sf::Vector2f newPos = getPosition() + forwardVec * m_speed * dt;
 
-                // Use the QuadTree for collision checking, consistent with LOS
-                if (CollisionUtils::isInsideBlockedPolygon(newPos, m_gameManager.getBlockedPolyTree())) {
-                    m_currentPath.clear(); // Collision, stop and replan
-                    m_currentPathIndex = 0;
-                }
-                else {
-                    Vehicle::setPosition(newPos);
-                }
+            if (!collision) {
+                Vehicle::setPosition(nextPosCandidate); // This should update Vehicle's position and sprite
+
+                // Update rotation to face the direction of movement
+                // (Sprite's front is assumed to be 'up', so +90 degrees)
+                float angle = std::atan2(normalizedDirection.y, normalizedDirection.x) * 180.f / M_PI;
+                Vehicle::getSprite().setRotation(angle + 90.f);
             }
         }
 
-        if (distanceToWaypoint < PATHFINDING_GRID_SIZE * 0.75f) { // Reached waypoint
+        if (distanceToWaypoint < TARGET_REACHED_DISTANCE) { // Reached waypoint
             m_currentPathIndex++;
             if (m_currentPathIndex >= m_currentPath.size()) {
                 m_currentPath.clear(); // Path completed
+                if (m_tankState == TankState::Retreating) {
+                    m_readyForCleanup = true; // If it was a retreat path, mark for cleanup.
+                }
             }
         }
+    }
+    else if (m_currentPath.empty() && m_tankState == TankState::Retreating) {
+        // No path to retreat, or path finished, and it's trying to retreat.
+        // Check if already off-screen (done in main update), otherwise it might be stuck.
+        // For now, if no path and retreating, it will just sit there until the off-screen check cleans it up.
+        // Or, more proactively:
+        m_readyForCleanup = true; // If retreating and no path, assume it's done or stuck.
     }
 }
 

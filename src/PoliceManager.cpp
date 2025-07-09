@@ -411,9 +411,9 @@ void PoliceManager::managePolicePopulation(int wantedLevel, const sf::Vector2f& 
         m_desiredBatonOfficers = 1; // Fewer baton officers at higher levels
         break;
     case 5:
-        m_desiredPistolOfficers = 0;//5
-        m_desiredPoliceCars = 0;//3
-        m_desiredPoliceHelicopters = 0;//2
+        m_desiredPistolOfficers = 5;//5
+        m_desiredPoliceCars = 3;//3
+        m_desiredPoliceHelicopters = 2;//2
         m_desiredPoliceTanks = 3;//change to 1...
         m_desiredBatonOfficers = 0;
         break;
