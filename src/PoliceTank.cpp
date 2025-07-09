@@ -8,38 +8,43 @@
 #include <iostream>
 
 PoliceTank::PoliceTank(GameManager& gameManager, const sf::Vector2f& startPosition)
-    : Vehicle(), // Call base Vehicle constructor
+    : Vehicle(),
     m_gameManager(gameManager),
     m_pathfinder(*gameManager.getPathfindingGrid()),
     m_currentPathIndex(0),
     m_repathTimer(0.f),
     m_targetPosition(startPosition) {
 
-    // Tank body sprite is assumed to be handled by Vehicle::sprite or Vehicle::setTexture
-    // Example: this->setTexture(ResourceManager::getInstance().getTexture("police_tank_body"));
-    // For now, we assume Vehicle's constructor or a derived method sets up the main sprite.
-    // If Vehicle class doesn't have a sprite, you'd initialize m_bodySprite here.
-    // We will use the Vehicle's sprite directly via getSprite() or by setting its texture.
-    // For simplicity, let's assume Vehicle has setTexture and setOrigin
-    Vehicle::setTexture(ResourceManager::getInstance().getTexture("policeTank")); // Placeholder
-    Vehicle::getSprite().setOrigin(Vehicle::getSprite().getTextureRect().width / 2.f, Vehicle::getSprite().getTextureRect().height / 2.f); // Example
+    std::cout << "tank has spawned";
+
+    // --- Body ---
+    Vehicle::setTexture(ResourceManager::getInstance().getTexture("policeTank"));
+    Vehicle::getSprite().setOrigin(
+        Vehicle::getSprite().getTextureRect().width / 2.f,
+        Vehicle::getSprite().getTextureRect().height / 2.f
+    );
+    Vehicle::getSprite().setScale(0.2f, 0.2f);
     Vehicle::setPosition(startPosition);
 
-    m_turretSprite.setTexture(ResourceManager::getInstance().getTexture("tankBody")); // Placeholder
+    // --- Turret ---
+    m_turretSprite.setTexture(ResourceManager::getInstance().getTexture("tankBody"));
     if (m_turretSprite.getTexture()) {
-        m_turretSprite.setOrigin(m_turretSprite.getTexture()->getSize().x / 4.f, m_turretSprite.getTexture()->getSize().y / 2.f); // Turret origin might be different
+        m_turretSprite.setOrigin(
+            m_turretSprite.getTexture()->getSize().x / 2.f,
+            m_turretSprite.getTexture()->getSize().y / 2.f
+        );
     }
     else {
         std::cerr << "PoliceTank turret texture not loaded!" << std::endl;
     }
-    m_turretSprite.setScale(Vehicle::getSprite().getScale()); // Match body scale initially
+
+    m_turretSprite.setScale(Vehicle::getSprite().getScale());
     m_turretSprite.setPosition(startPosition);
 
     m_health = 500;
     m_speed = 30.f;
-    // Vehicle::speed = m_speed; // If vehicle has a public speed member to override
-    // std::cout << "PoliceTank spawned at: " << startPosition.x << ", " << startPosition.y << std::endl;
 }
+
 
 void PoliceTank::update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     Vehicle::update(dt, blockedPolygons); // Base vehicle update (if any)
@@ -50,7 +55,16 @@ void PoliceTank::update(float dt, Player& player, const std::vector<std::vector<
     if (m_cannonCooldownTimer > 0.f) {
         m_cannonCooldownTimer -= dt;
     }
-    m_turretSprite.setPosition(getPosition()); // Keep turret on top of tank body
+
+    const sf::Vector2f turretOffset(34.f, -23.f); // ????? ?? ??????? ??? ?????
+    m_turretSprite.setPosition(getPosition() + turretOffset);
+
+    // ???? ?? ????? ???? ?????
+    sf::Vector2f direction = player.getPosition() - m_turretSprite.getPosition();
+    float angleRadians = std::atan2(direction.y, direction.x);
+    float angleDegrees = angleRadians * 180.f / 3.14159f;
+    m_turretSprite.setRotation(angleDegrees);
+
 }
 
 void PoliceTank::updateAIBehavior(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
@@ -169,7 +183,7 @@ void PoliceTank::aimAndFire(Player& player, float dt) {
         // TODO: GameManager needs a method like addTankShell(position, direction)
         // m_gameManager.addTankShell(projectileSpawnPos, fireDirection); 
         // For now, let's use addBullet as a placeholder, assuming it can take a 'powerful' flag
-        m_gameManager.addBullet(projectileSpawnPos, fireDirection, BulletType::TankShell); // ????
+        m_gameManager.addBullet(projectileSpawnPos, fireDirection, BulletType::Bazooka); // ????
         m_cannonCooldownTimer = CANNON_FIRE_RATE;
     }
 }
@@ -185,7 +199,6 @@ sf::Vector2f PoliceTank::getPosition() const {
 
 void PoliceTank::setPosition(const sf::Vector2f& pos) {
     Vehicle::setPosition(pos);    // Delegate to base class
-    m_turretSprite.setPosition(pos); // Keep turret synced
 }
 
 bool PoliceTank::isDestroyed() const {
