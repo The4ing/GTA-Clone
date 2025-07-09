@@ -20,6 +20,8 @@ public:
 
     bool isDestroyed() const;
     void takeDamage(int amount);
+    bool attemptRunOverPedestrian(class Pedestrian& ped);
+    bool attemptRunOverVehicle(class Vehicle& vehicle);
 
 private:
     void updateAIBehavior(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
@@ -31,9 +33,9 @@ private:
     sf::Sprite m_turretSprite;
 
     int m_health = 500;
-    float m_speed = 30.f;
-    float m_rotationSpeed = 45.f;
-    float m_turretRotationSpeed = 60.f;
+    float m_speed = 10.f;              
+    float m_rotationSpeed = 30.f;
+    float m_turretRotationSpeed = 15.f;
 
     std::vector<sf::Vector2f> m_currentPath;
     size_t m_currentPathIndex = 0;

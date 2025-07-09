@@ -8,6 +8,7 @@
 #include "PatrolZone.h" // Include for PatrolZone type
 #include "RoadSegment.h"
 #include "CollisionUtils.h"
+#include "CarManager.h"
 
 static float distanceSquared(const sf::Vector2f& a, const sf::Vector2f& b) {
     float dx = a.x - b.x;
@@ -548,7 +549,16 @@ void PoliceManager::spawnPoliceHelicopter(const sf::Vector2f& position) {
 }
 
 void PoliceManager::spawnPoliceTank(const sf::Vector2f& position) {
-    m_policeTanks.push_back(std::make_unique<PoliceTank>(m_gameManager, position));
+    sf::Vector2f spawnPos = position;
+    CarManager* cm = m_gameManager.getCarManager();
+    if (cm && !cm->getRoads().empty()) {
+        const auto& roads = cm->getRoads();
+        int roadIdx = rand() % roads.size();
+        const RoadSegment& road = roads[roadIdx];
+        int laneIndex = rand() % std::max(1, road.lanes);
+        spawnPos = road.getLaneCenter(laneIndex);
+    }
+    m_policeTanks.push_back(std::make_unique<PoliceTank>(m_gameManager, spawnPos));
     // std::cout << "Spawned Police Tank at: (" << position.x << ", " << position.y << ")\n";
 }
 
@@ -662,6 +672,9 @@ const std::vector<std::unique_ptr<Police>>& PoliceManager::getPoliceOfficers() c
     return m_policeOfficers;
 }
 
+const std::vector<std::unique_ptr<PoliceTank>>& PoliceManager::getPoliceTanks() const {
+    return m_policeTanks;
+}
 
 // This old spawning function might be deprecated or used for ambient 0-star police.
 // For now, the wanted level system in managePolicePopulation is the primary spawner.

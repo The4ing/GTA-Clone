@@ -6,6 +6,8 @@
 #include "CollisionUtils.h"  // For basic collision checks
 #include <cmath>
 #include <iostream>
+#include "Pedestrian.h"
+#include "Vehicle.h"
 
 PoliceTank::PoliceTank(GameManager& gameManager, const sf::Vector2f& startPosition)
     : Vehicle(),
@@ -42,7 +44,7 @@ PoliceTank::PoliceTank(GameManager& gameManager, const sf::Vector2f& startPositi
     m_turretSprite.setPosition(startPosition);
 
     m_health = 500;
-    m_speed = 30.f;
+    m_speed = 10.f; // slower movement
 }
 
 
@@ -213,4 +215,24 @@ void PoliceTank::takeDamage(int amount) {
         // std::cout << "Tank destroyed!" << std::endl;
         // m_gameManager.createExplosion(getPosition(), ExplosionSize::VERY_LARGE); // Example
     }
+}
+
+bool PoliceTank::attemptRunOverPedestrian(Pedestrian& ped) {
+    float distSq = std::pow(getPosition().x - ped.getPosition().x, 2.f) +
+        std::pow(getPosition().y - ped.getPosition().y, 2.f);
+    float combined = (getSprite().getGlobalBounds().width / 2.f) + ped.getCollisionRadius();
+    if (distSq < combined * combined) {
+        ped.takeDamage(9999.f);
+        return true;
+    }
+    return false;
+}
+
+bool PoliceTank::attemptRunOverVehicle(Vehicle& vehicle) {
+    if (&vehicle == this) return false;
+    if (getSprite().getGlobalBounds().intersects(vehicle.getSprite().getGlobalBounds())) {
+        vehicle.setDestroyed(true);
+        return true;
+    }
+    return false;
 }

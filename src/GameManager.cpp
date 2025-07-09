@@ -481,6 +481,19 @@ void GameManager::update(float dt) {
                     car->attemptRunOverPedestrian(*ped);
                 }
             }
+            for (const auto& tank : policeManager->getPoliceTanks()) {
+                for (const auto& ped : pedestrianManager->getPedestrians()) {
+                    tank->attemptRunOverPedestrian(*ped);
+                }
+                if (carManager) {
+                    for (auto& v : carManager->getVehicles()) {
+                        tank->attemptRunOverVehicle(v);
+                    }
+                }
+                if (player->isInVehicle()) {
+                    tank->attemptRunOverVehicle(*player->getCurrentVehicle());
+                }
+            }
         }
     }
 

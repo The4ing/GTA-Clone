@@ -40,6 +40,8 @@ public:
     void run();
     PathfindingGrid* getPathfindingGrid() const;
     const std::vector<PatrolZone>& getPatrolZones() const;
+    const std::vector<RoadSegment>& getRoads() const { return roads; }
+    CarManager* getCarManager() const { return carManager.get(); }
     bool isPositionBlocked(const sf::Vector2f& pos) const;
     BulletPool& getBulletPool() { return bulletPool; }
     const QuadTree<std::vector<sf::Vector2f>>& getBlockedPolyTree() const { return blockedPolyTree; }

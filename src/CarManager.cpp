@@ -193,6 +193,8 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
             vehicle.setCurrentRoad(currentRoad);
         }
     }
+    vehicles.erase(std::remove_if(vehicles.begin(), vehicles.end(),
+        [](const Vehicle& v) { return v.isDestroyed(); }), vehicles.end());
 }
 
 void CarManager::draw(sf::RenderTarget& window) {
