@@ -115,6 +115,10 @@ void PoliceTank::updateAIBehavior(float dt, Player& player, const std::vector<st
     m_repathTimer += dt;
     int wantedLevel = player.getWantedLevel();
 
+    // Calculate distance to player each frame for movement decisions
+    m_distanceToPlayer = std::hypot(player.getPosition().x - getPosition().x,
+        player.getPosition().y - getPosition().y);
+
     if (m_readyForCleanup) { // If already marked for cleanup, do nothing more in AI.
         m_currentPath.clear(); // Stop any movement.
         return;
@@ -186,11 +190,13 @@ void PoliceTank::updateAIBehavior(float dt, Player& player, const std::vector<st
         m_targetPosition = player.getPosition(); // Target is the player
         m_hasLineOfSightToPlayer = hasClearLineOfSight(m_targetPosition, m_gameManager.getBlockedPolyTree());
 
-        if (m_hasLineOfSightToPlayer) {
-            m_currentPath.clear(); // Stop movement if player is seen
-            m_currentPathIndex = 0;
-        }
-        else {
+        {
+            if (m_hasLineOfSightToPlayer) {
+                m_currentPath.clear(); // Stop movement if player is seen
+                m_currentPathIndex = 0;
+            }
+            else {
+            }
             // Player not in LOS, pathfind to player
             bool needsNewPath = m_currentPath.empty() || m_currentPathIndex >= m_currentPath.size();
             if (!needsNewPath) {
@@ -220,9 +226,9 @@ void PoliceTank::updateAIBehavior(float dt, Player& player, const std::vector<st
 }
 
 void PoliceTank::updateMovement(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    // If tank has LOS to player AND is NOT retreating, it should stop path-following movement.
-    // If it IS retreating, it should continue moving along its retreat path.
-    if (m_hasLineOfSightToPlayer && !m_isRetreatingToDespawn) {
+    // Stop moving if tank has LOS to the player or is within STOP_DISTANCE
+    // while not retreating. Retreat movement ignores these checks.
+    if ((m_hasLineOfSightToPlayer || m_distanceToPlayer <= STOP_DISTANCE) && !m_isRetreatingToDespawn) {
         return;
     }
 

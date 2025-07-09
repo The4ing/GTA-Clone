@@ -34,6 +34,9 @@ private:
     Pathfinder m_pathfinder;
     sf::Sprite m_turretSprite;
     bool m_hasLineOfSightToPlayer = false; // Added to store LOS state
+    float m_distanceToPlayer = 0.f; // Distance from tank to player each frame
+
+    const float STOP_DISTANCE = 300.f; // distance at which the tank stops moving
 
     int m_health = 500;
     float m_speed = 10.f;
