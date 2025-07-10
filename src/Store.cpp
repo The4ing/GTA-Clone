@@ -210,6 +210,7 @@ std::optional<sf::Text> Store::getHintTextIfClose() const {
 
     return hint;
 }
+//
 
 
 
