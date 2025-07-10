@@ -15,7 +15,4 @@ void HealthPresent::applyEffect(Player& player) {
     collect();
 }
 
-int HealthPresent::getPrice() const
-{
-    return 150;
-}
+
