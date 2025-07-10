@@ -9,7 +9,4 @@ std::string Bazooka::getType() const {
     return "Bazooka";
 }
 
-int Bazooka::getPrice() const
-{
-    return 0;
-}
+
