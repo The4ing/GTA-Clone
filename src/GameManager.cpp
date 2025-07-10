@@ -492,9 +492,9 @@ void GameManager::update(float dt) {
                         tank->attemptRunOverVehicle(*vPtr);
                     }
                 }
-                if (player->isInVehicle()) {
-                    tank->attemptRunOverVehicle(*player->getCurrentVehicle());
-                }
+                //if (player->isInVehicle()) {
+                //    tank->attemptRunOverVehicle(*player->getCurrentVehicle());
+                //}
             }
         }
     }

@@ -63,6 +63,10 @@ private:
     const float CANNON_RANGE = 400.f;
     float m_visionDistance = 300.f;
     float m_fieldOfViewAngle = 160.f; // Degrees
+    bool m_usingBezier = false;
+    float m_bezierT = 0.f;
+    sf::Vector2f m_bezierP0, m_bezierP1, m_bezierP2;
+
 
     // Despawning logic members (integrates with m_tankState)
     // bool m_isRetreatingToDespawn = false; // This concept will be handled by m_tankState == TankState::Retreating
