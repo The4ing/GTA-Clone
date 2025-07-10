@@ -16,8 +16,5 @@ void SpeedBoost::applyEffect(Player& player) {
     collect();
 }
 
-int SpeedBoost::getPrice() const
-{
-    return 150;
-}
+
 
