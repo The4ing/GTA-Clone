@@ -294,7 +294,8 @@ void PoliceTank::aimAndFire(Player& player, float dt) {
     float distanceToPlayer = std::hypot(directionToPlayer.x, directionToPlayer.y);
 
     // Turret rotation
-    float targetTurretAngle = std::atan2(directionToPlayer.y, directionToPlayer.x) * 180.f / M_PI + 90.f;
+    float targetTurretAngle = std::atan2(directionToPlayer.y, directionToPlayer.x) * 180.f / M_PI +110;
+
     float currentTurretAngle = m_turretSprite.getRotation();
     float turretAngleDiff = targetTurretAngle - currentTurretAngle;
     while (turretAngleDiff > 180.f) turretAngleDiff -= 360.f;
@@ -302,7 +303,7 @@ void PoliceTank::aimAndFire(Player& player, float dt) {
 
     float turretRotationThisFrame = m_turretRotationSpeed * dt;
     if (std::abs(turretAngleDiff) < turretRotationThisFrame) {
-        // m_turretSprite.setRotation(targetTurretAngle);
+         m_turretSprite.setRotation(targetTurretAngle);
     }
     else {
         m_turretSprite.rotate(turretAngleDiff > 0 ? turretRotationThisFrame : -turretRotationThisFrame);
