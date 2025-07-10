@@ -12,8 +12,5 @@ std::string Pistol::getType() const {
     return "Pistol";
 }
 
-int Pistol::getPrice() const
-{
-    return 0;
-}
+
 
