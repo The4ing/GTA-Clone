@@ -12,6 +12,7 @@
 #include "GameManager.h" 
 #include "Knife.h"
 #include "Grenade.h"
+#include "Money.h"
 #include "Store.h"
 
 
@@ -81,7 +82,7 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
     while (result.size() < count && attempts < maxAttempts) {
         ++attempts;
 
-        int type = rand() % 7;
+        int type = rand() % 9;
         float x = static_cast<float>(rand() % MAP_WIDTH);
         float y = static_cast<float>(rand() % MAP_HEIGHT);
         sf::Vector2f pos(x, y);
@@ -127,6 +128,11 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
                 ResourceManager::getInstance().getTexture("Grenade"), pos));
 
             break;
+        case 8:
+          result.push_back(std::make_unique<Money>(
+               ResourceManager::getInstance().getTexture("Money"), sf::Vector2f(70.f, 70.f)));
+
+     break;
 
         }
     }
