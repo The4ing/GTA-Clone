@@ -9,7 +9,4 @@ std::string Rifle::getType() const {
     return "Rifle";
 }
 
-int Rifle::getPrice() const
-{
-    return 0;
-}
+
