@@ -320,36 +320,37 @@ void Player::draw(sf::RenderTarget& window) {
         // assuming the vehicle itself will be drawn by CarManager.
         return;
     }
-    sf::CircleShape circle(getCollisionRadius());
-    circle.setOrigin(getCollisionRadius(), getCollisionRadius());
-    circle.setPosition(getCenter());
-    circle.setFillColor(sf::Color::Transparent);
-    circle.setOutlineColor(sf::Color::Blue);
-    circle.setOutlineThickness(1.f);
-    window.draw(circle);
+    sf::FloatRect bounds = getCollisionBounds();
+    sf::RectangleShape rect;
+    rect.setSize({ bounds.width, bounds.height });
+    rect.setPosition({ bounds.left, bounds.top });
+    rect.setFillColor(sf::Color::Transparent);
+    rect.setOutlineColor(sf::Color::Red);
+    rect.setOutlineThickness(1.f);
+    window.draw(rect);
+
 
 
     window.draw(sprite);
 }
 
 sf::FloatRect Player::getCollisionBounds(const sf::Vector2f& offset) const {
-    // Get the center position of the sprite (already scaled)
-    if (m_currentVehicle) {
+    // נשתמש ב־visible hitbox
+    sf::FloatRect visibleBox(12.f, 18.f, 30.f, 40.f);
 
-        // If in vehicle, collision bounds are effectively the vehicle's bounds
-        // This might need to be handled by the Vehicle class or GameManager
-        return {}; // Return empty rect, or vehicle's bounds
-    }
-    sf::Vector2f pos = sprite.getPosition();
-    sf::Vector2f size(frameWidth * sprite.getScale().x, frameHeight * sprite.getScale().y);
+    sf::Transform transform = sprite.getTransform();
+    sf::Vector2f topLeft = transform.transformPoint({ visibleBox.left, visibleBox.top });
+    sf::Vector2f bottomRight = transform.transformPoint({ visibleBox.left + visibleBox.width, visibleBox.top + visibleBox.height });
 
-    return {
-        pos.x - size.x / 2.f + offset.x,
-        pos.y - size.y / 2.f + offset.y,
-        size.x,
-        size.y
-    };
+    sf::FloatRect worldBounds;
+    worldBounds.left = topLeft.x + offset.x;
+    worldBounds.top = topLeft.y + offset.y;
+    worldBounds.width = bottomRight.x - topLeft.x;
+    worldBounds.height = bottomRight.y - topLeft.y;
+
+    return worldBounds;
 }
+
 
 sf::Vector2f Player::getCenter() const {
     sf::Vector2f pos = sprite.getPosition();
@@ -575,3 +576,4 @@ void Player::collideWithPlayer(Player& /*player*/) {
     // שחקן לא אמור להתנגש בעצמו – לכן אולי לא נדרש טיפול.
     // אפשר להשאיר ריק או להוסיף לוגיקת PVP בעתיד.
 }
+

@@ -163,14 +163,25 @@ void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<s
             bool collision = false;
             // NOTE: This simple collision check might be insufficient. Ideally, use Vehicle's collision.
             for (const auto& poly : blockedPolygons) {
-                if (CollisionUtils::pointInPolygon(nextPosCandidate, poly)) {
-                    collision = true;
-                    m_currentPath.clear();
-                    m_currentPathIndex = 0;
-                    // std::cout << "PoliceCar (Retreating): Collision, clearing path." << std::endl;
-                    // Consider if it should try to repath or just give up (mark needsCleanup = true)
-                    break;
+                // ???? ?? ???????? ?????? ??? ?????? ???????
+                sf::Transform moveTransform;
+                moveTransform.translate(nextPosCandidate - getPosition());
+
+                std::vector<sf::Vector2f> movedHitbox = getHitboxPolygon();
+                for (auto& point : movedHitbox) {
+                    point = moveTransform.transformPoint(point);
                 }
+
+                for (const auto& poly : blockedPolygons) {
+                    if (CollisionUtils::polygonIntersectsPolygon(movedHitbox, poly)) {
+                        collision = true;
+                        m_currentPath.clear();
+                        m_currentPathIndex = 0;
+                        m_currentTargetPosition = sf::Vector2f(-1.f, -1.f);
+                        break;
+                    }
+                }
+
             }
 
             if (!collision) {
@@ -442,6 +453,19 @@ void PoliceCar::draw(sf::RenderTarget& target) {
     // If Vehicle base class handles drawing, call Vehicle::draw(target);
     // Otherwise, draw m_sprite directly:
     target.draw(m_sprite);
+
+    //for debug
+    std::vector<sf::Vector2f> corners = getHitboxPolygon();
+
+    sf::Vertex outline[] = {
+        sf::Vertex(corners[0], sf::Color::Red),
+        sf::Vertex(corners[1], sf::Color::Red),
+        sf::Vertex(corners[2], sf::Color::Red),
+        sf::Vertex(corners[3], sf::Color::Red),
+        sf::Vertex(corners[0], sf::Color::Red) // ?????
+    };
+
+    target.draw(outline, 5, sf::LineStrip);
 }
 
 // Implementing getPosition and setPosition to fulfill Vehicle virtuals if needed,
@@ -457,6 +481,24 @@ void PoliceCar::setPosition(const sf::Vector2f& pos) {
     // Vehicle::setPosition(pos); // Update base class state
     m_sprite.setPosition(pos);   // Update sprite position
 }
+
+std::vector<sf::Vector2f> PoliceCar::getHitboxPolygon() const {
+
+    sf::FloatRect visibleBox(240.f, 22.f, 140.f, 380.f);
+    sf::Transform transform = m_sprite.getTransform();
+
+    std::vector<sf::Vector2f> corners;
+    corners.push_back(transform.transformPoint({ visibleBox.left, visibleBox.top }));
+    corners.push_back(transform.transformPoint({ visibleBox.left + visibleBox.width, visibleBox.top }));
+    corners.push_back(transform.transformPoint({ visibleBox.left + visibleBox.width, visibleBox.top + visibleBox.height }));
+    corners.push_back(transform.transformPoint({ visibleBox.left, visibleBox.top + visibleBox.height }));
+
+    return corners;
+}
+
+
+
+
 
 // void PoliceCar::setTarget(const sf::Vector2f& target) {
 // This might not be needed if updateChaseBehavior always targets the player.

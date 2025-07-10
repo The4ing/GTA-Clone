@@ -37,6 +37,7 @@ private:
     void updateTankMovementAsCar(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons); // New movement function
     void aimAndFire(Player& player, float dt);
     bool hasClearLineOfSight(const sf::Vector2f& targetPos, const QuadTree<std::vector<sf::Vector2f>>& blockedPolyTree) const;
+    std::vector<sf::Vector2f> getVisibleHitboxCorners() const;
 
     GameManager& m_gameManager;
     Pathfinder m_pathfinder;

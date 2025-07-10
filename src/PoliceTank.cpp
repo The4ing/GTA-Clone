@@ -378,9 +378,19 @@ void PoliceTank::aimAndFire(Player& player, float dt) {
 }
 
 void PoliceTank::draw(sf::RenderTarget& target) {
-    Vehicle::draw(target); // Draw tank body (assuming Vehicle::draw handles its sprite)
-    target.draw(m_turretSprite); // Draw turret on top
+    Vehicle::draw(target);
+    target.draw(m_turretSprite);
+
+    // for debug
+    auto corners = getVisibleHitboxCorners();
+    std::vector<sf::Vertex> lines;
+    for (size_t i = 0; i < corners.size(); ++i)
+        lines.emplace_back(corners[i], sf::Color::Green);
+    lines.emplace_back(corners[0], sf::Color::Green);
+    target.draw(lines.data(), lines.size(), sf::LineStrip);
 }
+
+
 
 sf::Vector2f PoliceTank::getPosition() const {
     return Vehicle::getPosition(); // Delegate to base class
@@ -405,15 +415,18 @@ void PoliceTank::takeDamage(int amount) {
 }
 
 bool PoliceTank::attemptRunOverPedestrian(Pedestrian& ped) {
-    float distSq = std::pow(getPosition().x - ped.getPosition().x, 2.f) +
-        std::pow(getPosition().y - ped.getPosition().y, 2.f);
-    float combined = (getSprite().getGlobalBounds().width / 2.f) + ped.getCollisionRadius();
-    if (distSq < combined * combined) {
+    sf::Vector2f pedPos = ped.getPosition();
+    float pedRadius = ped.getCollisionRadius();
+
+    std::vector<sf::Vector2f> tankHitbox = getVisibleHitboxCorners();
+
+    if (CollisionUtils::circleIntersectsPolygon(pedPos, pedRadius, tankHitbox)) {
         ped.takeDamage(9999.f);
         return true;
     }
     return false;
 }
+
 
 bool PoliceTank::attemptRunOverVehicle(Vehicle& vehicle) {
     if (&vehicle == this) return false;
@@ -456,3 +469,19 @@ bool PoliceTank::canSeePlayer(const Player& player, const std::vector<std::vecto
     }
     return true;
 }
+
+std::vector<sf::Vector2f> PoliceTank::getVisibleHitboxCorners() const {
+    // ????? ????? ????? ?????? ???? policeTank.png
+    sf::FloatRect visibleBox(15.f, 24.f, 143.f, 245.f);
+
+    sf::Transform transform = getSprite().getTransform();
+
+    std::vector<sf::Vector2f> corners;
+    corners.push_back(transform.transformPoint({ visibleBox.left, visibleBox.top }));
+    corners.push_back(transform.transformPoint({ visibleBox.left + visibleBox.width, visibleBox.top }));
+    corners.push_back(transform.transformPoint({ visibleBox.left + visibleBox.width, visibleBox.top + visibleBox.height }));
+    corners.push_back(transform.transformPoint({ visibleBox.left, visibleBox.top + visibleBox.height }));
+
+    return corners;
+}
+

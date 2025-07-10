@@ -75,6 +75,7 @@ void ResourceInitializer::loadGameResources() {
     //inventory 
     rm.loadTexture("StoreAmmo", "resources/StoreAmmo.png");
     rm.loadTexture("Store", "resources/Store.png");
+    rm.loadTexture("Money", "resources/Money.png");
 
     //bullets:
     rm.loadTexture("bullet_default", "resources/bullet.png"); //pistol or default

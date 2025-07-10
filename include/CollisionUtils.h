@@ -10,6 +10,9 @@ public:
     static bool isInsideBlockedPolygon(const sf::Vector2f& point, const std::vector<std::vector<sf::Vector2f>>& polygons);
     static bool isInsideBlockedPolygon(const sf::Vector2f& point);
     static void setBlockedPolyTree(const QuadTree<std::vector<sf::Vector2f>>* tree);
+    static bool circleIntersectsPolygon(const sf::Vector2f& circleCenter, float radius, const std::vector<sf::Vector2f>& polygon);
+    static bool polygonIntersectsPolygon(const std::vector<sf::Vector2f>& polyA, const std::vector<sf::Vector2f>& polyB);
+
     template<typename T>
     static bool isInsideBlockedPolygon(const sf::Vector2f& point, const T& polyTree);
 private:
