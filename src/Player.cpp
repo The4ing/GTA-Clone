@@ -447,6 +447,8 @@ bool Player::tryBuyAmmo(const std::string& weaponName, int amountToAdd, int pric
     ammo.Ammo += amountCanAdd;
     decreaseMoney(price);
 
+    if (weaponName == "Grenade" || weaponName == "Knife")
+        AddWeapon(weaponName);
 
     std::cout << "Bought " << amountCanAdd << " ammo for " << weaponName << "\n";
     return true;
@@ -552,6 +554,12 @@ int Player::getWantedLevel() const {
     return m_wantedLevel;
 }
 
+void Player::setMoney(int money)
+{
+    m_money += money;
+    if (m_money > MaxMoney)
+        m_money = MaxMoney;
+}
 void Player::setArmor(int armor)
 {
 
