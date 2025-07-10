@@ -25,7 +25,6 @@ public:
 // לוגיקה שקשורה ל־Present
     void collect();
     bool isCollected() const;
-    virtual int getPrice() const = 0;
 
     // פונקציות גישה ל־sprite
     sf::Sprite& getSprite();
