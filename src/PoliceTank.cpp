@@ -24,7 +24,9 @@ PoliceTank::PoliceTank(GameManager& gameManager, const sf::Vector2f& startPositi
     m_repathTimer(0.f),
     // m_targetPosition(startPosition) { // Replaced by m_currentTargetPosition
     m_currentTargetPosition(startPosition),
-    m_tankState(TankState::Chasing) { // Initialize tank state
+    m_tankState(TankState::Chasing), // Initialize tank state
+    m_previousMovementAxis(MovementAxis::None),
+    m_wasUsingBezierLastFrame(false) {
 
     std::cout << "tank has spawned";
 
@@ -236,7 +238,7 @@ void PoliceTank::updateAIBehavior(float dt, Player& player, const std::vector<st
 // OLD updateMovement function is now removed.
 
 void PoliceTank::updateTankMovementAsCar(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    // If chasing and has LOS and is close enough, don't move.
+    // ?? ????, ???? ?? ????? ????? ????? — ????
     if (m_tankState == TankState::Chasing && m_hasLineOfSightToPlayer && m_distanceToPlayer <= STOP_DISTANCE) {
         m_currentSpeed = 0;
         return;
@@ -244,108 +246,43 @@ void PoliceTank::updateTankMovementAsCar(float dt, Player& player, const std::ve
 
     m_currentSpeed = m_baseSpeed;
 
-    // If in Bezier mode
-    if (m_usingBezier) {
-        m_bezierT += dt * 0.5f; // Curve progress speed
-
-        if (m_bezierT >= 1.f) {
-            m_usingBezier = false;
-            m_currentPathIndex++;
-            return;
-        }
-
-        sf::Vector2f nextPosCandidate = quadraticBezier(m_bezierP0, m_bezierP1, m_bezierP2, m_bezierT);
-
-        if (!CollisionUtils::isInsideBlockedPolygon(nextPosCandidate, m_gameManager.getBlockedPolyTree())) {
-            Vehicle::setPosition(nextPosCandidate);
-
-            // Calculate tangent for rotation
-            sf::Vector2f tangent = 2.f * (1.f - m_bezierT) * (m_bezierP1 - m_bezierP0) +
-                2.f * m_bezierT * (m_bezierP2 - m_bezierP1);
-            float angle = std::atan2(tangent.y, tangent.x) * 180.f / M_PI + 90.f;
-            Vehicle::getSprite().setRotation(angle);
-        }
-        else {
-            m_usingBezier = false;
-            m_currentPath.clear();
-            m_currentPathIndex = 0;
-        }
-        return;
-    }
-
     if (!m_currentPath.empty() && m_currentPathIndex < m_currentPath.size()) {
         sf::Vector2f nextWaypoint = m_currentPath[m_currentPathIndex];
-        sf::Vector2f directionToWaypoint = nextWaypoint - getPosition();
-        float distanceToWaypoint = std::hypot(directionToWaypoint.x, directionToWaypoint.y);
+        sf::Vector2f direction = nextWaypoint - getPosition();
+        float distanceToWaypoint = std::hypot(direction.x, direction.y);
 
-        if (distanceToWaypoint > 0.01f) {
-            sf::Vector2f normalizedDirection = directionToWaypoint / distanceToWaypoint;
-            float moveStep = m_currentSpeed * dt;
+        if (distanceToWaypoint > 0.01f)
+            direction /= distanceToWaypoint;
 
-            sf::Vector2f nextPosCandidate;
-            bool advancingToNext = false;
+        sf::Vector2f currentPos = getPosition();
+        float moveStep = m_currentSpeed * dt;
+        sf::Vector2f nextPosCandidate = currentPos + direction * std::min(moveStep, distanceToWaypoint);
 
-            if (distanceToWaypoint <= moveStep) {
-                // If there is a next waypoint, use Bezier
-                if (m_currentPathIndex + 1 < m_currentPath.size()) {
-                    m_bezierP0 = getPosition();
-                    m_bezierP2 = m_currentPath[m_currentPathIndex + 1];
-
-                    // Control point in direction of movement with slight curve
-                    sf::Vector2f dir = nextWaypoint - m_bezierP0;
-                    sf::Vector2f normal(-dir.y, dir.x); // Perpendicular
-                    m_bezierP1 = nextWaypoint + normal * 10.f; // Curve strength
-
-                    m_bezierT = 0.f;
-                    m_usingBezier = true;
-                    return;
-                }
-                else {
-                    // No next waypoint, just snap
-                    nextPosCandidate = nextWaypoint;
-                    advancingToNext = true;
-                }
-            }
-            else {
-                nextPosCandidate = getPosition() + normalizedDirection * moveStep;
-            }
-
-            bool collision = CollisionUtils::isInsideBlockedPolygon(nextPosCandidate, m_gameManager.getBlockedPolyTree());
-            if (!collision) {
-                Vehicle::setPosition(nextPosCandidate);
-
-                float targetAngle = std::atan2(normalizedDirection.y, normalizedDirection.x) * 180.f / M_PI + 90.f;
-                float currentAngle = Vehicle::getSprite().getRotation();
-                float angleDiff = targetAngle - currentAngle;
-                while (angleDiff > 180.f) angleDiff -= 360.f;
-                while (angleDiff < -180.f) angleDiff += 360.f;
-
-                float maxRotationPerFrame = 90.f * dt;
-                if (std::abs(angleDiff) < maxRotationPerFrame) {
-                    Vehicle::getSprite().setRotation(targetAngle);
-                }
-                else {
-                    Vehicle::getSprite().rotate((angleDiff > 0.f ? 1.f : -1.f) * maxRotationPerFrame);
-                }
-
-                if (advancingToNext || distanceToWaypoint < TARGET_REACHED_DISTANCE) {
-                    m_currentPathIndex++;
-                    if (m_currentPathIndex >= m_currentPath.size()) {
-                        m_currentPath.clear();
-                        if (m_tankState == TankState::Retreating) {
-                            m_readyForCleanup = true;
-                        }
-                    }
-                }
-            }
-            else {
+        // ????? ??????? ????? ?? ??????? ??????
+        bool collision = false;
+        for (const auto& poly : blockedPolygons) {
+            if (CollisionUtils::pointInPolygon(nextPosCandidate, poly)) {
+                collision = true;
                 m_currentPath.clear();
                 m_currentPathIndex = 0;
+                break;
             }
         }
-    }
-    else if (m_currentPath.empty() && m_tankState == TankState::Retreating) {
-        m_readyForCleanup = true;
+
+        if (!collision) {
+            setPosition(nextPosCandidate);
+            Vehicle::getSprite().setPosition(nextPosCandidate);
+
+            // ????? ????? ?????
+            if (distanceToWaypoint > 0.01f) {
+                float angle = std::atan2(direction.y, direction.x) * 180.f / M_PI;
+                Vehicle::getSprite().setRotation(angle + 90.f); // 90 ????? ?? ?????? ???? ????
+            }
+        }
+
+        if (distanceToWaypoint < TARGET_REACHED_DISTANCE) {
+            m_currentPathIndex++;
+        }
     }
 }
 
@@ -365,7 +302,7 @@ void PoliceTank::aimAndFire(Player& player, float dt) {
 
     float turretRotationThisFrame = m_turretRotationSpeed * dt;
     if (std::abs(turretAngleDiff) < turretRotationThisFrame) {
-       // m_turretSprite.setRotation(targetTurretAngle);
+        // m_turretSprite.setRotation(targetTurretAngle);
     }
     else {
         m_turretSprite.rotate(turretAngleDiff > 0 ? turretRotationThisFrame : -turretRotationThisFrame);

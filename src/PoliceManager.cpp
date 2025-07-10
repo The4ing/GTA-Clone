@@ -312,7 +312,7 @@ void PoliceManager::updatePoliceHelicopters(float dt, Player& player, const std:
         }),
         m_policeHelicopters.end());
 
-    m_numSeeingPlayer = 0; // reset count
+ //   m_numSeeingPlayer = 0; // reset count
     for (const auto& heli : m_policeHelicopters) {
         if (!heli->isDestroyed() && heli->canSeePlayer(player, blockedPolygons)) {
             m_numSeeingPlayer++;

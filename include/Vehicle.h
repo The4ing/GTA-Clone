@@ -59,6 +59,9 @@ public:
     bool isDestroyed() const;
     void setDestroyed(bool value);
 
+    // Indicates if the derived class handles its own AI rotation, preventing generic Vehicle AI rotation.
+    virtual bool handlesOwnAIRotation() const { return false; }
+
 protected:
     bool destroyed = false;
 

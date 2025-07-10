@@ -79,4 +79,10 @@ private:
 
     // Base speed for the tank, analogous to m_speed in PoliceCar
     float m_baseSpeed = 10.f; // Renamed from m_speed to avoid confusion if Vehicle::speed is used differently
+
+    enum class MovementAxis { None, Horizontal, Vertical };
+    MovementAxis m_previousMovementAxis = MovementAxis::None;
+    bool m_wasUsingBezierLastFrame = false; // For logging Bezier starts
+
+    bool handlesOwnAIRotation() const override { return true; }
 };

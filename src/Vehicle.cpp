@@ -116,7 +116,8 @@ void Vehicle::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blo
         sprite.setRotation(angle);
     }
     else {
-        if (!parking) {
+        // AI straight movement logic, only if derived class doesn't handle its own rotation
+        if (!parking && !handlesOwnAIRotation()) {
             // AI straight movement logic from first function
             sf::Vector2f dir = directionVec;
             float len = std::sqrt(dir.x * dir.x + dir.y * dir.y);
