@@ -137,34 +137,38 @@ void Store::drawUI(sf::RenderTarget& target) {
 void Store::handleInput(Player& player, const sf::RenderWindow& window) {
     if (!isOpen) return;
 
+    // ← אם הלחצן לחוץ
     if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-        sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-        sf::Vector2f worldPos = window.mapPixelToCoords(mousePos); // תמיכה בזום וכו'
+        if (!mouseHeld) {  // רק אם זו הלחיצה הראשונה
+            mouseHeld = true;
 
-        for (const auto& item : items) {
-            sf::FloatRect clickableArea(
-                position.x + item.area.left,
-                position.y + item.area.top,
-                item.area.width,
-                item.area.height
-            );
+            sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+            sf::Vector2f worldPos = window.mapPixelToCoords(mousePos);
 
-            if (clickableArea.contains(worldPos)) {
-                std::cout << player.getMoney() <<  item.price << "\n";
-                if (player.getMoney() >= item.price) {
-                    item.action(player);
-                    std::cout << "Purchased: " << item.name << "\n";
+            for (const auto& item : items) {
+                sf::Vector2f itemPos = Inv.getPosition() + sf::Vector2f(item.area.left - Inv.getOrigin().x, item.area.top - Inv.getOrigin().y);
+                sf::FloatRect itemBounds(itemPos, sf::Vector2f(item.area.width, item.area.height));
+
+                if (itemBounds.contains(worldPos)) {
+                    std::cout << player.getMoney() << " " << item.price << "\n";
+                    if (player.getMoney() >= item.price) {
+                        item.action(player);
+                        std::cout << "Purchased: " << item.name << "\n";
+                    }
+                    else {
+                        std::cout << "Not enough money for: " << item.name << "\n";
+                    }
+                    break;
                 }
-                else {
-                    std::cout << "Not enough money for: " << item.name << "\n";
-                }
-                break;
             }
         }
     }
-
-   
+    else {
+        // ← העכבר שוחרר, אפשר לאפשר לחיצה הבאה
+        mouseHeld = false;
+    }
 }
+
 void Store::setIsOpen(bool opt) {
 
     isOpen = opt;
