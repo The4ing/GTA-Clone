@@ -290,11 +290,16 @@ void PoliceTank::updateTankMovementAsCar(float dt, Player& player, const std::ve
 
 void PoliceTank::aimAndFire(Player& player, float dt) {
     sf::Vector2f playerPos = player.getPosition();
-    sf::Vector2f directionToPlayer = playerPos - getPosition();
+    // Use turret position for precise aiming
+    sf::Vector2f turretPos = m_turretSprite.getPosition();
+    sf::Vector2f directionToPlayer = playerPos - turretPos;
     float distanceToPlayer = std::hypot(directionToPlayer.x, directionToPlayer.y);
 
     // Turret rotation
-    float targetTurretAngle = std::atan2(directionToPlayer.y, directionToPlayer.x) * 180.f / M_PI +110;
+    float targetTurretAngle = std::atan2(directionToPlayer.y, directionToPlayer.x) * 180.f / M_PI;
+    targetTurretAngle += 90.f;
+    if (targetTurretAngle < 0.f)
+        targetTurretAngle += 360.f;
 
     float currentTurretAngle = m_turretSprite.getRotation();
     float turretAngleDiff = targetTurretAngle - currentTurretAngle;
@@ -341,7 +346,24 @@ void PoliceTank::aimAndFire(Player& player, float dt) {
 
         m_gameManager.addBullet(projectileSpawnPos, fireDirection, BulletType::TankShell); // Use TankShell type
         m_cannonCooldownTimer = CANNON_FIRE_RATE;
+
+
     }
+    // --- DEBUG INFO ---
+    std::cout << "[Turret Debug] TurretPos: ("
+        << turretPos.x << ", " << turretPos.y << "), PlayerPos: ("
+        << playerPos.x << ", " << playerPos.y << ")\n";
+
+    std::cout << "DirectionToPlayer: ("
+        << directionToPlayer.x << ", " << directionToPlayer.y << "), Distance: "
+        << distanceToPlayer << "\n";
+
+    std::cout << "TargetTurretAngle: " << targetTurretAngle
+        << ", CurrentTurretAngle: " << currentTurretAngle
+        << ", AngleDiff: " << turretAngleDiff << "\n";
+
+
+
 }
 
 void PoliceTank::draw(sf::RenderTarget& target) {
