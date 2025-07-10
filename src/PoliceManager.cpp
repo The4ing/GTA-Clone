@@ -414,7 +414,7 @@ void PoliceManager::managePolicePopulation(int wantedLevel, const sf::Vector2f& 
         m_desiredPistolOfficers = 5;//5
         m_desiredPoliceCars = 3;//3
         m_desiredPoliceHelicopters = 2;//2
-        m_desiredPoliceTanks = 3;//change to 1...
+        m_desiredPoliceTanks = 1;//change to 1...
         m_desiredBatonOfficers = 0;
         break;
     default: // For wanted levels > 5

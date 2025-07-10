@@ -82,20 +82,27 @@ void PoliceTank::update(float dt, Player& player, const std::vector<std::vector<
     Vehicle::update(dt, blockedPolygons); // Base vehicle update (if any)
 
     updateAIBehavior(dt, player, blockedPolygons);
-    aimAndFire(player, dt);
+    //aimAndFire(player, dt);
+
 
     if (m_cannonCooldownTimer > 0.f) {
         m_cannonCooldownTimer -= dt;
     }
 
-    const sf::Vector2f turretOffset(34.f, -23.f); // ????? ?? ??????? ??? ?????
-    m_turretSprite.setPosition(getPosition() + turretOffset);
+    const sf::Vector2f turretOffset(34.f, -23.f); // Offset from tank centre to turret origin
 
-    // ???? ?? ????? ???? ?????
-    sf::Vector2f directionToPlayerForTurret = player.getPosition() - m_turretSprite.getPosition();
-    float angleRadians = std::atan2(directionToPlayerForTurret.y, directionToPlayerForTurret.x);
-    float angleDegrees = angleRadians * 180.f / 3.14159f;
-    m_turretSprite.setRotation(angleDegrees);
+    // Rotate the offset by the tank body's current rotation so the turret stays aligned
+    float bodyRotationRad = Vehicle::getSprite().getRotation() * 3.14159f / 180.f;
+    sf::Vector2f rotatedOffset(
+        turretOffset.x * std::cos(bodyRotationRad) - turretOffset.y * std::sin(bodyRotationRad),
+        turretOffset.x * std::sin(bodyRotationRad) + turretOffset.y * std::cos(bodyRotationRad)
+    );
+    m_turretSprite.setPosition(getPosition() + rotatedOffset);
+    std::cout << "Tank Position: ("
+        << getPosition().x << ", "
+        << getPosition().y << ")" << std::endl;
+    // Aim and potentially fire after updating the turret's position so rotation smoothing uses the correct origin
+    aimAndFire(player, dt);
 
     // Despawn check (moved from the end of updateAIBehavior to general update)
     if (m_tankState == TankState::Retreating && !m_readyForCleanup) { // only check if retreating and not already marked
@@ -225,75 +232,78 @@ void PoliceTank::updateAIBehavior(float dt, Player& player, const std::vector<st
 void PoliceTank::updateTankMovementAsCar(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     // If chasing and has LOS and is close enough, don't move.
     if (m_tankState == TankState::Chasing && m_hasLineOfSightToPlayer && m_distanceToPlayer <= STOP_DISTANCE) {
-        m_currentSpeed = 0; // Stop
-        // Vehicle's update might still apply friction or other effects, so ensure speed is actively zeroed.
-        // Or, simply return here if no other movement logic (like rotation towards target) is desired while stopped.
+        m_currentSpeed = 0;
         return;
     }
-    m_currentSpeed = m_baseSpeed; // Restore speed if not stopped by LOS/distance condition.
+
+    m_currentSpeed = m_baseSpeed;
 
     if (!m_currentPath.empty() && m_currentPathIndex < m_currentPath.size()) {
         sf::Vector2f nextWaypoint = m_currentPath[m_currentPathIndex];
         sf::Vector2f directionToWaypoint = nextWaypoint - getPosition();
         float distanceToWaypoint = std::hypot(directionToWaypoint.x, directionToWaypoint.y);
 
-        if (distanceToWaypoint > 0.01f) { // If not already very close to waypoint
-            sf::Vector2f normalizedDirection = directionToWaypoint / distanceToWaypoint; // Normalize
-
-            // --- Movement ---
-            sf::Vector2f currentPos = getPosition();
+        if (distanceToWaypoint > 0.01f) {
+            sf::Vector2f normalizedDirection = directionToWaypoint / distanceToWaypoint;
             float moveStep = m_currentSpeed * dt;
-            sf::Vector2f nextPosCandidate = currentPos + normalizedDirection * std::min(moveStep, distanceToWaypoint);
 
-            // Collision check: For tank, using isInsideBlockedPolygon might be better than pointInPolygon.
-            // We can check the four corners of the tank's sprite.
-            // This requires getting sprite bounds and transforming points.
-            // For simplicity and closer match to PoliceCar, let's try a simpler check first,
-            // or adapt the existing Vehicle collision if it's robust.
-            // The Vehicle::update already has some collision logic for player-controlled vehicles.
-            // Here, we do a basic check for the new position.
+            sf::Vector2f nextPosCandidate;
+            bool advancingToNext = false;
 
-            bool collision = false;
-            // Use the QuadTree for collision checking, consistent with LOS
-            // Check a point slightly ahead, or use the vehicle's bounding box.
-            // For now, a simple point check for the next position:
-            if (CollisionUtils::isInsideBlockedPolygon(nextPosCandidate, m_gameManager.getBlockedPolyTree())) {
-                collision = true;
+            if (distanceToWaypoint <= moveStep) {
+                // Snap to waypoint directly and mark for next step
+                nextPosCandidate = nextWaypoint;
+                advancingToNext = true;
+            }
+            else {
+                nextPosCandidate = getPosition() + normalizedDirection * moveStep;
+            }
+
+            bool collision = CollisionUtils::isInsideBlockedPolygon(nextPosCandidate, m_gameManager.getBlockedPolyTree());
+            if (!collision) {
+                Vehicle::setPosition(nextPosCandidate);
+
+                float targetAngle = std::atan2(normalizedDirection.y, normalizedDirection.x) * 180.f / M_PI + 90.f;
+                float currentAngle = Vehicle::getSprite().getRotation();
+
+                // ???? ????? ???? ??? -180 ?-180
+                float angleDiff = targetAngle - currentAngle;
+                while (angleDiff > 180.f) angleDiff -= 360.f;
+                while (angleDiff < -180.f) angleDiff += 360.f;
+
+                // ????? — ??? ????? ????? ?? ????? (????? ???????)
+                float maxRotationPerFrame = 90.f * dt; // ???? ????? ??60 ?? 120 ??? ??? ?? ??? ????
+
+                if (std::abs(angleDiff) < maxRotationPerFrame) {
+                    Vehicle::getSprite().setRotation(targetAngle); // ???? ????? — ????? ??????
+                }
+                else {
+                    Vehicle::getSprite().rotate((angleDiff > 0 ? 1.f : -1.f) * maxRotationPerFrame);
+                }
+
+
+                if (advancingToNext || distanceToWaypoint < TARGET_REACHED_DISTANCE) {
+                    m_currentPathIndex++;
+                    if (m_currentPathIndex >= m_currentPath.size()) {
+                        m_currentPath.clear();
+                        if (m_tankState == TankState::Retreating) {
+                            m_readyForCleanup = true;
+                        }
+                    }
+                }
+            }
+            else {
+                // Collision encountered, clear path
                 m_currentPath.clear();
                 m_currentPathIndex = 0;
-                // m_currentTargetPosition = sf::Vector2f(-1.f, -1.f); // Indicate path failure if needed by other logic
-                // std::cout << "PoliceTank: Collision with blocked polygon, clearing path." << std::endl;
-            }
-
-
-            if (!collision) {
-                Vehicle::setPosition(nextPosCandidate); // This should update Vehicle's position and sprite
-
-                // Update rotation to face the direction of movement
-                // (Sprite's front is assumed to be 'up', so +90 degrees)
-                float angle = std::atan2(normalizedDirection.y, normalizedDirection.x) * 180.f / M_PI;
-                Vehicle::getSprite().setRotation(angle + 90.f);
-            }
-        }
-
-        if (distanceToWaypoint < TARGET_REACHED_DISTANCE) { // Reached waypoint
-            m_currentPathIndex++;
-            if (m_currentPathIndex >= m_currentPath.size()) {
-                m_currentPath.clear(); // Path completed
-                if (m_tankState == TankState::Retreating) {
-                    m_readyForCleanup = true; // If it was a retreat path, mark for cleanup.
-                }
             }
         }
     }
     else if (m_currentPath.empty() && m_tankState == TankState::Retreating) {
-        // No path to retreat, or path finished, and it's trying to retreat.
-        // Check if already off-screen (done in main update), otherwise it might be stuck.
-        // For now, if no path and retreating, it will just sit there until the off-screen check cleans it up.
-        // Or, more proactively:
-        m_readyForCleanup = true; // If retreating and no path, assume it's done or stuck.
+        m_readyForCleanup = true;
     }
 }
+
 
 
 void PoliceTank::aimAndFire(Player& player, float dt) {
@@ -310,7 +320,7 @@ void PoliceTank::aimAndFire(Player& player, float dt) {
 
     float turretRotationThisFrame = m_turretRotationSpeed * dt;
     if (std::abs(turretAngleDiff) < turretRotationThisFrame) {
-        m_turretSprite.setRotation(targetTurretAngle);
+       // m_turretSprite.setRotation(targetTurretAngle);
     }
     else {
         m_turretSprite.rotate(turretAngleDiff > 0 ? turretRotationThisFrame : -turretRotationThisFrame);
