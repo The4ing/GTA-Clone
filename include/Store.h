@@ -40,6 +40,7 @@ private:
     sf::Font font;
     bool isOpen;
     bool PlayerClose;
+    bool mouseHeld = false; // חדש
     sf::Sprite icon;
     sf::Sprite Inv;
 };
