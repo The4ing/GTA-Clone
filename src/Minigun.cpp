@@ -9,7 +9,4 @@ std::string Minigun::getType() const {
     return "Minigun";
 }
 
-int Minigun::getPrice() const
-{
-    return 0;
-}
+
