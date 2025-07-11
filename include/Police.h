@@ -94,6 +94,8 @@ private:
 
     GameManager& m_gameManager;
 
+   
+
 
     float fireCooldownTimer = 0.f;
     const float PISTOL_FIRE_RATE = 1.5f; 

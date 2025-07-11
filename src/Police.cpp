@@ -13,6 +13,8 @@
 #include <vector>
 #include "SoundManager.h"
 
+
+
 Police::Police(GameManager & gameManager, PoliceWeaponType weaponType) :
     m_gameManager(gameManager),
     m_weaponType(weaponType), // Initialize weapon type
@@ -54,7 +56,7 @@ Police::Police(GameManager & gameManager, PoliceWeaponType weaponType) :
     animationManager = std::make_unique<AnimationManager>(sprite, frameWidth, frameHeight, sheetCols, sheetRows);
     initAnimations(); // Call after animationManager is created
 
-    setRandomWanderDestination(MAP_BOUNDS); // MAP_BOUNDS needs to be accessible
+    setRandomWanderDestination(MAP_BOUNDS); //MAP_BOUNDS needs to be accessible
 }
 
 void Police::handleShooting(Player& player, float dt) {
@@ -484,6 +486,8 @@ void Police::takeDamage(int amount) {
     "Death1", "Death2", "Death3", "Death4" };
         SoundManager::getInstance().playRandomSound(deathSounds, 0.95f, 1.05f);
         dying = true;
+       
+
         deathTimer = 0.f;
         animationManager->setAnimation("Dying", false);
     }

@@ -91,7 +91,7 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
             continue;
 
       //  switch (type) {
-    switch (type) {
+    switch (4) {
         case 0:
                 result.push_back(std::make_unique<HealthPresent>(
                     ResourceManager::getInstance().getTexture("Health"), pos));
@@ -111,7 +111,7 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
             break;
         case 4:
             result.push_back(std::make_unique<Minigun>(
-                ResourceManager::getInstance().getTexture("Minigun"), pos));
+                ResourceManager::getInstance().getTexture("Minigun"), sf::Vector2f(70.f, 70.f)));
             break;
         case 5:
             result.push_back(std::make_unique<Bazooka>(
@@ -130,7 +130,7 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
             break;
         case 8:
           result.push_back(std::make_unique<Money>(
-               ResourceManager::getInstance().getTexture("Money"), sf::Vector2f(70.f, 70.f)));
+               ResourceManager::getInstance().getTexture("Money"), pos));
 
      break;
 

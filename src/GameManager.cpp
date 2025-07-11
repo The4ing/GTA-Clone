@@ -408,6 +408,7 @@ void GameManager::renderFrozenGame(sf::RenderTarget& target) {
         pedestrianManager->draw(target);
     for (auto& present : presents)
         present->draw(target);
+    
     for (auto& s : store)
         s->drawUI(target);
     for (const auto& bullet_ptr : bulletPool.getAllBullets()) { // Draw bullets from pool
@@ -434,14 +435,40 @@ void GameManager::update(float dt) {
         if (carManager)
             carManager->update(dt, blockedPolygons);
 
-        if (policeManager)
+        if (policeManager) {
+            for (const auto& p : policeManager->getPoliceOfficers()) {
+                if (p->isDead()) {
+                    auto money = std::make_unique<Money>(
+                        ResourceManager::getInstance().getTexture("Money"), p->getPosition());
+                    money->setTempMoney(true);
+                    presents.push_back(std::move(money)); 
+                }
+            }
             policeManager->update(dt, *player, blockedPolygons);
+        }
+
+            
 
         if (pedestrianManager)
             pedestrianManager->update(dt, blockedPolygons);
 
-        for (auto& present : presents)
+        // קודם כל, עדכון כל הפרזנטס
+        for (auto& present : presents) {
             present->update(dt, blockedPolygons);
+        }
+
+        
+        presents.erase(std::remove_if(presents.begin(), presents.end(),
+            [](const std::unique_ptr<Present>& present) {
+                if (auto money = dynamic_cast<Money*>(present.get())) {
+                    return money->getTempMoney() && money->isExpired();
+                }
+                return false;
+            }), presents.end());
+
+
+
+           
 
         std::vector<Pedestrian*> npcPtrs;
         if (pedestrianManager) {
@@ -450,9 +477,12 @@ void GameManager::update(float dt) {
         }
         std::vector<Police*> policePtrs;
         if (policeManager) {
-            for (const auto& p : policeManager->getPoliceOfficers())
-                policePtrs.push_back(p.get());
+            for (const auto& p : policeManager->getPoliceOfficers()) {
+                
+               policePtrs.push_back(p.get());
+            }
         }
+
         std::vector<Vehicle*> carPtrs;
         if (carManager) {
             for (auto& vPtr : carManager->getVehicles())
@@ -497,6 +527,8 @@ void GameManager::update(float dt) {
                 //}
             }
         }
+
+        
     }
 
     // --- 3. Camera follow player or vehicle ---
@@ -520,6 +552,7 @@ void GameManager::update(float dt) {
             player->onCollision(*present);  // Double Dispatch
         }
     }
+   
 
     // --- 5. HUD Update ---
     if (m_hud && currentState == GameState::Playing) {

@@ -18,6 +18,8 @@
 #include "PatrolZone.h" 
 #include "PauseMenu.h" // Added PauseMenu include
 #include "PlayerShooter.h"
+#include "Money.h"
+
 
 enum class GameState {
     Menu,
@@ -79,6 +81,8 @@ private:
     std::unique_ptr<PedestrianManager> pedestrianManager;
     std::unique_ptr<PathfindingGrid> pathfindingGrid;
     std::vector<std::unique_ptr<Present>> presents;
+    
+
     GameState                   currentState;
     sf::Clock                   clock;
     sf::Time                    m_gameTime;
