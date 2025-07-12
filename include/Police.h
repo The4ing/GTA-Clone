@@ -28,89 +28,93 @@ class GameManager;
 class Police : public Character {
 public:
     Police(GameManager& gameManager, PoliceWeaponType weaponType);
+
     void setPatrolZone(PatrolZone* zone); 
-        PatrolZone* getPatrolZone() const;
+    PatrolZone* getPatrolZone() const;
+    PoliceWeaponType getWeaponType() const;
+
+    void update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
+    void draw(sf::RenderTarget& window);
+
+
+    void setTargetPosition(const sf::Vector2f& pos);
+    void takeDamage(int amount);
+    void startRetreating(const sf::Vector2f& retreatTarget);
 
     bool canSeePlayer(const Player& player, const std::vector<std::vector<sf::Vector2f>>& obstacles);
-    void update(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     bool moveToward(const sf::Vector2f& target, float dt);
-    void draw(sf::RenderTarget& window);
-    void startRetreating(const sf::Vector2f& retreatTarget); 
-    bool isRetreating() const { return state == PoliceState::Retreating; }
-    bool needsCleanup = false; // Flag to mark for removal after retreating
-    bool dying = false;
-    float deathTimer = 0.f;
-    const float deathDuration = 1.f;
-    void takeDamage(int amount);
+    bool isRetreating() const;
     bool isDead() const;
+   
+  
+   
+    sf::FloatRect getCollisionBounds() const;
+    sf::Vector2f getPosition() const override;
+    void setPosition(const sf::Vector2f& pos) override;
+    bool getMoneyDropped() const;
+    void setMoneyDropped(bool change);
+    bool getNeedsCleanup() const;
+    void setNeedsCleanup(bool change);
+    
 
     float getCollisionRadius() const;
-    sf::FloatRect getCollisionBounds() const;
-    void setTargetPosition(const sf::Vector2f& pos); 
-
-    sf::Vector2f getPosition() const override {
-        return sprite.getPosition();
-    }
-    void setPosition(const sf::Vector2f& pos) override {
-        sprite.setPosition(pos);
-    }
-
-    PoliceWeaponType getWeaponType() const { return m_weaponType; } 
-
     void onCollision(GameObject& other) {};
     void collideWithPresent(Present& present) {};
     void collideWithPlayer(Player& /*player*/) {}
-    void setIsStatic(bool isStatic) { m_isStatic = isStatic; }
-    bool isStatic() const { return m_isStatic; }
+    void setIsStatic(bool isStatic);
+    bool isStatic() const;
  
 
 private:
     void setRandomWanderDestination(const sf::FloatRect& mapBounds);
     bool checkCollision(const sf::Vector2f& currentPos, const sf::Vector2f& nextPos, float radius);
     // bool pointInPolygonWithRadius(const sf::Vector2f& center, float radius, const std::vector<sf::Vector2f>& poly); //  unused for now
-    float debugPrintTimer = 0.f; // for debugging
-    float pathFailCooldown = 0.f;
+    
+    float debugPrintTimer ; // for debugging
+    float pathFailCooldown ;
+    float speed ;
+    int health ;
+    float detectionRadius;
+    float backUpDistance;
+    float backedUpSoFar ;
+    float pauseTimer ;
+    float nextPauseTime ;
+    float repathTimer ;
+    float fireCooldownTimer ;
+    float meleeCooldownTimer;
+    float m_visionDistance;
+    float m_fieldOfViewAngle;
+    float deathTimer ;
+    const float deathDuration = 1.f;
+
+    bool m_isStatic;
+    bool moneyDropped;
+    bool isPaused ;
+    bool needsCleanup;
+    bool dying;
 
     sf::Vector2f targetPos; 
     sf::Sprite sprite;
-    float speed = 40.f; 
-    float detectionRadius = 150.f; 
-    int health = 100;
-    PoliceState state = PoliceState::Idle;
-    PoliceWeaponType m_weaponType;
-    float backUpDistance = 30.f;
-    float backedUpSoFar = 0.f;
     sf::Vector2f backUpDirection;
     sf::Vector2f wanderDestination;
-    float pauseTimer = 0.f;
-    float nextPauseTime = 0.f;
-    bool isPaused = false;
+    sf::Vector2f pathTargetPosition;
+
+
+    PoliceState state = PoliceState::Idle;
+    PoliceWeaponType m_weaponType;
+   
 
     Pathfinder pathfinder;
     std::vector<sf::Vector2f> currentPath;
-    size_t currentPathIndex = 0;
-    float repathTimer = 0.f;
-    sf::Vector2f pathTargetPosition; 
-
+    size_t currentPathIndex ;
+   
+   
     GameManager& m_gameManager;
 
    
-
-
-    float fireCooldownTimer = 0.f;
-    const float PISTOL_FIRE_RATE = 1.5f; 
-    const float PISTOL_SHOOTING_RANGE = 200.f; 
-    const float PISTOL_LINE_OF_SIGHT_RANGE = 250.f; 
-
-
-    float meleeCooldownTimer = 0.f;
-    const float BATON_MELEE_RATE = 1.0f; 
-    const float BATON_MELEE_RANGE = 40.f; 
-    const int BATON_DAMAGE = 10;
-
     std::unique_ptr<AnimationManager> animationManager;
-    int sheetCols = 10; 
-    int sheetRows = 10;
+    int sheetCols ; 
+    int sheetRows ;
     int frameWidth;
     int frameHeight;
 
@@ -120,15 +124,12 @@ private:
     void handleMeleeAttack(Player& player, float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
 
     PatrolZone* m_assignedZone = nullptr;
-    float radarTimer = 0.f;          // סופר את הזמן שהרדאר מוצג
-    float radarCooldown = 0.f;       // סופר את הזמן בין הפעלות
-    bool showRadar = false;
+    float radarTimer ;          // סופר את הזמן שהרדאר מוצג
+    float radarCooldown ;       // סופר את הזמן בין הפעלות
+    bool showRadar;
     sf::Vector2f lastSeenPlayerPosition{}; // Stores player's position when radar activates
 
-        // Vision parameters
-    float m_visionDistance = 200.f;
-    float m_fieldOfViewAngle = 120.f; // Degrees
-    bool m_isStatic = false; // Flag to mark static police unitsAdd commentMore actions
+      
 
 };
 

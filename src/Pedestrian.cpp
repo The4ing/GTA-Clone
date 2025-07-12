@@ -6,7 +6,13 @@
 #include "CollisionUtils.h"
 #include "SoundManager.h"
 
-Pedestrian::Pedestrian(sf::Vector2f pos) : position(pos) {
+Pedestrian::Pedestrian(sf::Vector2f pos) : position(pos),
+idleTimer(0.f), idleDurationMin(1.f), idleDurationMax(3.f), idleProbability(0.15f) , 
+speed(50.f), animationTimer(90.f), timeSinceLastDirectionChange(0.f), backupProgress(0.f),
+deathTimer(0.f), health(100), characterRow(0), currentFrame(0), isBackingUp(false), 
+dying(false), remove(false), isIdle(false), moneyDropped(false)
+
+{
     sprite.setTexture(ResourceManager::getInstance().getTexture("pedestrian"));
     characterRow = rand() % numCharacters;
     currentFrame = 0;
@@ -25,6 +31,16 @@ void Pedestrian::startBackingUp() {
 
 bool Pedestrian::getIsBackingUp() const {
     return isBackingUp;
+}
+
+bool Pedestrian::getMoneyDropped() const
+{
+    return moneyDropped;
+}
+
+void Pedestrian::setMoneyDropped(bool change) 
+{
+    moneyDropped = change;
 }
 
 void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
@@ -241,4 +257,9 @@ void Pedestrian::takeDamage(float amount) {
 
 bool Pedestrian::isDead() const {
     return health <= 0;
+}
+
+bool Pedestrian::shouldRemove() const
+{
+    return remove;
 }

@@ -318,9 +318,9 @@ void GameManager::processEvents() {
                         if (closestOverallVehicle) {
                             PoliceCar* policeCar = dynamic_cast<PoliceCar*>(closestOverallVehicle);
                             if (policeCar && player->getWantedLevel() < 3) {
-                                if (!policeCar->m_playerCausedWantedIncrease) {
+                                if (!policeCar->getPlyrCausedWantedIncrease()) {
                                     player->setWantedLevel(3);
-                                    policeCar->m_playerCausedWantedIncrease = true;
+                                    policeCar->setPlyrCausedWantedIncrease(true);
                                 }
                                 policeCar->setIsAmbient(false);
                             }
@@ -437,7 +437,8 @@ void GameManager::update(float dt) {
 
         if (policeManager) {
             for (const auto& p : policeManager->getPoliceOfficers()) {
-                if (p->isDead()) {
+                if (p->isDead() && !p->getMoneyDropped()) {
+                    p->setMoneyDropped(true);
                     auto money = std::make_unique<Money>(
                         ResourceManager::getInstance().getTexture("Money"), p->getPosition());
                     money->setTempMoney(true);
@@ -450,9 +451,18 @@ void GameManager::update(float dt) {
             
 
         if (pedestrianManager)
+            for (auto& ped : pedestrianManager->getPedestrians()) {
+                if (ped->isDead() && !ped->getMoneyDropped()) {
+                    ped->setMoneyDropped(true);
+                    auto money = std::make_unique<Money>(
+                        ResourceManager::getInstance().getTexture("Money"), ped->getPosition());
+                    money->setTempMoney(true);
+                    presents.push_back(std::move(money));
+                }
+
+            }
             pedestrianManager->update(dt, blockedPolygons);
 
-        // קודם כל, עדכון כל הפרזנטס
         for (auto& present : presents) {
             present->update(dt, blockedPolygons);
         }

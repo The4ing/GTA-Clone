@@ -22,7 +22,14 @@ Police::Police(GameManager & gameManager, PoliceWeaponType weaponType) :
     state(PoliceState::Idle),
     currentPathIndex(0), repathTimer(0.f), pathFailCooldown(0.f),
     fireCooldownTimer(0.f), meleeCooldownTimer(0.f),
-    m_assignedZone(nullptr) // Initialize assigned zone
+    m_assignedZone(nullptr), moneyDropped(false),  isPaused(false),
+    needsCleanup(false), debugPrintTimer(0.f), speed(40.f),
+    health(100),detectionRadius(150.f), backUpDistance(30.f), backedUpSoFar(0.f),
+    pauseTimer(0.f), nextPauseTime(0.f), sheetCols(10), sheetRows(10), radarTimer(0.f),
+    radarCooldown(0.f), showRadar(false), m_visionDistance(200.f), m_fieldOfViewAngle(120.f),
+     m_isStatic(false), dying(false), deathTimer(0.f)
+
+    // Initialize assigned zone
     // animationTimer(0.f), animationSpeed(0.005f), currentFrame(0) // Likely handled by AnimationManager
 {
     if (!gameManager.getPathfindingGrid()) {
@@ -450,6 +457,11 @@ bool Police::moveToward(const sf::Vector2f& target, float dt) {
     return false; // No collision
 }
 
+bool Police::isRetreating() const
+{
+    return state == PoliceState::Retreating;
+}
+
 
 
 void Police::draw(sf::RenderTarget& window) {
@@ -502,6 +514,43 @@ bool Police::isDead() const {
     return health <= 0;
 }
 
+PoliceWeaponType Police::getWeaponType() const
+{
+    return m_weaponType;
+}
+
+sf::Vector2f Police::getPosition() const
+{
+    return sprite.getPosition();
+}
+
+void Police::setPosition(const sf::Vector2f& pos)
+{
+    sprite.setPosition(pos);
+}
+
+bool Police::getMoneyDropped() const
+{
+    return moneyDropped;
+}
+
+void Police::setMoneyDropped(bool change)
+{
+    moneyDropped = change;
+}
+
+bool Police::getNeedsCleanup() const
+{
+    return needsCleanup;
+}
+
+void Police::setNeedsCleanup(bool change)
+{
+    needsCleanup = change;
+}
+
+
+
 float Police::getCollisionRadius() const {
     // Effective radius after scaling. Original frameWidth * scale / 2
     return (frameWidth * sprite.getScale().x) / 2.0f * 0.8f; // 0.8f is an adjustment factor
@@ -521,6 +570,15 @@ void Police::setTargetPosition(const sf::Vector2f& pos) {
         // currentPath.clear(); // If player moves, old path is invalid
         // currentPathIndex = 0;
     }
+}
+
+void Police::setIsStatic(bool isStatic)
+{
+    m_isStatic = isStatic;
+}
+bool Police::isStatic() const
+{
+    return m_isStatic;
 }
 
 void Police::setRandomWanderDestination(const sf::FloatRect& mapBounds) {

@@ -8,7 +8,10 @@
 #include <random>
 
 PoliceHelicopter::PoliceHelicopter(GameManager& gameManager, const sf::Vector2f& startPosition)
-    : m_gameManager(gameManager), m_targetPosition(startPosition) {
+    : m_gameManager(gameManager), m_targetPosition(startPosition), m_isRetreating(false),
+     m_speed(60.f), m_rotationSpeed(90.f), m_health(200), m_altitude(100.f), m_fireCooldownTimer(0.f),
+    needsCleanup(false)
+{
 
     m_sprite.setTexture(ResourceManager::getInstance().getTexture("policeHelicopter")); // Placeholder texture name
     if (m_sprite.getTexture()) {
@@ -81,6 +84,16 @@ void PoliceHelicopter::startRetreating(const sf::Vector2f& target) {
     m_targetPosition = target;
 }
 
+bool PoliceHelicopter::getNeedsCleanup() const
+{
+    return needsCleanup;
+}
+
+void PoliceHelicopter::setNeedsCleanup(bool change)
+{
+    needsCleanup = change;
+}
+
 void PoliceHelicopter::updateMovement(float dt, const sf::Vector2f& targetPosition) {
     sf::Vector2f currentPosition = getPosition();
     sf::Vector2f toPlayer = targetPosition - currentPosition;
@@ -148,6 +161,11 @@ sf::Vector2f PoliceHelicopter::getPosition() const {
 void PoliceHelicopter::setPosition(const sf::Vector2f& pos) {
     m_sprite.setPosition(pos);
     // MovingObject::setPosition(pos); // If MovingObject base class tracks position
+}
+
+bool PoliceHelicopter::isRetreating() const
+{
+    return m_isRetreating;
 }
 
 bool PoliceHelicopter::isDestroyed() const {

@@ -153,7 +153,7 @@ void PoliceManager::spawnAmbientPoliceCarOnRoadSegment(const RoadSegment* road, 
     newPoliceCar->setCurrentLaneIndex(laneIndex);
 
     newPoliceCar->setIsAmbient(true);
-    newPoliceCar->m_playerCausedWantedIncrease = false; // Explicitly set, though it's the default
+    newPoliceCar->setPlyrCausedWantedIncrease(false) ; // Explicitly set, though it's the default
 
     m_policeCars.push_back(std::move(newPoliceCar));
     // std::cout << "Spawned AMBIENT Police Car at: (" << spawnPosition.x << ", " << spawnPosition.y << ")\n";
@@ -194,7 +194,7 @@ void PoliceManager::update(float dt, Player& player, const std::vector<std::vect
         }
     }
     m_staticPoliceOfficers.erase(std::remove_if(m_staticPoliceOfficers.begin(), m_staticPoliceOfficers.end(),
-        [](const std::unique_ptr<Police>& p) { return p->needsCleanup; }),
+        [](const std::unique_ptr<Police>& p) { return p->getNeedsCleanup(); }),
         m_staticPoliceOfficers.end());
 
     for (auto& car : m_staticPoliceCars) {
@@ -249,7 +249,7 @@ void PoliceManager::updatePoliceCars(float dt, Player& player, const std::vector
         }
     }
     m_policeCars.erase(std::remove_if(m_policeCars.begin(), m_policeCars.end(),
-        [](const std::unique_ptr<PoliceCar>& pc) { return pc->isDestroyed() || pc->needsCleanup; }), m_policeCars.end());
+        [](const std::unique_ptr<PoliceCar>& pc) { return pc->isDestroyed() || pc->getNeedsCleanup(); }), m_policeCars.end());
 
     for (const auto& car : m_policeCars) {
         if (!car->isDestroyed() && !car->isRetreating() && car->canSeePlayer(player, blockedPolygons)) { // Don't count retreating cars
@@ -268,7 +268,7 @@ void PoliceManager::updatePoliceOfficers(float dt, Player& player, const std::ve
         unit->update(dt, player, blockedPolygons);
     }
     m_policeOfficers.erase(std::remove_if(m_policeOfficers.begin(), m_policeOfficers.end(),
-        [](const std::unique_ptr<Police>& p) { return p->needsCleanup; }),
+        [](const std::unique_ptr<Police>& p) { return p->getNeedsCleanup(); }),
         m_policeOfficers.end());
 
     for (const auto& unit : m_policeOfficers) {
@@ -299,7 +299,7 @@ void PoliceManager::updatePoliceHelicopters(float dt, Player& player, const std:
             sf::Vector2f distVec = heli->getPosition() - viewCenter;
             float dist = std::sqrt(distVec.x * distVec.x + distVec.y * distVec.y);
             if (dist > cleanupDistance) {
-                heli->needsCleanup = true;
+                heli->setNeedsCleanup(true);
             }
         }
 
@@ -308,7 +308,7 @@ void PoliceManager::updatePoliceHelicopters(float dt, Player& player, const std:
 
     m_policeHelicopters.erase(std::remove_if(m_policeHelicopters.begin(), m_policeHelicopters.end(),
         [](const std::unique_ptr<PoliceHelicopter>& ph) {
-            return ph->isDestroyed() || ph->needsCleanup;
+            return ph->isDestroyed() || ph->getNeedsCleanup();
         }),
         m_policeHelicopters.end());
 
@@ -493,7 +493,7 @@ void PoliceManager::managePolicePopulation(int wantedLevel, const sf::Vector2f& 
     for (auto& officer : m_policeOfficers) {
         if (batonOfficersToRetreat <= 0 || retreated >= MAX_RETREATS_PER_FRAME) break;
         if (!officer->isStatic() && officer->getWeaponType() == PoliceWeaponType::BATON && !officer->isRetreating()) {
-            officer->needsCleanup = true; // Remove instantly to avoid heavy pathfinding
+            officer->setNeedsCleanup(true); // Remove instantly to avoid heavy pathfinding
             batonOfficersToRetreat--;
             retreated++;
         }
@@ -503,7 +503,7 @@ void PoliceManager::managePolicePopulation(int wantedLevel, const sf::Vector2f& 
     for (auto& officer : m_policeOfficers) {
         if (pistolOfficersToRetreat <= 0 || retreated >= MAX_RETREATS_PER_FRAME) break;
         if (!officer->isStatic() && officer->getWeaponType() == PoliceWeaponType::PISTOL && !officer->isRetreating()) {
-            officer->needsCleanup = true;
+            officer->setNeedsCleanup(true);
             pistolOfficersToRetreat--;
             retreated++;
         }
@@ -765,7 +765,7 @@ PoliceCar* PoliceManager::spawnPatrolCar(const sf::Vector2f& position, PatrolZon
     PoliceCar* carPtr = newCar.get(); // Get raw pointer before moving
     newCar->setPatrolZone(zone);
     newCar->setIsAmbient(true); // Patrol cars start as "ambient" within their zone
-    newCar->m_playerCausedWantedIncrease = false; // Ensure this is reset
+    newCar->setPlyrCausedWantedIncrease(false); // Ensure this is reset
     // Additional setup like finding nearest road and setting initial direction might be needed here or in PoliceCar when a zone is set.
     m_policeCars.push_back(std::move(newCar));
     return carPtr;

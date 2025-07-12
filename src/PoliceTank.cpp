@@ -23,10 +23,14 @@ PoliceTank::PoliceTank(GameManager& gameManager, const sf::Vector2f& startPositi
     m_currentPathIndex(0),
     m_repathTimer(0.f),
     // m_targetPosition(startPosition) { // Replaced by m_currentTargetPosition
-    m_currentTargetPosition(startPosition),
-    m_tankState(TankState::Chasing), // Initialize tank state
-    m_previousMovementAxis(MovementAxis::None),
-    m_wasUsingBezierLastFrame(false) {
+    m_currentTargetPosition(startPosition), m_tankState(TankState::Chasing), // Initialize tank state
+    m_previousMovementAxis(MovementAxis::None),   m_wasUsingBezierLastFrame(false) ,
+    m_hasLineOfSightToPlayer(false), m_usingBezier(false), m_readyForCleanup(false),
+    m_distanceToPlayer(0.f), m_health(500),  m_currentSpeed(10.f), m_turretRotationSpeed(15.f), 
+    m_cannonCooldownTimer(0.f), m_visionDistance(300.f),  m_fieldOfViewAngle(160.f), m_bezierT(0.f),
+   m_baseSpeed(10.f)
+
+{
 
     std::cout << "tank has spawned";
 
@@ -404,6 +408,11 @@ bool PoliceTank::isDestroyed() const {
     return m_health <= 0;
 }
 
+bool PoliceTank::isReadyForCleanup() const
+{
+    return m_readyForCleanup;
+}
+
 void PoliceTank::takeDamage(int amount) {
     m_health -= amount;
     if (m_health < 0) m_health = 0;
@@ -483,5 +492,10 @@ std::vector<sf::Vector2f> PoliceTank::getVisibleHitboxCorners() const {
     corners.push_back(transform.transformPoint({ visibleBox.left, visibleBox.top + visibleBox.height }));
 
     return corners;
+}
+
+bool PoliceTank::handlesOwnAIRotation() const
+{
+    return true;
 }
 

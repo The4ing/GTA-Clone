@@ -19,7 +19,20 @@ PoliceCar::PoliceCar(GameManager& gameManager, const sf::Vector2f& startPosition
     m_currentTargetPosition(-1.f, -1.f),
     m_isAmbient(true), // Explicitly initialize, though defaults in .h
     m_playerCausedWantedIncrease(false), // Explicitly initialize
-    m_assignedZone(nullptr) // Initialize assigned zoneAdd commentMore actions
+    m_assignedZone(nullptr), // Initialize assigned zoneAdd commentMore actions
+    m_isStatic(false),
+    m_hasOfficerInside(true),
+    m_requestOfficerExit(false),
+    m_playerHitCount(0),
+    m_currentSpeed(120.f),
+    m_bumpCount(0),
+    m_speed(120.f),
+    m_bumpCooldown(0.f),
+    m_visionDistance(250.f),
+    m_fieldOfViewAngle(140.f),
+    needsCleanup(false)
+    
+
 {
 
     // Use Vehicle's setTexture or manage sprite locally if Vehicle doesn't have one.
@@ -61,6 +74,16 @@ bool PoliceCar::isRetreating() const {
     return m_carState == CarState::Retreating;
 }
 
+void PoliceCar::setIsStatic(bool isStatic)
+{
+    m_isStatic = isStatic;
+}
+
+bool PoliceCar::isStatic() const
+{
+    return m_isStatic;
+}
+
 void PoliceCar::startRetreating(const sf::Vector2f& retreatTarget) {
     if (m_carState == CarState::Retreating) return;
 
@@ -76,6 +99,7 @@ void PoliceCar::startRetreating(const sf::Vector2f& retreatTarget) {
         m_currentPath = m_pathfinder.findPath(getPosition(), retreatTarget);
         if (m_currentPath.empty()) {
             // std::cout << "PoliceCar " << this << ": Failed to find retreat path. Marking for cleanup." << std::endl;
+            
             needsCleanup = true;
         }
         else {
@@ -257,6 +281,36 @@ bool PoliceCar::attemptRunOverPedestrian(Pedestrian& ped) {
         return true;
     }
     return false;
+}
+
+bool PoliceCar::hasOfficerInside() const
+{
+    return m_hasOfficerInside;
+}
+
+void PoliceCar::setOfficerInside(bool inside)
+{
+    m_hasOfficerInside = inside;
+}
+
+bool PoliceCar::getNeedsCleanup() const
+{
+    return needsCleanup;
+}
+
+void PoliceCar::setNeedsCleanup(bool change)
+{
+    needsCleanup = change;
+}
+
+bool PoliceCar::getPlyrCausedWantedIncrease() const
+{
+    return m_playerCausedWantedIncrease;
+}
+
+void PoliceCar::setPlyrCausedWantedIncrease(bool change)
+{
+    m_playerCausedWantedIncrease = change;
 }
 
 bool PoliceCar::readyForOfficerExit() const {
