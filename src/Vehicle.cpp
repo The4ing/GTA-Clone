@@ -12,8 +12,9 @@
 
 using json = nlohmann::json;
 
-Vehicle::Vehicle() : m_driver(nullptr), parking(false) { // Initialize m_driver
-    sprite.setTexture(ResourceManager::getInstance().getTexture("car"));
+Vehicle::Vehicle() : m_driver(nullptr), parking(false) {
+    sprite.setTexture(ResourceManager::getInstance().getTexture("car_sheet"));
+    sprite.setTextureRect(sf::IntRect(0, 0, 600, 600));
 
     // Set origin to center for rotation
     sf::FloatRect bounds = sprite.getLocalBounds();
@@ -81,29 +82,34 @@ void Vehicle::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blo
         // Collision detection
         bool collisionDetected = false;
         if (speed != 0.f) {
-            sf::Transform transform = sprite.getTransform();
-            sf::FloatRect localBounds = sprite.getLocalBounds();
-
-            // Get corners of vehicle sprite at next position
             sf::Sprite nextSprite = sprite;
             nextSprite.setPosition(nextPosition);
             nextSprite.setRotation(angle);
-            sf::Transform nextTransform = nextSprite.getTransform();
 
-            std::vector<sf::Vector2f> nextVehiclePoints = {
-                nextTransform.transformPoint({ localBounds.left, localBounds.top }),
-                nextTransform.transformPoint({ localBounds.left + localBounds.width, localBounds.top }),
-                nextTransform.transformPoint({ localBounds.left + localBounds.width, localBounds.top + localBounds.height }),
-                nextTransform.transformPoint({ localBounds.left, localBounds.top + localBounds.height })
+            // Get transformed hitbox polygon at next position
+            sf::Transform nextTransform = nextSprite.getTransform();
+            sf::FloatRect localBounds = sprite.getLocalBounds();
+
+            const float widthShrinkFactor = 0.3f;
+            const float heightShrinkFactor = 0.8f;
+            const float shrinkX = (1.f - widthShrinkFactor) * localBounds.width / 2.f;
+            const float shrinkY = (1.f - heightShrinkFactor) * localBounds.height / 2.f;
+
+            std::vector<sf::Vector2f> hitbox = {
+                nextTransform.transformPoint({ localBounds.left + shrinkX, localBounds.top + shrinkY }),
+                nextTransform.transformPoint({ localBounds.left + localBounds.width - shrinkX, localBounds.top + shrinkY }),
+                nextTransform.transformPoint({ localBounds.left + localBounds.width - shrinkX, localBounds.top + localBounds.height - shrinkY }),
+                nextTransform.transformPoint({ localBounds.left + shrinkX, localBounds.top + localBounds.height - shrinkY })
             };
 
-            for (const auto& point : nextVehiclePoints) {
+            for (const auto& point : hitbox) {
                 if (CollisionUtils::isInsideBlockedPolygon(point, blockedPolygons)) {
                     collisionDetected = true;
                     break;
                 }
             }
         }
+
 
         if (!collisionDetected) {
             position = nextPosition;
@@ -136,6 +142,17 @@ void Vehicle::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blo
 void Vehicle::draw(sf::RenderTarget& target) {
     target.draw(sprite);
 
+    // Draw hitbox polygon for debugging similar to PoliceCar
+    std::vector<sf::Vector2f> corners = getHitboxPolygon();
+    sf::Vertex outline[] = {
+        sf::Vertex(corners[0], sf::Color::Red),
+        sf::Vertex(corners[1], sf::Color::Red),
+        sf::Vertex(corners[2], sf::Color::Red),
+        sf::Vertex(corners[3], sf::Color::Red),
+        sf::Vertex(corners[0], sf::Color::Red)
+    };
+
+    target.draw(outline, 5, sf::LineStrip);
     if (inTurn) {
         sf::CircleShape startPoint(5.f);
         startPoint.setFillColor(sf::Color::Green);
@@ -178,6 +195,24 @@ void Vehicle::draw(sf::RenderTarget& target) {
 
 
 
+std::vector<sf::Vector2f> Vehicle::getHitboxPolygon() const {
+    sf::FloatRect localBounds = sprite.getLocalBounds();
+    sf::Transform transform = sprite.getTransform();
+
+    const float widthShrinkFactor = 0.3f;   // 70% ??????
+    const float heightShrinkFactor = 0.8f;  // 80% ??????
+
+    const float shrinkX = (1.f - widthShrinkFactor) * localBounds.width / 2.f;
+    const float shrinkY = (1.f - heightShrinkFactor) * localBounds.height / 2.f;
+
+    std::vector<sf::Vector2f> corners;
+    corners.push_back(transform.transformPoint({ localBounds.left + shrinkX, localBounds.top + shrinkY }));
+    corners.push_back(transform.transformPoint({ localBounds.left + localBounds.width - shrinkX, localBounds.top + shrinkY }));
+    corners.push_back(transform.transformPoint({ localBounds.left + localBounds.width - shrinkX, localBounds.top + localBounds.height - shrinkY }));
+    corners.push_back(transform.transformPoint({ localBounds.left + shrinkX, localBounds.top + localBounds.height - shrinkY }));
+
+    return corners;
+}
 
 sf::Vector2f Vehicle::getPosition() const {
     return position;
@@ -247,6 +282,12 @@ void Vehicle::setDirectionVec(const std::string& dir) {
         directionVec = { 0.f, 0.f };
         sprite.setRotation(0.f);  // ????? ????
     }
+}
+
+void Vehicle::setTextureRect(const sf::IntRect& rect) {
+    sprite.setTextureRect(rect);
+    sf::FloatRect bounds = sprite.getLocalBounds();
+    sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
 }
 
 void Vehicle::stop() {

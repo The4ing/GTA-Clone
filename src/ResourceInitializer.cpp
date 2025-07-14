@@ -44,7 +44,7 @@ void ResourceInitializer::loadGameResources() {
     rm.loadTexture("static_building", "resources/building.png");
     rm.loadTexture("map", "resources/map.png");
  //   rm.loadTexture("bullet", "resources/bullet.png");
-    rm.loadTexture("car", "resources/car.png");
+    rm.loadTexture("car_sheet", "resources/cars_spritesheet.png");
 
     // Sound Buffers
     //rm.loadSoundBuffer("startup", "resources/sounds/startup.wav"); // Example, if you have one

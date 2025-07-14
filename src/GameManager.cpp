@@ -814,9 +814,10 @@ void GameManager::startGameFullscreen() {
 
     carManager = GameFactory::createCarManager(roads, *policeManager);
 
-    //    for (int i = 0; i < 20; ++i) {
-    carManager->spawnSingleVehicleOnRoad();
-    //  }
+    for (int i = 0; i < 2; ++i) {
+        carManager->spawnSingleVehicleOnRoad();
+    //carManager->spawnSingleVehicleOnRoad();
+      }
     player = GameFactory::createPlayer(*this, { 100.f, 100.f }); // Pass *this (GameManager instance)
     //presents = GameFactory::createPresents(30, blockedPolygons);
     presents = GameFactory::createPresents(5, blockedPolygons);

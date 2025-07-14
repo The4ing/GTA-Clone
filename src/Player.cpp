@@ -327,7 +327,7 @@ void Player::draw(sf::RenderTarget& window) {
     rect.setFillColor(sf::Color::Transparent);
     rect.setOutlineColor(sf::Color::Red);
     rect.setOutlineThickness(1.f);
-    window.draw(rect);
+   // window.draw(rect);
 
 
 

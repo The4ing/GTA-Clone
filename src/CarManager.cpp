@@ -285,6 +285,7 @@ void CarManager::spawnSingleVehicleOnRoad() {
     }
 
     int roadIdx = rand() % roads.size();
+    roadIdx = 0;
     const RoadSegment& road = roads[roadIdx];
     int laneIndex = rand() % std::max(1, road.lanes);
     sf::Vector2f laneCenter = road.getLaneCenter(laneIndex);
@@ -306,7 +307,15 @@ void CarManager::spawnSingleVehicleOnRoad() {
     }
 
     auto car = std::make_unique<Vehicle>();
-    car->setTexture(ResourceManager::getInstance().getTexture("car"));
+    car->setTexture(ResourceManager::getInstance().getTexture("car_sheet"));
+    int carIndex = rand() % 7; // 7 car variants in the sprite sheet
+    int frameWidth = 600;
+    int frameHeight = 600;
+    int columns = 3;
+    int col = carIndex % columns;
+    int row = carIndex / columns;
+    car->setTextureRect(sf::IntRect(col * frameWidth, row * frameHeight, frameWidth, frameHeight));
+
     car->setPosition(laneCenter);
     car->setScale(0.05f, 0.05f);
     std::string actualDir = getActualLaneDirection(road, laneIndex);
@@ -320,26 +329,26 @@ void CarManager::spawnSingleVehicleOnRoad() {
     //std::cout << "Spawned car at (" << laneCenter.x << ", " << laneCenter.y
     //    << ") on lane " << laneIndex << " direction: " << actualDir
     //    << " (road#" << roadIdx << ")\n";
-    int spawnChoice = rand() % 100; // Random number between 0 and 99Add commentMore actions
+   // int spawnChoice = rand() % 100; // Random number between 0 and 99Add commentMore actions
 
 
-    if (spawnChoice < POLICE_CAR_SPAWN_CHANCE) {
-        // Spawn an ambient police car via PoliceManager
-        // The method signature for spawnAmbientPoliceCarOnRoadSegment is defined in plan step 5
-        // as (const RoadSegment* road, int laneIndex, const std::string& actualDir, const sf::Vector2f& spawnPosition)
-        m_policeManager.spawnAmbientPoliceCarOnRoadSegment(&road, laneIndex, actualDir, laneCenter);
-        // std::cout << "Attempted to spawn ambient POLICE car at (" << laneCenter.x << ", " << laneCenter.y
-        //           << ") on lane " << laneIndex << " direction: " << actualDir
-        //           << " (road#" << roadIdx << ")\n";
-    }
-    else {
+    //if (spawnChoice < POLICE_CAR_SPAWN_CHANCE) {
+    //    // Spawn an ambient police car via PoliceManager
+    //    // The method signature for spawnAmbientPoliceCarOnRoadSegment is defined in plan step 5
+    //    // as (const RoadSegment* road, int laneIndex, const std::string& actualDir, const sf::Vector2f& spawnPosition)
+    //    m_policeManager.spawnAmbientPoliceCarOnRoadSegment(&road, laneIndex, actualDir, laneCenter);
+    //    // std::cout << "Attempted to spawn ambient POLICE car at (" << laneCenter.x << ", " << laneCenter.y
+    //    //           << ") on lane " << laneIndex << " direction: " << actualDir
+    //    //           << " (road#" << roadIdx << ")\n";
+    //}
+    //else {
         // Spawn a regular car
         addVehicle(std::move(car));
         vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), vehicles.back().get());
         // std::cout << "Spawned REGULAR car at (" << laneCenter.x << ", " << laneCenter.y
         //           << ") on lane " << laneIndex << " direction: " << actualDir
         //           << " (road#" << roadIdx << ")\n";
-    }
+    //}
 }
 
 

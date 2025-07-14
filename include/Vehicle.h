@@ -1,6 +1,7 @@
 #pragma once
 #include "MovingObject.h"
 #include "RoadSegment.h"
+#include <vector>
 
 class Player;
 
@@ -23,6 +24,7 @@ public:
     void setCurrentRoad(const RoadSegment* road);
     bool isInTurn() const;
     std::string getDirection() const;
+    void setTextureRect(const sf::IntRect& rect);
 
     static sf::Vector2f bezier(float t, const sf::Vector2f& P0, const sf::Vector2f& P1, const sf::Vector2f& P2);
     void stop();
@@ -56,6 +58,7 @@ public:
 
     const sf::Sprite& getSprite() const; // Accessor for the sprite
     sf::Sprite& getSprite();
+    std::vector<sf::Vector2f> getHitboxPolygon() const;
     bool isDestroyed() const;
     void setDestroyed(bool value);
 
