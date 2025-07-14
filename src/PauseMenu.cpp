@@ -26,7 +26,7 @@ PauseMenu::PauseMenu() : m_isOpen(false), selectedIndex(0), selectedOption(MenuO
     playerMarker.setOutlineColor(sf::Color::White);
     playerMarker.setOutlineThickness(2.f);
     playerMarker.setOrigin(playerMarker.getRadius(), playerMarker.getRadius());
-    destinationMarker.setRadius(6.f);
+    destinationMarker.setRadius(20.f);
     destinationMarker.setFillColor(sf::Color::Red);
     destinationMarker.setOrigin(destinationMarker.getRadius(), destinationMarker.getRadius());
 
@@ -582,9 +582,10 @@ void PauseMenu::prepareMapScreen(const sf::Texture& mapTex, sf::Vector2f playerP
         // mapDisplaySprite.setScale( appropriate_scale_x, appropriate_scale_y );
         mapResourcesInitialized = true; // Set this early
     }
-
+    // Save player position for centering and marker placement
+    playerMapPosition = playerPos;
     missionPoints = destinations;
-    destinationMarker.setRadius(6.f);
+    destinationMarker.setRadius(20.f);
     destinationMarker.setFillColor(sf::Color::Red);
     destinationMarker.setOrigin(6.f, 6.f);
 
@@ -593,6 +594,8 @@ void PauseMenu::prepareMapScreen(const sf::Texture& mapTex, sf::Vector2f playerP
     mapDisplayView.zoom(1.0f); // Start with 1:1 zoom, can be adjusted
 
     playerMarker.setPosition(playerMapPosition);
+    // Restart blink timer so the destination marker starts visible when the map opens
+    destinationBlinkClock.restart();
 
     showingMap = true;
     std::cout << "Map screen prepared. Player at: " << playerPos.x << "," << playerPos.y

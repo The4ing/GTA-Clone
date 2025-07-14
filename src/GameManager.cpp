@@ -875,7 +875,7 @@ void GameManager::startGameFullscreen() {
 
     carManager = GameFactory::createCarManager(roads, *policeManager);
 
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 1; ++i) {
         carManager->spawnSingleVehicleOnRoad();
     //carManager->spawnSingleVehicleOnRoad();
       }
