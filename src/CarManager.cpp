@@ -65,23 +65,24 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
             continue;
         }
         sf::Vector2f pos = vehicle.getPosition();
-        sf::FloatRect area(pos.x - 30.f, pos.y - 30.f, 60.f, 60.f); // Consider making this radius based on vehicle size/speedAdd commentMore actions
-        std::vector<Vehicle*> nearby; // This was Vehicle* but vehicleTree stores Vehicle*
+        sf::FloatRect area(pos.x - 30.f, pos.y - 30.f, 60.f, 60.f);
+        std::vector<Vehicle*> nearby;
         vehicleTree.query(area, nearby);
 
         bool hasCollision = false;
+        sf::FloatRect myBounds = vehicle.getSprite().getGlobalBounds();
         for (auto* other : nearby) {
-            if (other == &vehicle) continue; // Don't check collision with selfAdd commentMore actions
-            // Ensure 'other' is also an AI vehicle or handle player vehicle collision differently if needed
-            if (other->hasDriver()) continue; // Simple: AI doesn't collide with player-driven cars for now (or player handles it)
-            float dist = length(vehicle.getPosition(), other->getPosition());
-            if (dist < 30.f) { // 30.f is a magic number, consider vehicle sizesAdd commentMore actions
-                vehicle.stop(); // AI vehicle stops
+            if (other == &vehicle) continue;
+            if (other->hasDriver()) continue;
+
+            if (myBounds.intersects(other->getSprite().getGlobalBounds())) {
+                vehicle.stopForSeconds(1.f); // ?? ???? ??? ????
                 hasCollision = true;
                 break;
             }
+
         }
-        if (hasCollision) { // If AI vehicle stopped due to collision, skip pathfinding for this frame
+        if (hasCollision) {
             continue;
         }
 

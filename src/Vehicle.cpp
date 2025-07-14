@@ -28,6 +28,14 @@ Vehicle::Vehicle() : m_driver(nullptr), parking(false) {
 }
 
 void Vehicle::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+    if (stopTimer > 0.f) {
+        stopTimer -= dt;
+        if (stopTimer < 0.f)
+            stopTimer = 0.f;
+        speed = 0.f;
+        sprite.setPosition(position);
+        return;
+    }
     if (inTurn) {
         // U-turn / Bezier curve logic from first function
         bezierT += dt * 0.7f;
@@ -213,6 +221,12 @@ std::vector<sf::Vector2f> Vehicle::getHitboxPolygon() const {
 
     return corners;
 }
+
+void Vehicle::stopForSeconds(float seconds) {
+    stop();
+    stopTimer = std::max(stopTimer, seconds);
+}
+
 
 sf::Vector2f Vehicle::getPosition() const {
     return position;

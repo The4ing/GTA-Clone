@@ -28,6 +28,7 @@ public:
 
     static sf::Vector2f bezier(float t, const sf::Vector2f& P0, const sf::Vector2f& P1, const sf::Vector2f& P2);
     void stop();
+    void stopForSeconds(float seconds);
 
     const RoadSegment* getCurrentRoad() const;
 
@@ -92,7 +93,7 @@ private:
     float bezierSpeed = 0.0004f;
     const RoadSegment* previousRoad = nullptr;
     int currentLaneIndex = 0;
-
+    float stopTimer = 0.f;
 
 
 };

@@ -511,8 +511,8 @@ void GameManager::update(float dt) {
                     if (&aiVehicle == playerVehicle || aiVehicle.hasDriver())
                         continue;
                     if (playerBounds.intersects(aiVehicle.getSprite().getGlobalBounds())) {
-                        playerVehicle->stop();
-                        aiVehicle.stop();
+                        playerVehicle->stopForSeconds(1.f);
+                        aiVehicle.stopForSeconds(1.f);
                     }
                 }
             }

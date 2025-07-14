@@ -440,7 +440,14 @@ bool PoliceTank::attemptRunOverPedestrian(Pedestrian& ped) {
 bool PoliceTank::attemptRunOverVehicle(Vehicle& vehicle) {
     if (&vehicle == this) return false;
     if (getSprite().getGlobalBounds().intersects(vehicle.getSprite().getGlobalBounds())) {
-        vehicle.setDestroyed(true);
+        sf::Vector2f tankPos = getPosition();
+        sf::Vector2f carPos = vehicle.getPosition();
+        sf::Vector2f dir = carPos - tankPos;
+        float len = std::hypot(dir.x, dir.y);
+        if (len > 0.f)
+            dir /= len;
+        vehicle.setPosition(carPos + dir * 20.f);
+        vehicle.stopForSeconds(1.f);
         return true;
     }
     return false;
