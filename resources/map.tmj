@@ -11,6 +11,18 @@
  "infinite":false,
  "layers":[
         {
+         "id":23,
+         "image":"map.png",
+         "imageheight":4672,
+         "imagewidth":4640,
+         "name":"Image Layer 1",
+         "opacity":1,
+         "type":"imagelayer",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
          "draworder":"topdown",
          "id":4,
          "name":"collision",
@@ -24999,7 +25011,7 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         }, 
@@ -41338,12 +41350,40 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
+         "visible":false,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":22,
+         "name":"destination",
+         "objects":[
+                {
+                 "height":118.5,
+                 "id":2325,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"Mission",
+                         "type":"int",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":84.5,
+                 "x":3377.5,
+                 "y":1112.5
+                }],
+         "opacity":1,
+         "type":"objectgroup",
          "visible":true,
          "x":0,
          "y":0
         }],
- "nextlayerid":22,
- "nextobjectid":2325,
+ "nextlayerid":24,
+ "nextobjectid":2326,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",
@@ -41353,14 +41393,4 @@
  "type":"map",
  "version":"1.10",
  "width":160
-}
-
-{
-  "missions": [
-    {
-      "id": 1,
-      "description": "Deliver the package to the destination and lose your wanted level.",
-      "destination": {"x": 1000, "y": 1000}
-    }
-  ]
 }
