@@ -8,6 +8,7 @@ void ResourceInitializer::loadInitialResources() {
     rm.loadFont("main", "resources/Pricedown.otf");
     rm.loadTexture("background_menu", "resources/GtaLogo.png");
     rm.loadTexture("loading_background", "resources/SF.png"); // Placeholder for loading screen
+     rm.loadTexture("background_set", "resources/set_bk.png");
 }
 
 void ResourceInitializer::loadGameResources() {
@@ -24,7 +25,7 @@ void ResourceInitializer::loadGameResources() {
     rm.loadTexture("SF", "resources/SF.png"); // Retained if used elsewhere, otherwise can be removed if only for placeholder
     rm.loadTexture("SS", "resources/SS.png");
     rm.loadTexture("ST", "resources/ST.png");
-    rm.loadTexture("background_set", "resources/set_bk.png");
+   
 
     // Weapon Textures
     rm.loadTexture("Pistol", "resources/pistol.png");
