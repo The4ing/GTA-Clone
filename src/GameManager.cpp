@@ -433,7 +433,7 @@ void GameManager::update(float dt) {
         m_gameTime += sf::seconds(dt * GAME_TIME_SCALE);
 
         if (carManager)
-            carManager->update(dt, blockedPolygons);
+            carManager->update(dt, blockedPolygons, gameView);
 
         if (policeManager) {
             for (const auto& p : policeManager->getPoliceOfficers()) {

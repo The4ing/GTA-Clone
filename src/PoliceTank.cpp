@@ -364,20 +364,6 @@ void PoliceTank::aimAndFire(Player& player, float dt) {
 
 
     }
-    // --- DEBUG INFO ---
-    std::cout << "[Turret Debug] TurretPos: ("
-        << turretPos.x << ", " << turretPos.y << "), PlayerPos: ("
-        << playerPos.x << ", " << playerPos.y << ")\n";
-
-    std::cout << "DirectionToPlayer: ("
-        << directionToPlayer.x << ", " << directionToPlayer.y << "), Distance: "
-        << distanceToPlayer << "\n";
-
-    std::cout << "TargetTurretAngle: " << targetTurretAngle
-        << ", CurrentTurretAngle: " << currentTurretAngle
-        << ", AngleDiff: " << turretAngleDiff << "\n";
-
-
 
 }
 

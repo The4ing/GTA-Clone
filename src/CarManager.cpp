@@ -43,7 +43,7 @@ QuadTree<RoadSegment>& CarManager::getRoadTree() {
     return roadTree;
 }
 
-void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
+void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons, const sf::View& view) {
     int nextLaneIndex;
     bool turnFound;
 
@@ -60,10 +60,13 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
         // First, call the vehicle's own update method.
         // This handles player input if present, or basic AI movement (like Bezier curve execution if inTurn is true for AI).
         vehicle.update(dt, blockedPolygons);
+        if (!vehicle.hasDriver() && vehicle.getSpeed() < 0.1f)
+            vehicle.setDestroyed(true);
         // If a player is driving this vehicle, skip all AI decision-making and pathfinding logic.
         if (vehicle.hasDriver()) {
             continue;
         }
+
         sf::Vector2f pos = vehicle.getPosition();
         sf::FloatRect area(pos.x - 30.f, pos.y - 30.f, 60.f, 60.f);
         std::vector<Vehicle*> nearby;
@@ -197,9 +200,73 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
             vehicle.setCurrentRoad(currentRoad);
         }
     }
-    vehicles.erase(std::remove_if(vehicles.begin(), vehicles.end(),
-        [](const std::unique_ptr<Vehicle>& v) { return v->isDestroyed(); }), vehicles.end());
+    sf::FloatRect viewRect(view.getCenter() - view.getSize() / 2.f, view.getSize());
+
+    auto it = vehicles.begin();
+    while (it != vehicles.end()) {
+        Vehicle& v = **it;
+        if (v.isDestroyed() && !viewRect.intersects(v.getSprite().getGlobalBounds())) {
+            it = vehicles.erase(it);
+            spawnVehicleOffScreen(view);
+        }
+        else {
+            ++it;
+        }
+    }
 }
+
+void CarManager::spawnVehicleOffScreen(const sf::View& view) {
+    if (roads.empty()) return;
+
+    sf::FloatRect viewRect(view.getCenter() - view.getSize() / 2.f, view.getSize());
+    for (int attempt = 0; attempt < 50; ++attempt) {
+        int roadIdx = rand() % roads.size();
+        const RoadSegment& road = roads[roadIdx];
+        if (viewRect.intersects(road.bounds))
+            continue;
+
+        int laneIndex = rand() % std::max(1, road.lanes);
+        sf::Vector2f laneCenter = road.getLaneCenter(laneIndex);
+
+        float carLength = 50.f;
+        float offset = 0.f;
+
+        if (road.direction == "up" || road.direction == "down") {
+            float maxOffset = road.bounds.height - carLength;
+            offset = static_cast<float>(rand()) / RAND_MAX * std::max(0.f, maxOffset);
+            laneCenter.y = (road.direction == "up") ? road.bounds.top + road.bounds.height - offset
+                : road.bounds.top + offset;
+        }
+        else {
+            float maxOffset = road.bounds.width - carLength;
+            offset = static_cast<float>(rand()) / RAND_MAX * std::max(0.f, maxOffset);
+            laneCenter.x = (road.direction == "left") ? road.bounds.left + road.bounds.width - offset
+                : road.bounds.left + offset;
+        }
+
+        auto car = std::make_unique<Vehicle>();
+        car->setTexture(ResourceManager::getInstance().getTexture("car_sheet"));
+        int carIndex = rand() % 7;
+        int frameWidth = 600;
+        int frameHeight = 600;
+        int columns = 3;
+        int col = carIndex % columns;
+        int row = carIndex / columns;
+        car->setTextureRect(sf::IntRect(col * frameWidth, row * frameHeight, frameWidth, frameHeight));
+
+        car->setPosition(laneCenter);
+        car->setScale(0.05f, 0.05f);
+        std::string actualDir = getActualLaneDirection(road, laneIndex);
+        car->setDirectionVec(actualDir);
+        car->setCurrentRoad(&road);
+        car->setCurrentLaneIndex(laneIndex);
+
+        addVehicle(std::move(car));
+        vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), vehicles.back().get());
+        return;
+    }
+}
+
 
 void CarManager::draw(sf::RenderTarget& window) {
     // Draw rejected roads in gray with yellow outline and reason text

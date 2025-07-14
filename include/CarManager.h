@@ -14,7 +14,7 @@ class CarManager {
 public:
 
     CarManager(PoliceManager& policeMgr);
-    void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
+    void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons, const sf::View& view);
     void draw(sf::RenderTarget& window);
 
     std::vector<std::unique_ptr<Vehicle>>& getVehicles();
@@ -24,6 +24,7 @@ public:
     void buildRoadTree();
     std::vector<RoadSegment> findNearbyRoads(const sf::FloatRect& area);
     void spawnSingleVehicleOnRoad();
+    void spawnVehicleOffScreen(const sf::View& view);
 
     std::vector<RoadSegment>& getRoads();
     QuadTree<RoadSegment>& getRoadTree();
