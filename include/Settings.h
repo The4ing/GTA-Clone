@@ -1,8 +1,9 @@
-﻿#pragma once
+#pragma once
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
 #include "StoryScreen.h"
+#include "Help.h"
 
 class Settings {
 public:
@@ -18,11 +19,12 @@ private:
     sf::RenderWindow& window;
     sf::Font font;
     sf::Sprite background;
-  
+    
+
     bool shouldClose = false;
     bool soundEnabled;
-    float volumeLevel; // ערך בין 0 ל־1
-    float brightnessLevel; // ערך בין 0 ל־1
+    float volumeLevel;
+    float brightnessLevel; 
 
     std::vector<sf::Text> options;
     int selectedOption;
