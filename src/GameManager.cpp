@@ -60,6 +60,18 @@ GameManager::GameManager()
     }
     updatePressStartPosition();
 
+    // Prepare task instruction text
+    try {
+        m_taskInstructionText.setFont(ResourceManager::getInstance().getFont("main"));
+        m_taskInstructionText.setCharacterSize(40);
+        m_taskInstructionText.setFillColor(sf::Color::White);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error initializing task text: " << e.what() << '\n';
+    }
+
+    loadTasks();
+
 }
 
 /*‑‑‑‑‑  main loop  ‑‑‑‑‑*/
@@ -187,7 +199,14 @@ void GameManager::processEvents() {
                 if (event.key.code != sf::Keyboard::F11) {
                     std::cout << "First player move detected, game is now active." << std::endl;
                     m_isAwaitingFirstPlayerMove = false;
-                    if (mission) mission->start();
+                    startNextTask();
+                }
+            }
+            else if (m_isAwaitingTaskStart) {
+                if (event.key.code != sf::Keyboard::F11) {
+                    m_isAwaitingTaskStart = false;
+                    ++m_currentTaskIndex;
+                    continue; // Skip other handling while task screen is active
                 }
             }
 
@@ -433,7 +452,7 @@ void GameManager::update(float dt) {
     player->update(dt, blockedPolygons);
 
     // --- 2. If game started, update systems ---
-    if (!m_isAwaitingFirstPlayerMove) {
+    if (!m_isAwaitingFirstPlayerMove && !m_isAwaitingTaskStart) {
         m_gameTime += sf::seconds(dt * GAME_TIME_SCALE);
 
         if (carManager)
@@ -678,10 +697,12 @@ void GameManager::render() {
     window.setView(window.getDefaultView());
     if (m_hud)
         m_hud->draw(window);
-    if (m_isAwaitingFirstPlayerMove) {
+    if (m_isAwaitingFirstPlayerMove || m_isAwaitingTaskStart) {
         sf::RectangleShape overlay(sf::Vector2f(window.getSize()));
         overlay.setFillColor(sf::Color(0, 0, 0, 150));
         window.draw(overlay);
+        if (m_isAwaitingTaskStart)
+            window.draw(m_taskInstructionText);
         window.draw(m_pressStartText);
     }
 
@@ -1025,6 +1046,13 @@ void GameManager::updatePressStartPosition() {
         textRect.top + textRect.height / 2.f);
     m_pressStartText.setPosition(window.getSize().x / 2.f,
         window.getSize().y / 2.f);
+    if (m_taskInstructionText.getFont()) {
+        sf::FloatRect taskRect = m_taskInstructionText.getLocalBounds();
+        m_taskInstructionText.setOrigin(taskRect.left + taskRect.width / 2.f,
+            taskRect.top + taskRect.height / 2.f);
+        m_taskInstructionText.setPosition(window.getSize().x / 2.f,
+            window.getSize().y / 2.f - 50.f);
+    }
 }
 
 void GameManager::displayLoadingScreen(const std::string& message, float initialProgress) {
@@ -1079,4 +1107,26 @@ void GameManager::displayLoadingScreen(const std::string& message, float initial
     window.draw(loadingBarBackground);
     window.draw(loadingBarFill);
     window.display();
+}
+
+void GameManager::loadTasks() {
+    // Hard-coded example tasks; in a real game these could come from a file
+    m_taskInstructions = {
+        "Reach the safe house at the north side of town.",
+        "Collect the hidden package behind the warehouse.",
+        "Escape the police and get back to your base."
+    };
+}
+
+void GameManager::startNextTask() {
+    if (m_currentTaskIndex >= m_taskInstructions.size())
+        return;
+    m_taskInstructionText.setString(m_taskInstructions[m_currentTaskIndex]);
+    sf::FloatRect textRect = m_taskInstructionText.getLocalBounds();
+    m_taskInstructionText.setOrigin(textRect.left + textRect.width / 2.f,
+        textRect.top + textRect.height / 2.f);
+    m_taskInstructionText.setPosition(window.getSize().x / 2.f,
+        window.getSize().y / 2.f - 50.f);
+    updatePressStartPosition();
+    m_isAwaitingTaskStart = true;
 }

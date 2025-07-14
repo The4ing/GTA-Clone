@@ -10,7 +10,8 @@
 #include "PedestrianManager.h"
 #include "Present.h"
 #include "InventoryUI.h"
-#include <vector> 
+#include <vector>
+#include <string>
 #include "BulletPool.h"
 #include "PathfindingGrid.h"
 #include "Store.h"
@@ -105,4 +106,11 @@ private:
     std::unique_ptr<Mission> mission;
     bool showMissionComplete = false;
     sf::Clock missionCompleteClock;
+    // Task/mission management
+    void loadTasks();
+    void startNextTask();
+    std::vector<std::string> m_taskInstructions;
+    std::size_t m_currentTaskIndex = 0;
+    bool m_isAwaitingTaskStart = false;
+    sf::Text m_taskInstructionText;
 };
