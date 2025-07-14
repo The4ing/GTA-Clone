@@ -1,9 +1,10 @@
-﻿#include "Settings.h"
+#include "Settings.h"
 #include "ResourceManager.h"
 #include <iostream>
 
 Settings::Settings(sf::RenderWindow& win)
     : window(win), soundEnabled(true), volumeLevel(1.0f), brightnessLevel(1.0f), selectedOption(-1)
+    
 {
     font = ResourceManager::getInstance().getFont("main");
 
@@ -116,8 +117,10 @@ void Settings::decreaseBrightness() {
 }
 
 void Settings::showHelp() {
-    //std::cout << "This is a game where you must survive and complete levels.\n";
+    Help help(window);
+    help.run();
 }
+
 
 bool Settings::shouldExit() const {
     return shouldClose;
