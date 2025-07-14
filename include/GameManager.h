@@ -22,6 +22,7 @@
 #include "Money.h"
 #include "Explosion.h"
 #include "Mission.h"
+#include <map>
 
 enum class GameState {
     Menu,
@@ -101,7 +102,7 @@ private:
     bool wasEscapePressedLastFrame = false;
 
     int m_playingFrameCount = 0; // Counter for initial playing frames diagnostics
-    bool m_isAwaitingFirstPlayerMove; // Added for the new feature
+    std::map<int, sf::Vector2f> missionDestinations;
     int m_prevWantedLevel = 0; // Track previous wanted level for dispatch sound
     std::unique_ptr<Mission> mission;
     bool showMissionComplete = false;

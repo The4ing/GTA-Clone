@@ -36,7 +36,7 @@ const float CANNON_FIRE_RATE = 5.0f;
 const float CANNON_RANGE = 400.f;
 
 // Wanted Level ReductionAdd commentMore actions
-const float TIME_TO_START_WANTED_REDUCTION = 15.0f; // Seconds player must be unseen before reduction starts
+const float TIME_TO_START_WANTED_REDUCTION = 30.0f; // Seconds player must be unseen before reduction starts
 const float WANTED_REDUCTION_COOLDOWN_SECONDS = 10.0f; // Seconds before another star can be lost
 
 #define M_PI 3.14159265358979323846

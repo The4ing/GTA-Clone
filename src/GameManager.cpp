@@ -39,8 +39,7 @@ static float distanceSquared(const sf::Vector2f& p1, const sf::Vector2f& p2)
 /*‑‑‑‑‑  ctor  ‑‑‑‑‑*/
 GameManager::GameManager()
     : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top‑Down GTA Clone"),
-    m_gameTime(sf::Time::Zero),
-    m_isAwaitingFirstPlayerMove(false)
+    m_gameTime(sf::Time::Zero)
 {
     frozenBackgroundTexture.create(window.getSize().x, window.getSize().y);
     window.setFramerateLimit(60);
@@ -195,14 +194,7 @@ void GameManager::processEvents() {
         }
 
         if (event.type == sf::Event::KeyPressed) {
-            if (m_isAwaitingFirstPlayerMove && currentState == GameState::Playing) {
-                if (event.key.code != sf::Keyboard::F11) {
-                    std::cout << "First player move detected, game is now active." << std::endl;
-                    m_isAwaitingFirstPlayerMove = false;
-                    startNextTask();
-                }
-            }
-            else if (m_isAwaitingTaskStart) {
+            if (m_isAwaitingTaskStart) {
                 if (event.key.code != sf::Keyboard::F11) {
                     m_isAwaitingTaskStart = false;
                     ++m_currentTaskIndex;
@@ -290,7 +282,7 @@ void GameManager::processEvents() {
                 currentState = GameState::Paused;
                 pauseMenu.open();
                 if (player && mapTexture) {
-                    pauseMenu.prepareMapScreen(*mapTexture, player->getPosition(), window.getSize());
+                    pauseMenu.prepareMapScreen(*mapTexture, player->getPosition(), window.getSize(), missionDestinations);
                 }
                 m_playingFrameCount = 0;
             }
@@ -370,7 +362,7 @@ void GameManager::processEvents() {
             }
             else if (action == PauseMenu::MenuAction::RequestOpenMap) {
                 if (player && mapTexture) {
-                    pauseMenu.prepareMapScreen(*mapTexture, player->getPosition(), window.getSize());
+                    pauseMenu.prepareMapScreen(*mapTexture, player->getPosition(), window.getSize(), missionDestinations);
                 }
                 else {
                     std::cerr << "GameManager: Cannot open map. Player or mapTexture missing." << std::endl;
@@ -452,7 +444,7 @@ void GameManager::update(float dt) {
     player->update(dt, blockedPolygons);
 
     // --- 2. If game started, update systems ---
-    if (!m_isAwaitingFirstPlayerMove && !m_isAwaitingTaskStart) {
+    if (!m_isAwaitingTaskStart) {
         m_gameTime += sf::seconds(dt * GAME_TIME_SCALE);
 
         if (carManager)
@@ -697,12 +689,11 @@ void GameManager::render() {
     window.setView(window.getDefaultView());
     if (m_hud)
         m_hud->draw(window);
-    if (m_isAwaitingFirstPlayerMove || m_isAwaitingTaskStart) {
+    if (m_isAwaitingTaskStart) {
         sf::RectangleShape overlay(sf::Vector2f(window.getSize()));
         overlay.setFillColor(sf::Color(0, 0, 0, 150));
         window.draw(overlay);
-        if (m_isAwaitingTaskStart)
-            window.draw(m_taskInstructionText);
+        window.draw(m_taskInstructionText);
         window.draw(m_pressStartText);
     }
 
@@ -794,6 +785,22 @@ void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
                     if (!road.direction.empty())
                         roads.push_back(road);
                 }
+            }
+        }
+        else if (layer["type"] == "objectgroup" && layer["name"] == "destination") {
+            for (const auto& obj : layer["objects"]) {
+                float x = obj["x"];
+                float y = obj["y"];
+                int missionId = 0;
+                if (obj.contains("properties")) {
+                    for (const auto& prop : obj["properties"]) {
+                        if (prop["name"] == "Mission") {
+                            missionId = prop["value"];
+                            break;
+                        }
+                    }
+                }
+                missionDestinations[missionId] = { x, y };
             }
         }
     }
@@ -902,28 +909,20 @@ void GameManager::startGameFullscreen() {
 
     m_hud->updateElementPositions(window.getSize().x, window.getSize().y);
     // Load first mission and initial inventory item
-    try {
-        std::ifstream mfile("resources/missions.json");
-        if (mfile.is_open()) {
-            json mdata; mfile >> mdata;
-            if (!mdata["missions"].empty()) {
-                mission = std::make_unique<Mission>();
-                auto& m0 = mdata["missions"][0];
-                mission->setDescription(m0["description"]);
-                mission->setDestination({ m0["destination"]["x"], m0["destination"]["y"] });
-                player->getInventory().addItem("Package", ResourceManager::getInstance().getTexture("Package"));
-                player->setWantedLevel(1);
-                m_pressStartText.setString(mission->getDescription() + "\nPress any key to start");
-                updatePressStartPosition();
-            }
-        }
-    }
-    catch (...) {
-        std::cerr << "Failed to load mission data" << std::endl;
-    }
+    // Load first mission description from tasks file and destination from map
+    mission = std::make_unique<Mission>();
+    if (!m_taskInstructions.empty())
+        mission->setDescription(m_taskInstructions[0]);
+    auto it = missionDestinations.find(1);
+    if (it != missionDestinations.end())
+        mission->setDestination(it->second);
+    player->getInventory().addItem("Package", ResourceManager::getInstance().getTexture("Package"));
+    player->setWantedLevel(1);
+    m_pressStartText.setString(mission->getDescription() + "\nPress any key to start");
+    updatePressStartPosition();
 
     currentState = GameState::Playing;
-    m_isAwaitingFirstPlayerMove = true; // Start in the 'awaiting input' state
+    startNextTask();
    // SoundManager::getInstance().playSound("gameplay");
 }
 
@@ -1110,12 +1109,18 @@ void GameManager::displayLoadingScreen(const std::string& message, float initial
 }
 
 void GameManager::loadTasks() {
-    // Hard-coded example tasks; in a real game these could come from a file
-    m_taskInstructions = {
-        "Reach the safe house at the north side of town.",
-        "Collect the hidden package behind the warehouse.",
-        "Escape the police and get back to your base."
-    };
+    m_taskInstructions.clear();
+    std::ifstream file("resources/tasks.txt");
+    if (!file.is_open()) {
+        std::cerr << "Failed to open resources/tasks.txt" << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        if (!line.empty())
+            m_taskInstructions.push_back(line);
+    }
 }
 
 void GameManager::startNextTask() {

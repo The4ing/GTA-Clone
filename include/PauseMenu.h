@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <SFML/Graphics.hpp>
+#include <map>
 
 class PauseMenu {
 public:
@@ -40,7 +41,9 @@ private:
 public: // Public for GameManager to access
     enum class MenuAction { None, RequestNewGame, Resume, RequestOpenMap, RequestOpenStats, Exit};
     MenuAction getAndClearAction();
-    void prepareMapScreen(const sf::Texture& mapTex, sf::Vector2f playerPos, sf::Vector2u windowSize);
+    void prepareMapScreen(const sf::Texture& mapTex, sf::Vector2f playerPos,
+        sf::Vector2u windowSize,
+        const std::map<int, sf::Vector2f>& destinations);
 
     struct PlayerGameStats { // Renamed to avoid conflict
         sf::Time gameTime = sf::Time::Zero;
@@ -74,6 +77,8 @@ private:
 
     sf::View mapDisplayView;
     sf::CircleShape playerMarker;
+    sf::CircleShape destinationMarker;
+    std::map<int, sf::Vector2f> missionPoints;
     sf::Vector2f playerMapPosition;
     bool mapResourcesInitialized = false;
 };

@@ -25,6 +25,9 @@ PauseMenu::PauseMenu() : m_isOpen(false), selectedIndex(0), selectedOption(MenuO
     playerMarker.setOutlineColor(sf::Color::White);
     playerMarker.setOutlineThickness(2.f);
     playerMarker.setOrigin(playerMarker.getRadius(), playerMarker.getRadius());
+    destinationMarker.setRadius(6.f);
+    destinationMarker.setFillColor(sf::Color::Red);
+    destinationMarker.setOrigin(destinationMarker.getRadius(), destinationMarker.getRadius());
 
     titleText.setFont(font);
     titleText.setString("Paused");
@@ -145,7 +148,10 @@ void PauseMenu::draw(sf::RenderTarget& target) {
             // For now, its position is set in prepareMapScreen and on pan/zoom (if view center changes)
             playerMarker.setPosition(playerMapPosition);
             target.draw(playerMarker);
-
+            for (const auto& p : missionPoints) {
+                destinationMarker.setPosition(p.second);
+                target.draw(destinationMarker);
+            }
             target.setView(previousView);
 
             // Draw instructions in the default view (or a HUD view)
@@ -561,7 +567,9 @@ PauseMenu::MenuAction PauseMenu::getAndClearAction() {
     return action;
 }
 
-void PauseMenu::prepareMapScreen(const sf::Texture& mapTex, sf::Vector2f playerPos, sf::Vector2u windowSize) {
+void PauseMenu::prepareMapScreen(const sf::Texture& mapTex, sf::Vector2f playerPos,
+    sf::Vector2u windowSize,
+    const std::map<int, sf::Vector2f>& destinations) {
     if (!mapResourcesInitialized) {
         mapDisplaySprite.setTexture(mapTex);
         mapDisplaySprite.setPosition(0.f, 0.f); // Assuming texture draws from (0,0)
@@ -570,7 +578,10 @@ void PauseMenu::prepareMapScreen(const sf::Texture& mapTex, sf::Vector2f playerP
         mapResourcesInitialized = true; // Set this early
     }
 
-    playerMapPosition = playerPos;
+    missionPoints = destinations;
+    destinationMarker.setRadius(6.f);
+    destinationMarker.setFillColor(sf::Color::Red);
+    destinationMarker.setOrigin(6.f, 6.f);
 
     mapDisplayView.setSize(static_cast<float>(windowSize.x), static_cast<float>(windowSize.y));
     mapDisplayView.setCenter(playerMapPosition);
