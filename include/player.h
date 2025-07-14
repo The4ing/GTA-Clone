@@ -41,6 +41,7 @@ public:
     void setHealth(int health);
     void setArmor(int armor);
     void setWantedLevel(int level);
+    void playThrowAnimation();
     void setCurrentWeapon(const std::string& name, int maxAmmo);
 
     void onCollision(GameObject& other);

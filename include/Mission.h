@@ -13,6 +13,7 @@ public:
     const sf::Vector2f& getDestination() const;
     void start();
     MissionState getState() const;
+    void setState();
     void update(float dt, class Player& player);
 
 private:

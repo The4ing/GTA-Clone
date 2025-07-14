@@ -27,8 +27,7 @@ private:
     const int sheetRows = 5;
     int frameWidth = 0;
     int frameHeight = 0;
-    float radius = 0.f;
 
     float duration = 1.f; // ??? ??? ?????? ????
-    float m_radius = 1.f; // ???
+    float m_radius = 1.f; 
 };

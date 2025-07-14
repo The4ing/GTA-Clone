@@ -198,6 +198,8 @@ void GameManager::processEvents() {
                 if (event.key.code != sf::Keyboard::F11) {
                     m_isAwaitingTaskStart = false;
                     ++m_currentTaskIndex;
+                    if (mission && mission->getState() == MissionState::NotStarted)
+                        mission->start();
                     continue; // Skip other handling while task screen is active
                 }
             }
@@ -493,6 +495,7 @@ void GameManager::update(float dt) {
         if (mission) {
             mission->update(dt, *player);
             if (!showMissionComplete && mission->getState() == MissionState::Completed) {
+                std::cout << "compklete";
                 showMissionComplete = true;
                 missionCompleteClock.restart();
                 SoundManager::getInstance().playSound("mission_complete");
@@ -501,7 +504,19 @@ void GameManager::update(float dt) {
         if (showMissionComplete && missionCompleteClock.getElapsedTime().asSeconds() > 3.f) {
             showMissionComplete = false;
         }
+        if (mission && mission->getState() == MissionState::Completed &&
+            missionCompleteClock.getElapsedTime().asSeconds() > MISSION_NEXT_TASK_DELAY &&
+            !m_isAwaitingTaskStart) {
+            startNextTask();
 
+            if (m_currentTaskIndex < m_taskInstructions.size()) {
+                mission = std::make_unique<Mission>();
+                mission->setDescription(m_taskInstructions[m_currentTaskIndex]);
+                auto it = missionDestinations.find(static_cast<int>(m_currentTaskIndex + 1));
+                if (it != missionDestinations.end())
+                    mission->setDestination(it->second);
+            }
+        }
 
            
 
@@ -594,6 +609,8 @@ void GameManager::update(float dt) {
    
 
     // --- 5. HUD Update ---
+    if (mission)
+        mission->setState();
     if (m_hud && currentState == GameState::Playing) {
         PlayerData data;
         data.money = player->getMoney();

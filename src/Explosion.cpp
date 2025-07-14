@@ -1,11 +1,18 @@
 #include "Explosion.h"
 #include "ResourceManager.h"
-#include <cassert>
+#include <iostream>
 
 Explosion::Explosion(const sf::Vector2f& pos, float radius)
-    : position(pos), m_radius(radius)
+    : position(pos)
 {
-    assert(radius > 0.f);  // ???? ?????? ?? ?? ?? ??? ???? ?????? ????
+    if (radius <= 0.f) {
+        std::cerr << "Warning: Explosion created with non-positive radius "
+            << radius << ". Using radius = 1" << std::endl;
+        m_radius = 1.f;
+    }
+    else {
+        m_radius = radius;
+    }
     sprite.setTexture(ResourceManager::getInstance().getTexture("explosion"));
     sf::Vector2u texSize = sprite.getTexture()->getSize();
     frameWidth = texSize.x / sheetCols;
@@ -13,8 +20,8 @@ Explosion::Explosion(const sf::Vector2f& pos, float radius)
     sprite.setOrigin(frameWidth / 2.f, frameHeight / 2.f);
     sprite.setTextureRect(sf::IntRect(0, 0, frameWidth, frameHeight));
 
-    float scaleX = (radius * 2.f) / static_cast<float>(frameWidth);
-    float scaleY = (radius * 2.f) / static_cast<float>(frameHeight);
+    float scaleX = (m_radius * 2.f) / static_cast<float>(frameWidth);
+    float scaleY = (m_radius * 2.f) / static_cast<float>(frameHeight);
     sprite.setScale(scaleX, scaleY);
     sprite.setPosition(position);
 }

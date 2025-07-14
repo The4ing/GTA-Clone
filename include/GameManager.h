@@ -95,6 +95,7 @@ private:
     sf::View                    m_hudView;
     PauseMenu                   pauseMenu; // Added PauseMenu instance
     static constexpr float GAME_TIME_SCALE = 60.0f;
+    static constexpr float MISSION_NEXT_TASK_DELAY = 10.f;
     sf::Text m_pressStartText;
     InventoryUI inventoryUI;
     sf::RenderTexture frozenBackgroundTexture;

@@ -582,3 +582,7 @@ void Player::collideWithPlayer(Player& /*player*/) {
     // אפשר להשאיר ריק או להוסיף לוגיקת PVP בעתיד.
 }
 
+void Player::playThrowAnimation() {
+    playAnimation("ThrowGrenade", false, false, true);
+    SoundManager::getInstance().playSound("ThrowGrenade");
+}
