@@ -187,6 +187,7 @@ void GameManager::processEvents() {
                 if (event.key.code != sf::Keyboard::F11) {
                     std::cout << "First player move detected, game is now active." << std::endl;
                     m_isAwaitingFirstPlayerMove = false;
+                    if (mission) mission->start();
                 }
             }
 
@@ -478,7 +479,17 @@ void GameManager::update(float dt) {
                 }
                 return false;
             }), presents.end());
-
+        if (mission) {
+            mission->update(dt, *player);
+            if (!showMissionComplete && mission->getState() == MissionState::Completed) {
+                showMissionComplete = true;
+                missionCompleteClock.restart();
+                SoundManager::getInstance().playSound("mission_complete");
+            }
+        }
+        if (showMissionComplete && missionCompleteClock.getElapsedTime().asSeconds() > 3.f) {
+            showMissionComplete = false;
+        }
 
 
            
@@ -674,6 +685,19 @@ void GameManager::render() {
         window.draw(m_pressStartText);
     }
 
+    if (showMissionComplete) {
+        sf::RectangleShape overlay(sf::Vector2f(window.getSize()));
+        overlay.setFillColor(sf::Color(0, 0, 0, 150));
+        window.draw(overlay);
+        sf::Text doneText = m_pressStartText;
+        doneText.setString("Mission Completed");
+        doneText.setFillColor(sf::Color::Green);
+        sf::FloatRect rect = doneText.getLocalBounds();
+        doneText.setOrigin(rect.left + rect.width / 2.f, rect.top + rect.height / 2.f);
+        doneText.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f);
+        window.draw(doneText);
+    }
+
 
 
 
@@ -856,6 +880,26 @@ void GameManager::startGameFullscreen() {
     gameView.zoom(0.25f);
 
     m_hud->updateElementPositions(window.getSize().x, window.getSize().y);
+    // Load first mission and initial inventory item
+    try {
+        std::ifstream mfile("resources/missions.json");
+        if (mfile.is_open()) {
+            json mdata; mfile >> mdata;
+            if (!mdata["missions"].empty()) {
+                mission = std::make_unique<Mission>();
+                auto& m0 = mdata["missions"][0];
+                mission->setDescription(m0["description"]);
+                mission->setDestination({ m0["destination"]["x"], m0["destination"]["y"] });
+                player->getInventory().addItem("Package", ResourceManager::getInstance().getTexture("Package"));
+                player->setWantedLevel(1);
+                m_pressStartText.setString(mission->getDescription() + "\nPress any key to start");
+                updatePressStartPosition();
+            }
+        }
+    }
+    catch (...) {
+        std::cerr << "Failed to load mission data" << std::endl;
+    }
 
     currentState = GameState::Playing;
     m_isAwaitingFirstPlayerMove = true; // Start in the 'awaiting input' state

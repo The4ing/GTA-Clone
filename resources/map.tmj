@@ -41354,3 +41354,13 @@
  "version":"1.10",
  "width":160
 }
+
+{
+  "missions": [
+    {
+      "id": 1,
+      "description": "Deliver the package to the destination and lose your wanted level.",
+      "destination": {"x": 1000, "y": 1000}
+    }
+  ]
+}
