@@ -14,7 +14,7 @@ Player::Player(GameManager& gameManager) // Modified constructor
     m_currentVehicle(nullptr), frameWidth(0), frameHeight(0), currentFrame(0),
     sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
     m_money(PlayerMoney), m_health(MaxHealth), m_armor(MaxArmor),
-    m_currentWeaponName("Fists"), m_maxWeaponAmmo(0),
+    m_currentWeaponName("Bazooka"), m_maxWeaponAmmo(0),
     m_wantedLevel(5)
 {
     sf::Texture& texture = ResourceManager::getInstance().getTexture("player");
@@ -421,6 +421,11 @@ void Player::applyKnockback(const sf::Vector2f& velocity, float duration) {
 PlayerShooter& Player::getShooter() {
     return *m_shooter;
 }
+
+GameManager& Player::getGameManager() {
+    return m_gameManager;
+}
+
 
 bool Player::tryBuyAmmo(const std::string& weaponName, int amountToAdd, int price) {
 

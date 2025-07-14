@@ -19,7 +19,7 @@
 #include "PauseMenu.h" // Added PauseMenu include
 #include "PlayerShooter.h"
 #include "Money.h"
-
+#include "Explosion.h"
 
 enum class GameState {
     Menu,
@@ -48,6 +48,7 @@ public:
     BulletPool& getBulletPool() { return bulletPool; }
     const QuadTree<std::vector<sf::Vector2f>>& getBlockedPolyTree() const { return blockedPolyTree; }
     const sf::View& getGameView() const { return gameView; }
+    void createExplosion(const sf::Vector2f& pos, float radius);
 
 private:
     void setupPatrolZones(); // Method to initialize patrol zones
@@ -81,7 +82,7 @@ private:
     std::unique_ptr<PedestrianManager> pedestrianManager;
     std::unique_ptr<PathfindingGrid> pathfindingGrid;
     std::vector<std::unique_ptr<Present>> presents;
-    
+    std::vector<std::unique_ptr<Explosion>> explosions;
 
     GameState                   currentState;
     sf::Clock                   clock;

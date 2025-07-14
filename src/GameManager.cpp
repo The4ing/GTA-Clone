@@ -22,6 +22,7 @@
 #include "Vehicle.h"
 #include "PoliceCar.h"
 #include "SoundManager.h"
+#include "Explosion.h"
 // Uncomment to time‑profile את 10 הפריימים הראשונים
 // #define DEBUG_TIMING
 
@@ -416,6 +417,8 @@ void GameManager::renderFrozenGame(sf::RenderTarget& target) {
             bullet_ptr->draw(target);
         }
     }
+    for (auto& exp : explosions)
+        exp->draw(target);
 }
 
 void GameManager::update(float dt) {
@@ -500,6 +503,10 @@ void GameManager::update(float dt) {
         }
 
         player->getShooter().update(dt, blockedPolygons, npcPtrs, policePtrs, carPtrs, *player);
+        for (auto& exp : explosions)
+            exp->update(dt, blockedPolygons);
+        explosions.erase(std::remove_if(explosions.begin(), explosions.end(),
+            [](const std::unique_ptr<Explosion>& e) { return e->isFinished(); }), explosions.end());
 
         // Vehicle-to-Vehicle collision (Player-driven vs AI)
         if (player->isInVehicle() && carManager) {
@@ -641,6 +648,8 @@ void GameManager::render() {
             bullet_ptr->draw(window);
         }
     }
+    for (auto& exp : explosions)
+        exp->draw(window);
 
     for (auto& s : store) {
         s->drawUI(window);
@@ -901,6 +910,10 @@ void GameManager::addBullet(const sf::Vector2f& startPos, const sf::Vector2f& di
     if (bullet) {
         bullet->init(startPos, direction, type, fromPlayer, ignoreBlocked);
     }
+}
+
+void GameManager::createExplosion(const sf::Vector2f& pos, float radius) {
+    explosions.push_back(std::make_unique<Explosion>(pos, radius));
 }
 
 

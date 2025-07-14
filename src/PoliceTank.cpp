@@ -110,9 +110,6 @@ void PoliceTank::update(float dt, Player& player, const std::vector<std::vector<
         turretOffset.x * std::sin(bodyRotationRad) + turretOffset.y * std::cos(bodyRotationRad)
     );
     m_turretSprite.setPosition(getPosition() + rotatedOffset);
-    std::cout << "Tank Position: ("
-        << getPosition().x << ", "
-        << getPosition().y << ")" << std::endl;
     // Aim and potentially fire after updating the turret's position so rotation smoothing uses the correct origin
     aimAndFire(player, dt);
 

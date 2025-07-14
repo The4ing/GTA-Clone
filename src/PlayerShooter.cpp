@@ -1,4 +1,5 @@
 #include "PlayerShooter.h"
+#include "GameManager.h"
 #include <cmath>
 
 PlayerShooter::PlayerShooter(Player& player, BulletPool& pool)
@@ -117,8 +118,9 @@ void PlayerShooter::update(float dt,
     for (auto& bptr : m_pool.getAllBullets()) {
         if (!bptr->isActive()) continue;
         bptr->update(dt, blockedPolygons);
-        if (bptr->checkCollision(blockedPolygons, npcs, police, vehicles, player)) {
-            //SoundManager::getInstance().playSound("gunshot");
+        bool collided = bptr->checkCollision(blockedPolygons, npcs, police, vehicles, player);
+        if (collided && bptr->getExplosionRadius() > 0.f) {
+            player.getGameManager().createExplosion(bptr->getPosition(), bptr->getExplosionRadius());
         }
     }
 }

@@ -66,6 +66,7 @@ public:
     void incrementKills() { ++killCount; } 
 
     PlayerShooter& getShooter();
+    GameManager& getGameManager();
     void applyKnockback(const sf::Vector2f& velocity, float duration);
 
 private:
