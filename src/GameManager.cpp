@@ -50,7 +50,7 @@ GameManager::GameManager()
     /* Press‑any‑key overlay */
     try {
         m_pressStartText.setFont(ResourceManager::getInstance().getFont("main"));
-        m_pressStartText.setString("Press any key to start");
+        m_pressStartText.setString("Press Enter to start");
         m_pressStartText.setCharacterSize(60);
         m_pressStartText.setFillColor(sf::Color::White);
     }
@@ -195,7 +195,7 @@ void GameManager::processEvents() {
 
         if (event.type == sf::Event::KeyPressed) {
             if (m_isAwaitingTaskStart) {
-                if (event.key.code != sf::Keyboard::F11) {
+                if (event.key.code == sf::Keyboard::Enter) {
                     m_isAwaitingTaskStart = false;
                     ++m_currentTaskIndex;
                     if (mission && mission->getState() == MissionState::NotStarted)
@@ -501,7 +501,8 @@ void GameManager::update(float dt) {
                 SoundManager::getInstance().playSound("mission_complete");
             }
         }
-        if (showMissionComplete && missionCompleteClock.getElapsedTime().asSeconds() > 3.f) {
+        // Hide the "Mission Completed" text after five seconds
+        if (showMissionComplete && missionCompleteClock.getElapsedTime().asSeconds() > 5.f) {
             showMissionComplete = false;
         }
         if (mission && mission->getState() == MissionState::Completed &&
@@ -609,8 +610,6 @@ void GameManager::update(float dt) {
    
 
     // --- 5. HUD Update ---
-    if (mission)
-        mission->setState();
     if (m_hud && currentState == GameState::Playing) {
         PlayerData data;
         data.money = player->getMoney();
@@ -935,7 +934,7 @@ void GameManager::startGameFullscreen() {
         mission->setDestination(it->second);
     player->getInventory().addItem("Package", ResourceManager::getInstance().getTexture("Package"));
     player->setWantedLevel(1);
-    m_pressStartText.setString("Press any key to start");
+    m_pressStartText.setString("Press Enter key to start");
 
     updatePressStartPosition();
 
