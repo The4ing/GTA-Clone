@@ -78,6 +78,8 @@ private:
     sf::View mapDisplayView;
     sf::CircleShape playerMarker;
     sf::CircleShape destinationMarker;
+    sf::Clock destinationBlinkClock;
+    float destinationBlinkInterval = 0.5f;
     std::map<int, sf::Vector2f> missionPoints;
     sf::Vector2f playerMapPosition;
     bool mapResourcesInitialized = false;

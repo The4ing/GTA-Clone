@@ -3,6 +3,7 @@
 #include "ResourceManager.h" // Assuming a ResourceManager exists for fonts
 #include "SoundManager.h" // Added for volume controls
 #include <iostream> // For placeholder cout statements
+#include <cmath>
 
 // It's good practice to put Constants.h inclusion within an ifdef
 // or ensure it's included correctly by the build system.
@@ -148,9 +149,13 @@ void PauseMenu::draw(sf::RenderTarget& target) {
             // For now, its position is set in prepareMapScreen and on pan/zoom (if view center changes)
             playerMarker.setPosition(playerMapPosition);
             target.draw(playerMarker);
+            bool blinkVisible = fmod(destinationBlinkClock.getElapsedTime().asSeconds(),
+                destinationBlinkInterval * 2.f) < destinationBlinkInterval;
             for (const auto& p : missionPoints) {
-                destinationMarker.setPosition(p.second);
-                target.draw(destinationMarker);
+                if (blinkVisible) {
+                    destinationMarker.setPosition(p.second);
+                    target.draw(destinationMarker);
+                }
             }
             target.setView(previousView);
 

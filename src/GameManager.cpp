@@ -918,7 +918,8 @@ void GameManager::startGameFullscreen() {
         mission->setDestination(it->second);
     player->getInventory().addItem("Package", ResourceManager::getInstance().getTexture("Package"));
     player->setWantedLevel(1);
-    m_pressStartText.setString(mission->getDescription() + "\nPress any key to start");
+    m_pressStartText.setString("Press any key to start");
+
     updatePressStartPosition();
 
     currentState = GameState::Playing;
@@ -1040,19 +1041,23 @@ void GameManager::setupPatrolZones() {
 }
 
 void GameManager::updatePressStartPosition() {
+    // CENTER "Press any key" (תחתון)
     sf::FloatRect textRect = m_pressStartText.getLocalBounds();
     m_pressStartText.setOrigin(textRect.left + textRect.width / 2.f,
         textRect.top + textRect.height / 2.f);
     m_pressStartText.setPosition(window.getSize().x / 2.f,
-        window.getSize().y / 2.f);
+        window.getSize().y / 2.f + 30.f); // 🔼 מעט נמוך יותר
+
+    // CENTER "Task Instruction" (עליון)
     if (m_taskInstructionText.getFont()) {
         sf::FloatRect taskRect = m_taskInstructionText.getLocalBounds();
         m_taskInstructionText.setOrigin(taskRect.left + taskRect.width / 2.f,
             taskRect.top + taskRect.height / 2.f);
         m_taskInstructionText.setPosition(window.getSize().x / 2.f,
-            window.getSize().y / 2.f - 50.f);
+            window.getSize().y / 2.f - 30.f); // 🔽 מעט גבוה יותר
     }
 }
+
 
 void GameManager::displayLoadingScreen(const std::string& message, float initialProgress) {
     window.clear();

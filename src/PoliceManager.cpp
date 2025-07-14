@@ -389,7 +389,7 @@ void PoliceManager::managePolicePopulation(int wantedLevel, const sf::Vector2f& 
         m_desiredPoliceTanks = 0;
         break;
     case 1:
-        m_desiredBatonOfficers = 2;
+        m_desiredBatonOfficers = 7;
         m_desiredPistolOfficers = 0;
         m_desiredPoliceCars = 0;
         break;
