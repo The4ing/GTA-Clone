@@ -91,6 +91,7 @@ private:
     float       animDelay;
     float       speed = 50.f;
     float m_knockbackTimer = 0.f;
+    float speedBoostTimer = 0.f;
 
     int         frameWidth;
     int         frameHeight;
@@ -119,7 +120,7 @@ private:
 
     Inventory inventory;
    
-    float speedBoostTimer = 0.f;
+   
     sf::Vector2f m_knockbackVelocity = { 0.f, 0.f };
    
    
