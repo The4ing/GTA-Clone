@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required (VERSION 3.26)
 
 project (oop2_ex04)
-set (MY_AUTHORS "ROMI SINIZKEY AND OR-RAM ATAR")
+set (MY_AUTHORS "Or_Ram_Atar-Romi_sinizkey")
 
 include (cmake/CompilerSettings.cmake)
 
