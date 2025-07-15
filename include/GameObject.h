@@ -4,6 +4,7 @@
 class Player;
 class Present;
 
+//class for all the characters and other stuff 
 class GameObject {
 public:
     virtual ~GameObject() = default;
@@ -14,8 +15,6 @@ public:
     virtual void setPosition(const sf::Vector2f& pos) = 0;
 
     virtual void onCollision(GameObject& other) = 0;
-
-    // ← נוסיף את שתי הפונקציות החשובות:
     virtual void collideWithPlayer(Player& player) = 0;
     virtual void collideWithPresent(Present& present) = 0;
 };

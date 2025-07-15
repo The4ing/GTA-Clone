@@ -105,7 +105,6 @@ private:
     int m_health;
     int m_armor;
     std::string m_currentWeaponName;
-    CurrentWepapon m_currentWeaponAmmo;
     int m_maxWeaponAmmo;
     int m_wantedLevel;
     std::unique_ptr<PlayerShooter> m_shooter;
