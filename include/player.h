@@ -15,26 +15,32 @@ class GameManager; // Forward declaration ????
 class Player : public Character {
 public:
     Player(GameManager& gameManager);
-
-    void setPosition(const sf::Vector2f& pos);
-    sf::Vector2f getPosition() const;
-    float getRotation() const;
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
     void draw(sf::RenderTarget& window);
+    void setPosition(const sf::Vector2f& pos);
+
+    sf::Vector2f getPosition() const;
     sf::FloatRect getCollisionBounds(const sf::Vector2f& offset = {}) const;
     sf::Vector2f getCenter() const;
-    float getCollisionRadius() const;
     sf::CircleShape getCollisionCircle() const;
+    std::string getCurrentWeaponName() const;
+    Vehicle* getCurrentVehicle() const;
+    PlayerShooter& getShooter();
+    GameManager& getGameManager();
+
+    float getRotation() const;
     void takeDamage(int amount);
+    float getCollisionRadius() const;
+    
 
     // HUD Data Getters
     int getMoney() const;
     int getHealth() const;
     int getArmor() const;
-    std::string getCurrentWeaponName() const;
     int getCurrentAmmo(const std::string& name) const;
     int getMaxAmmo() const;
     int getWantedLevel() const;
+
     bool consumeAmmo(const std::string& name);
 
     // HUD Data Setters
@@ -44,6 +50,7 @@ public:
     void setWantedLevel(int level);
     void playThrowAnimation();
     void setCurrentWeapon(const std::string& name, int maxAmmo);
+
 
     void onCollision(GameObject& other);
     void collideWithPresent(Present& present);
@@ -61,20 +68,17 @@ public:
 
     void enterVehicle(Vehicle* vehicle);
     void exitVehicle();
-    Vehicle* getCurrentVehicle() const;
+   
     bool isInVehicle() const;
-    int getKills() const { return killCount; }
+    int getKills() const;
 
-    void incrementKills() { ++killCount; }
+    void incrementKills();
+    void incrementNpcKills();
+    void incrementCopKills();
+    int getNpcKills() const;
+    int getCopKills() const;
 
-    void incrementNpcKills() { ++npcKills; }
-    void incrementCopKills() { ++copKills; }
-    int getNpcKills() const { return npcKills; }
-    int getCopKills() const { return copKills; }
-   // void resetMissionKills() { npcKills = 0; copKills = 0; }
-
-    PlayerShooter& getShooter();
-    GameManager& getGameManager();
+  
     void applyKnockback(const sf::Vector2f& velocity, float duration);
     void resetAfterDeath();
     void resetMissionKills();
@@ -89,9 +93,9 @@ private:
 
     float       animTimer;
     float       animDelay;
-    float       speed = 50.f;
-    float m_knockbackTimer = 0.f;
-    float speedBoostTimer = 0.f;
+    float       speed ;
+    float m_knockbackTimer ;
+    float speedBoostTimer ;
 
     int         frameWidth;
     int         frameHeight;
@@ -101,17 +105,17 @@ private:
     int m_money;
     int m_health;
     int m_armor;
-    int killCount = 0;
-    int Bullets = 0;
+    int killCount ;
+    int Bullets ;
     int m_maxWeaponAmmo;
     int m_wantedLevel;
-    int npcKills = 0;
-    int copKills = 0;
+    int npcKills ;
+    int copKills;
 
     sf::Vector2f position;
-    bool wasShooting = false;
-    bool isFinishingShootAnim = false;
-    bool m_isDead = false;
+    bool wasShooting ;
+    bool isFinishingShootAnim ;
+    bool m_isDead ;
     
     std::string m_currentWeaponName;
     std::string currentAnimationName;
@@ -120,8 +124,8 @@ private:
 
     Inventory inventory;
    
-   
-    sf::Vector2f m_knockbackVelocity = { 0.f, 0.f };
+
+    sf::Vector2f m_knockbackVelocity ;
    
    
     std::unique_ptr<AnimationManager> animationManager;

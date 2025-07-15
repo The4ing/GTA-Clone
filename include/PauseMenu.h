@@ -74,8 +74,7 @@ private:
     int newGameConfirmIndex ; 
     int selectedIndex ; 
 
-    void updateVolumeDisplayText(); // Helper to update the volume text
- 
+
 
     std::vector<std::string> menuItems;
   
@@ -87,7 +86,7 @@ private:
     bool showingStats ;
     bool wasEscapePressed ;
 
-
+    void updateVolumeDisplayText();
     void navigateUp();
     void navigateDown();
     void selectCurrent();

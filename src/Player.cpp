@@ -16,7 +16,9 @@ Player::Player(GameManager& gameManager) // Modified constructor
     sheetCols(12), sheetRows(12), animTimer(0.f), animDelay(0.1f),
     m_money(PlayerMoney), m_health(MaxHealth), m_armor(MaxArmor),
     m_currentWeaponName("Fists"), m_maxWeaponAmmo(0),
-    m_wantedLevel(0)
+    m_wantedLevel(0),speed(50.f),m_knockbackTimer(0.f), speedBoostTimer(0.f), killCount(0),Bullets(0),
+    npcKills(0),copKills(0), wasShooting(false),  isFinishingShootAnim(false), m_isDead(false), m_knockbackVelocity({ 0.f, 0.f })
+
 {
     sf::Texture& texture = ResourceManager::getInstance().getTexture("player");
     sprite.setTexture(texture);
@@ -518,6 +520,36 @@ Vehicle* Player::getCurrentVehicle() const {
 
 bool Player::isInVehicle() const {
     return m_currentVehicle != nullptr;
+}
+
+int Player::getKills() const
+{
+    return killCount;
+}
+
+void Player::incrementKills()
+{
+    ++killCount;
+}
+
+void Player::incrementNpcKills()
+{
+    ++npcKills;
+}
+
+void Player::incrementCopKills()
+{
+    ++copKills;
+}
+
+int Player::getNpcKills() const
+{
+    return npcKills;
+}
+
+int Player::getCopKills() const
+{
+    return copKills;
 }
 
 void Player::setCurrentWeapon(const std::string& name, int maxAmmo) {
