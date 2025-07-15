@@ -1,9 +1,10 @@
-﻿#include "Menu.h"
+#include "Menu.h"
 #include "ResourceManager.h"
 #include "Settings.h"
+#include "SoundManager.h"
 #include <iostream>
 
-Menu::Menu(sf::RenderWindow & win) : window(win) {
+Menu::Menu(sf::RenderWindow& win) : window(win) {
     font = ResourceManager::getInstance().getFont("main");
 
     background.setTexture(ResourceManager::getInstance().getTexture("background_menu"));
@@ -29,29 +30,35 @@ Menu::Menu(sf::RenderWindow & win) : window(win) {
         text.setFillColor(sf::Color::White);
         options.push_back(text);
     }
+
+    // ✅ נגן מוזיקת תפריט ברקע בלולאה
+    menuLoop.setBuffer(ResourceManager::getInstance().getSoundBuffer("MenuSound"));
+    menuLoop.setLoop(true);
+    menuLoop.setVolume(SoundManager::getInstance().getVolume());
+    menuLoop.play();
+    SoundManager::getInstance().registerExternalSound(&menuLoop);
+   
 }
-
-
 
 void Menu::update(sf::Event& event) {
     auto mousePos = sf::Mouse::getPosition(window);
     auto worldPos = window.mapPixelToCoords(mousePos);
 
+    int hoveredIndex = -1;
 
-    int  hoveredIndex = -1;
+
+    
 
     for (size_t i = 0; i < options.size(); ++i) {
         if (options[i].getGlobalBounds().contains(worldPos)) {
             hoveredIndex = static_cast<int>(i);
-
             options[i].setFillColor(sf::Color::Yellow);
-            options[i].setCharacterSize(42);  // גדול יותר
+            options[i].setCharacterSize(42);  // הגדל טקסט
 
             if (event.type == sf::Event::MouseButtonPressed &&
                 event.mouseButton.button == sf::Mouse::Left) {
 
                 if (options[i].getString() == "Settings") {
-
                     Settings settings(window);
                     while (!settings.shouldExit()) {
                         sf::Event settingsEvent;
@@ -68,7 +75,15 @@ void Menu::update(sf::Event& event) {
                         window.display();
                     }
                 }
-                else {
+                else if (options[i].getString() == "Start Game") {
+                    // ✅ עצור את המוזיקה
+                    menuLoop.stop();
+                    SoundManager::getInstance().unregisterExternalSound(&menuLoop);
+
+                    selectedIndex = static_cast<int>(i);
+                    optionChosen = true;
+                }
+                else if (options[i].getString() == "Exit") {
                     selectedIndex = static_cast<int>(i);
                     optionChosen = true;
                 }
@@ -81,15 +96,11 @@ void Menu::update(sf::Event& event) {
     }
 }
 
-
-
 void Menu::draw() {
     window.draw(background);
     for (auto& option : options)
         window.draw(option);
 }
-
-
 
 int Menu::getSelectedIndex() const {
     return selectedIndex;
@@ -106,9 +117,5 @@ std::string Menu::getSelectedOption() const {
 void Menu::reset() {
     optionChosen = false;
     selectedIndex = 0;
-    // If there are other states to reset for the menu, add them here.
-    // For example, if the menu could be in different sub-menus.
-    std::cout << "Menu reset." << std::endl; // For debugging
+    std::cout << "Menu reset." << std::endl;
 }
-
-
