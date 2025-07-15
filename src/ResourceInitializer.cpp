@@ -45,10 +45,9 @@ void ResourceInitializer::loadGameResources() {
     // Item/Present Textures
     rm.loadTexture("Health", "resources/health.png");
     rm.loadTexture("Speed", "resources/speed.png");
-    rm.loadTexture("Ammo", "resources/ammo.png");
     rm.loadTexture("Package", "resources/package.png");
     // Object Textures
-    rm.loadTexture("static_building", "resources/building.png");
+
     rm.loadTexture("map", "resources/map.png");
  //   rm.loadTexture("bullet", "resources/bullet.png");
     rm.loadTexture("car_sheet", "resources/cars_spritesheet.png");
@@ -84,7 +83,7 @@ void ResourceInitializer::loadGameResources() {
     rm.loadSoundBuffer("gameplay", "resources/sounds/gameplay.ogg");
 
 
-    // rm.loadSoundBuffer("explosion", "resources/sounds/explosion.ogg");
+ 
 
     //inventory 
     rm.loadTexture("StoreAmmo", "resources/StoreAmmo.png");

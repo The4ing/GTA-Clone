@@ -409,26 +409,7 @@ void GameManager::renderFrozenGame(sf::RenderTarget& target) {
         blood->draw(target);
     player->draw(target);
 
-    for (const auto& poly : blockedPolygons) {
-        sf::ConvexShape shape;
-        shape.setPointCount(poly.size());
-        for (size_t i = 0; i < poly.size(); ++i)
-            shape.setPoint(i, poly[i]);
-        shape.setFillColor(sf::Color::Transparent);
-        shape.setOutlineColor(sf::Color::Green);
-        shape.setOutlineThickness(1.f);
-        target.draw(shape);
-    }
-
-    for (const auto& road : roads) {
-        sf::RectangleShape shape;
-        shape.setSize({ road.bounds.width, road.bounds.height });
-        shape.setPosition({ road.bounds.left, road.bounds.top });
-        shape.setFillColor(sf::Color::Transparent);
-        shape.setOutlineColor(sf::Color::Red);
-        shape.setOutlineThickness(1.f);
-        target.draw(shape);
-    }
+   
 
     if (carManager)
         carManager->draw(target);
