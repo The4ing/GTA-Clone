@@ -42,12 +42,12 @@ Player::Player(GameManager& gameManager) // Modified constructor
 
     WeaponsAmmo = {
     { "Fists",   AmmoSetting{0, 0} },
-    { "Pistol",  AmmoSetting{12, 60} },
-    { "Rifle",   AmmoSetting{180, 180} },
-    { "Minigun", AmmoSetting{1000, 1000} },
-    { "Bazooka", AmmoSetting{5, 5} },
+    { "Pistol",  AmmoSetting{10, 60} },
+    { "Rifle",   AmmoSetting{10, 180} },
+    { "Minigun", AmmoSetting{50, 1000} },
+    { "Bazooka", AmmoSetting{1, 5} },
     { "Knife",   AmmoSetting{0, 1} },
-    { "Grenade", AmmoSetting{3, 10} }
+    { "Grenade", AmmoSetting{0, 10} }
     };
     m_maxWeaponAmmo = WeaponsAmmo[m_currentWeaponName].MaxAmmo;
 }
@@ -333,8 +333,6 @@ void Player::draw(sf::RenderTarget& window) {
         return;
     }
 
-    sf::CircleShape hitCircle = getCollisionCircle();
-    window.draw(hitCircle);
 
 
     window.draw(sprite);
