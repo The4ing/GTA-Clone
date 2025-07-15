@@ -10,7 +10,7 @@
 #include "CollisionUtils.h"
 #include "CarManager.h"
 
-static float distanceSquared(const sf::Vector2f & a, const sf::Vector2f & b) {
+static float distanceSquared(const sf::Vector2f& a, const sf::Vector2f& b) {
     float dx = a.x - b.x;
     float dy = a.y - b.y;
     return dx * dx + dy * dy;
@@ -153,7 +153,7 @@ void PoliceManager::spawnAmbientPoliceCarOnRoadSegment(const RoadSegment* road, 
     newPoliceCar->setCurrentLaneIndex(laneIndex);
 
     newPoliceCar->setIsAmbient(true);
-    newPoliceCar->setPlyrCausedWantedIncrease(false) ; // Explicitly set, though it's the default
+    newPoliceCar->setPlyrCausedWantedIncrease(false); // Explicitly set, though it's the default
 
     m_policeCars.push_back(std::move(newPoliceCar));
     // std::cout << "Spawned AMBIENT Police Car at: (" << spawnPosition.x << ", " << spawnPosition.y << ")\n";
@@ -187,27 +187,33 @@ void PoliceManager::update(float dt, Player& player, const std::vector<std::vect
     updatePoliceTanks(dt, player, blockedPolygons);
 
     // Update static units as well
-    for (auto& unit : m_staticPoliceOfficers) {
-        unit->update(dt, player, blockedPolygons);
-        if (!unit->isDead() && unit->canSeePlayer(player, blockedPolygons)) {
+    for (size_t i = 0; i < m_staticPoliceOfficers.size(); ) {
+        m_staticPoliceOfficers[i]->update(dt, player, blockedPolygons);
+        if (!m_staticPoliceOfficers[i]->isDead() && m_staticPoliceOfficers[i]->canSeePlayer(player, blockedPolygons)) {
             m_numSeeingPlayer++; // Static units also contribute to being seen
         }
+        if (m_staticPoliceOfficers[i]->getNeedsCleanup()) {
+            m_staticPoliceOfficers.erase(m_staticPoliceOfficers.begin() + i);
+        }
+        else {
+            i++;
+        }
     }
-    m_staticPoliceOfficers.erase(std::remove_if(m_staticPoliceOfficers.begin(), m_staticPoliceOfficers.end(),
-        [](const std::unique_ptr<Police>& p) { return p->getNeedsCleanup(); }),
-        m_staticPoliceOfficers.end());
 
-    for (auto& car : m_staticPoliceCars) {
-        car->update(dt, player, blockedPolygons);
-        if (!car->isDestroyed() && car->canSeePlayer(player, blockedPolygons)) {
-            if (car->getDriver() != &player) {
+    for (size_t i = 0; i < m_staticPoliceCars.size(); ) {
+        m_staticPoliceCars[i]->update(dt, player, blockedPolygons);
+        if (!m_staticPoliceCars[i]->isDestroyed() && m_staticPoliceCars[i]->canSeePlayer(player, blockedPolygons)) {
+            if (m_staticPoliceCars[i]->getDriver() != &player) {
                 m_numSeeingPlayer++; // Static cars also contribute
             }
         }
+        if (m_staticPoliceCars[i]->isDestroyed()) {
+            m_staticPoliceCars.erase(m_staticPoliceCars.begin() + i);
+        }
+        else {
+            i++;
+        }
     }
-    m_staticPoliceCars.erase(std::remove_if(m_staticPoliceCars.begin(), m_staticPoliceCars.end(),
-        [](const std::unique_ptr<PoliceCar>& pc) { return pc->isDestroyed(); }),
-        m_staticPoliceCars.end());
 
     // Old random spawning logic (trySpawnRandomPoliceNear) might be disabled or integrated into managePolicePopulation for 0 stars.
     // if (wantedLevel == 0) {
@@ -235,7 +241,8 @@ void PoliceManager::update(float dt, Player& player, const std::vector<std::vect
 }
 
 void PoliceManager::updatePoliceCars(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    for (auto& car : m_policeCars) {
+    for (size_t i = 0; i < m_policeCars.size(); ) {
+        auto& car = m_policeCars[i];
         car->update(dt, player, blockedPolygons);
         if (car->hasOfficerInside() && car->readyForOfficerExit()) {
             float rot = (car->getSprite().getRotation() - 90.f) * static_cast<float>(M_PI) / 180.f;
@@ -247,9 +254,14 @@ void PoliceManager::updatePoliceCars(float dt, Player& player, const std::vector
             car->stop();
             car->clearOfficerExitRequest();
         }
+
+        if (car->isDestroyed() || car->getNeedsCleanup()) {
+            m_policeCars.erase(m_policeCars.begin() + i);
+        }
+        else {
+            i++;
+        }
     }
-    m_policeCars.erase(std::remove_if(m_policeCars.begin(), m_policeCars.end(),
-        [](const std::unique_ptr<PoliceCar>& pc) { return pc->isDestroyed() || pc->getNeedsCleanup(); }), m_policeCars.end());
 
     for (const auto& car : m_policeCars) {
         if (!car->isDestroyed() && !car->isRetreating() && car->canSeePlayer(player, blockedPolygons)) { // Don't count retreating cars
@@ -264,12 +276,17 @@ void PoliceManager::updatePoliceCars(float dt, Player& player, const std::vector
 
 // Renamed from updatePoliceUnits
 void PoliceManager::updatePoliceOfficers(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    for (auto& unit : m_policeOfficers) {
+    for (size_t i = 0; i < m_policeOfficers.size(); ) {
+        auto& unit = m_policeOfficers[i];
         unit->update(dt, player, blockedPolygons);
+
+        if (unit->getNeedsCleanup()) {
+            m_policeOfficers.erase(m_policeOfficers.begin() + i);
+        }
+        else {
+            i++;
+        }
     }
-    m_policeOfficers.erase(std::remove_if(m_policeOfficers.begin(), m_policeOfficers.end(),
-        [](const std::unique_ptr<Police>& p) { return p->getNeedsCleanup(); }),
-        m_policeOfficers.end());
 
     for (const auto& unit : m_policeOfficers) {
         if (!unit->isDead() && !unit->isRetreating() && unit->canSeePlayer(player, blockedPolygons)) { // Don't count retreating units as seeing player
@@ -284,7 +301,8 @@ void PoliceManager::updatePoliceHelicopters(float dt, Player& player, const std:
     const float viewRadius = std::max(view.getSize().x, view.getSize().y) * 0.5f;
     const float cleanupDistance = viewRadius + 400.f; // מרחק שמעבר לו נחשיב את המסוק כרחוק
 
-    for (auto& heli : m_policeHelicopters) {
+    for (size_t i = 0; i < m_policeHelicopters.size(); ) {
+        auto& heli = m_policeHelicopters[i];
         if (player.getWantedLevel() < 4) {
             // התחלת נסיגה אם עוד לא התחיל
             if (!heli->isRetreating()) {
@@ -304,15 +322,16 @@ void PoliceManager::updatePoliceHelicopters(float dt, Player& player, const std:
         }
 
         heli->update(dt, player, blockedPolygons);
+
+        if (heli->isDestroyed() || heli->getNeedsCleanup()) {
+            m_policeHelicopters.erase(m_policeHelicopters.begin() + i);
+        }
+        else {
+            i++;
+        }
     }
 
-    m_policeHelicopters.erase(std::remove_if(m_policeHelicopters.begin(), m_policeHelicopters.end(),
-        [](const std::unique_ptr<PoliceHelicopter>& ph) {
-            return ph->isDestroyed() || ph->getNeedsCleanup();
-        }),
-        m_policeHelicopters.end());
-
- //   m_numSeeingPlayer = 0; // reset count
+    //   m_numSeeingPlayer = 0; // reset count
     for (const auto& heli : m_policeHelicopters) {
         if (!heli->isDestroyed() && heli->canSeePlayer(player, blockedPolygons)) {
             m_numSeeingPlayer++;
@@ -322,12 +341,17 @@ void PoliceManager::updatePoliceHelicopters(float dt, Player& player, const std:
 
 
 void PoliceManager::updatePoliceTanks(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    for (auto& tank : m_policeTanks) {
+    for (size_t i = 0; i < m_policeTanks.size(); ) {
+        auto& tank = m_policeTanks[i];
         tank->update(dt, player, blockedPolygons);
+
+        if (tank->isDestroyed() || tank->isReadyForCleanup()) {
+            m_policeTanks.erase(m_policeTanks.begin() + i);
+        }
+        else {
+            i++;
+        }
     }
-    m_policeTanks.erase(std::remove_if(m_policeTanks.begin(), m_policeTanks.end(),
-        [](const std::unique_ptr<PoliceTank>& pt) { return pt->isDestroyed() || pt->isReadyForCleanup(); }),
-        m_policeTanks.end());
 
     for (const auto& tank : m_policeTanks) {
         if (!tank->isDestroyed() && tank->canSeePlayer(player, blockedPolygons)) {

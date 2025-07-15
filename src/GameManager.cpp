@@ -491,18 +491,16 @@ void GameManager::update(float dt) {
             }
         pedestrianManager->update(dt, blockedPolygons);
 
-        for (auto& present : presents) {
-            present->update(dt, blockedPolygons);
-        }
-
-
-        presents.erase(std::remove_if(presents.begin(), presents.end(),
-            [](const std::unique_ptr<Present>& present) {
-                if (auto money = dynamic_cast<Money*>(present.get())) {
-                    return money->getTempMoney() && money->isExpired();
+        for (size_t i = 0; i < presents.size(); ) {
+            presents[i]->update(dt, blockedPolygons);
+            if (auto money = dynamic_cast<Money*>(presents[i].get())) {
+                if (money->getTempMoney() && money->isExpired()) {
+                    presents.erase(presents.begin() + i);
+                    continue;
                 }
-                return false;
-            }), presents.end());
+            }
+            i++;
+        }
         if (m_currentTaskIndex < missions.size()) {
             missions[m_currentTaskIndex]->update(dt, *player);
             if (!showMissionComplete && missions[m_currentTaskIndex]->isCompleted()) {
@@ -1065,7 +1063,7 @@ void GameManager::startGameFullscreen() {
 
     currentState = GameState::Playing;
     startNextTask();
-    // SoundManager::getInstance().playSound("gameplay");
+    SoundManager::getInstance().playSound("gameplay");
 }
 
 void GameManager::setFullscreen(bool fullscreen) {

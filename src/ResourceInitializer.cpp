@@ -73,7 +73,7 @@ void ResourceInitializer::loadGameResources() {
     rm.loadSoundBuffer("wanted", "resources/sounds/wanted.wav");
     rm.loadSoundBuffer("dispatch", "resources/sounds/dispatch.wav");
     rm.loadSoundBuffer("wasted", "resources/sounds/wasted.wav");
- //   rm.loadSoundBuffer("gameplay", "resources/sounds/gameplay.wav");
+    rm.loadSoundBuffer("gameplay", "resources/sounds/gameplay.wav");
     // rm.loadSoundBuffer("explosion", "resources/sounds/explosion.wav");
 
     //inventory 

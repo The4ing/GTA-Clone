@@ -55,8 +55,8 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
         vehicleTree.insert(area, vPtr.get());
     }
 
-    for (auto& vehiclePtr : vehicles) {
-        Vehicle& vehicle = *vehiclePtr;
+    for (size_t i = 0; i < vehicles.size(); ++i) {
+        Vehicle& vehicle = *vehicles[i];
         // First, call the vehicle's own update method.
         // This handles player input if present, or basic AI movement (like Bezier curve execution if inTurn is true for AI).
         vehicle.update(dt, blockedPolygons);
@@ -202,15 +202,14 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
     }
     sf::FloatRect viewRect(view.getCenter() - view.getSize() / 2.f, view.getSize());
 
-    auto it = vehicles.begin();
-    while (it != vehicles.end()) {
-        Vehicle& v = **it;
+    for (size_t i = 0; i < vehicles.size(); ) {
+        Vehicle& v = *vehicles[i];
         if (v.isDestroyed() && !viewRect.intersects(v.getSprite().getGlobalBounds())) {
-            it = vehicles.erase(it);
+            vehicles.erase(vehicles.begin() + i);
             spawnVehicleOffScreen(view);
         }
         else {
-            ++it;
+            ++i;
         }
     }
 }
@@ -411,12 +410,12 @@ void CarManager::spawnSingleVehicleOnRoad() {
     //}
     //else {
         // Spawn a regular car
-        addVehicle(std::move(car));
-        vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), vehicles.back().get());
-        // std::cout << "Spawned REGULAR car at (" << laneCenter.x << ", " << laneCenter.y
-        //           << ") on lane " << laneIndex << " direction: " << actualDir
-        //           << " (road#" << roadIdx << ")\n";
-    //}
+    addVehicle(std::move(car));
+    vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), vehicles.back().get());
+    // std::cout << "Spawned REGULAR car at (" << laneCenter.x << ", " << laneCenter.y
+    //           << ") on lane " << laneIndex << " direction: " << actualDir
+    //           << " (road#" << roadIdx << ")\n";
+//}
 }
 
 
