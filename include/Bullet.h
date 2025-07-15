@@ -25,18 +25,20 @@ enum class BulletType {
 class Bullet : public MovingObject {
 public:
     Bullet();
-    sf::Vector2f m_startPos; // for debug drawing
+    sf::Vector2f m_startPos;
     void init(const sf::Vector2f& startPos, const sf::Vector2f& direction,
-        BulletType type = BulletType::Default,
-        bool firedByPlayer = false,
-        bool ignoreBlocked = false);
+        BulletType type = BulletType::Default, bool firedByPlayer = false,bool ignoreBlocked = false);
+
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) override;
     void draw(sf::RenderTarget& target) override;
+
 
     sf::Vector2f getPosition() const override;
     void setPosition(const sf::Vector2f& pos) override;
     void move(const sf::Vector2f& moveDir, float dt) override;
-    float getSpeed() const override;
+    void setActive(bool active);
+    void setType(BulletType type);
+
 
     void onCollision(GameObject& other) override;
     void collideWithPlayer(Player& player) override;
@@ -47,25 +49,28 @@ public:
         const std::vector<Police*>& police,
         const std::vector<Vehicle*>& cars,
         Player& player);
-
-    void setType(BulletType type);
     bool isActive() const;
-    void setActive(bool active);
+  
+    
+   
     float getDamage() const;
     float getExplosionRadius() const;
+    float getSpeed() const override;
+
 
 private:
     sf::Sprite m_sprite;
     sf::Vector2f m_position;
     sf::Vector2f m_direction;
-    float m_speed = 500.f;
-
     BulletType m_type = BulletType::Default;
-    float m_damage = 10.f;
-    float m_explosionRadius = 0.f;
-    bool m_active = false;
-    bool m_firedByPlayer = false;
-    bool m_ignoreBlocked = false;
+
+    float m_speed ;
+    float m_damage;
+    float m_explosionRadius ;
+
+    bool m_active ;
+    bool m_firedByPlayer ;
+    bool m_ignoreBlocked ;
 
     void applyExplosionDamage(const std::vector<Pedestrian*>& npcs,
         const std::vector<Police*>& police,

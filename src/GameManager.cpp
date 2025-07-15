@@ -79,7 +79,7 @@ GameManager::GameManager()
 void GameManager::run()
 {
     Slideshow slideshow(window, 2.5f);       // לוגו/קרדיטים בהפעלה – אם תרצה
-    //slideshow.run();
+    slideshow.run();
 
     while (window.isOpen()) {
         float deltaTime = clock.restart().asSeconds();

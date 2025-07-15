@@ -11,33 +11,36 @@ struct AnimationRange {
 };
 
 class AnimationManager {
+   
+
+public:
+    AnimationManager(sf::Sprite& spr, int frameW, int frameH, int cols, int rows);
+
+    void initAnimations();
+    void addAnimation(const std::string& name, AnimationRange range);
+    void setAnimation(const std::string& name, bool shouldLoop = true, bool isPingPong = false, bool forceReset = false);
+    void update(float dt);
+
+    bool isAnimationFinished() const;
+
 private:
+    void updateSpriteRect();
+    int countFrames(const AnimationRange& ar)const;
+
     sf::Sprite& sprite;
     int frameWidth;
     int frameHeight;
     int sheetCols;
     int sheetRows;
-
-    std::unordered_map<std::string, AnimationRange> animations;
-    std::string currentAnim;
     int currentFrame;
     float animTimer;
     float animDelay;
 
-    bool loop = true;       // ???? ??? ??????
-    bool pingpong = false;  // ?????? ??????? ???? ????
-    bool forward = true;    // ??? ????? ?????/????? (pingpong)
+    std::unordered_map<std::string, AnimationRange> animations;
+    std::string currentAnim;
 
-public:
-    void initAnimations();
-    AnimationManager(sf::Sprite& spr, int frameW, int frameH, int cols, int rows);
-    bool isAnimationFinished() const;
-    void addAnimation(const std::string& name, AnimationRange range);
-    // ???? ?-setAnimation ??????? ?? ????? ????
-    void setAnimation(const std::string& name, bool shouldLoop = true, bool isPingPong = false, bool forceReset = false);
-    void update(float dt);
 
-private:
-    void updateSpriteRect();
-    int countFrames(const AnimationRange& ar)const;
+    bool loop;
+    bool pingpong;
+    bool forward;
 };

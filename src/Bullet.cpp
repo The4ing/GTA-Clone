@@ -3,7 +3,8 @@
 #include "CollisionUtils.h"
 #include <cmath>
 #include <iostream>
-Bullet::Bullet() {
+Bullet::Bullet(): m_damage(10.f), m_explosionRadius(0.f), m_active(false),
+   m_firedByPlayer(false), m_ignoreBlocked(false), m_speed(500.f){
 }
 
 void Bullet::init(const sf::Vector2f& startPos, const sf::Vector2f& direction,

@@ -15,7 +15,7 @@ void ResourceInitializer::loadInitialResources() {
     rm.loadTexture("SS", "resources/SS.png");
    rm.loadTexture("ST", "resources/ST.png");
    //for slide show
-   rm.loadSoundBuffer("MenuSound", "resources/sounds/MenuSound.wav");
+   rm.loadSoundBuffer("MenuSound", "C:/Users/User/OneDrive/OOP/GTA2/resources/sounds/MenuSound.wav");
 
     //rm.loadSoundBuffer("LoadScreen", "C:/Users/User/OneDrive/OOP/GTA2/resources/sounds/LoadScreen.wav");
 }
