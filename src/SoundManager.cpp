@@ -174,3 +174,12 @@ void SoundManager::stopWantedLoop() {
 bool SoundManager::isWantedLoopPlaying() const {
     return m_wantedLoop.getStatus() == sf::Sound::Playing;
 }
+
+void SoundManager::playLoopingSound(const std::string& name, sf::Sound& soundOut) {
+    soundOut.setBuffer(ResourceManager::getInstance().getSoundBuffer(name));
+    soundOut.setLoop(true);
+    float effectiveVol = muted ? 0.f : volume;
+    soundOut.setVolume(effectiveVol);
+    soundOut.play();
+    registerExternalSound(&soundOut);
+}
