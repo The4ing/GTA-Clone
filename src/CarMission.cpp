@@ -7,6 +7,10 @@ CarMission::CarMission(const std::string& description)
 
 void CarMission::start() {
     state = MissionState::InProgress;
+    // Reset mission specific timers
+    inCar = false;
+    timeInCar = 0.f;
+    timeAtSpeed = 0.f;
 }
 
 void CarMission::update(float dt, Player& player) {
@@ -17,7 +21,6 @@ void CarMission::update(float dt, Player& player) {
     if (player.isInVehicle()) {
         if (!inCar) {
             inCar = true;
-            player.setWantedLevel(2);
         }
 
         timeInCar += dt;
@@ -30,8 +33,7 @@ void CarMission::update(float dt, Player& player) {
             timeAtSpeed = 0.f;
         }
 
-        if (timeAtSpeed >= 7.f) {
-            player.setWantedLevel(0);
+        if (timeAtSpeed >= 7.f && player.getWantedLevel() == 0) {
             state = MissionState::Completed;
         }
     }

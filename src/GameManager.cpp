@@ -198,6 +198,8 @@ void GameManager::processEvents() {
                 if (event.key.code == sf::Keyboard::Enter) {
                     m_isAwaitingTaskStart = false;
                     if (m_currentTaskIndex < missions.size()) {
+                        if (player)
+                            player->setWantedLevel(static_cast<int>(m_currentTaskIndex + 1));
                         missions[m_currentTaskIndex]->start();
                     }
                     else {
