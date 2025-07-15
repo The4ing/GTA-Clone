@@ -2,7 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <string>
-#include "SoundManager.h"
+
 
 class Slideshow {
 public:
