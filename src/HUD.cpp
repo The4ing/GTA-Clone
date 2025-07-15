@@ -3,7 +3,8 @@
 #include <iostream>
 #include <cstdio>
 
-HUD::HUD() : m_currentWantedLevel(0) {
+HUD::HUD() : m_currentWantedLevel(0), m_padding(20.f), m_starIconSize(20.f),
+m_starSpacing(4.f),m_viewWidth(1920.f), m_viewHeight(1080.f) {
     m_starSprites.resize(MAX_STARS);
 }
 

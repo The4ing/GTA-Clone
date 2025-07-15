@@ -66,3 +66,23 @@ struct AmmoSetting {
 
 //range from the store with the player
 const float STORE_INTERACT_RADIUS = 60.f;
+
+
+//for HUD 
+const sf::Color GTA_MONEY_GREEN = sf::Color(0, 150, 0);
+const sf::Color GTA_HEALTH_PINK = sf::Color(210, 45, 95);
+const sf::Color GTA_ARMOR_BLUE = sf::Color(50, 90, 200);
+const sf::Color GTA_WEAPON_ORANGE = sf::Color(220, 140, 20);
+const sf::Color GTA_AMMO_WHITE = sf::Color(220, 220, 220);
+const sf::Color GTA_TIME_WHITE = sf::Color(220, 220, 220);
+const sf::Color GTA_STAR_YELLOW = sf::Color(255, 180, 0);
+const sf::Color GTA_SHADOW_BLACK = sf::Color(0, 0, 0, 180);
+
+//ALSO HUD
+const unsigned int MONEY_CHAR_SIZE = 68;
+const unsigned int DEFAULT_CHAR_SIZE = 66;
+const unsigned int AMMO_CHAR_SIZE = 72;
+const unsigned int WEAPON_CHAR_SIZE = 62;
+const unsigned int TIME_CHAR_SIZE = 88;
+static const int MAX_STARS = 6;
+const sf::Vector2f SHADOW_OFFSET = sf::Vector2f(2.f, 2.f);

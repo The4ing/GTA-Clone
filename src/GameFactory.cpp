@@ -16,7 +16,7 @@
 #include "Store.h"
 
 
-std::unique_ptr<Player> GameFactory::createPlayer(GameManager& gameManager, const sf::Vector2f& pos) { 
+std::unique_ptr<Player> GameFactory::createPlayer(GameManager& gameManager, const sf::Vector2f& pos) {
     auto player = std::make_unique<Player>(gameManager); // Pass gameManager to constructor
     player->setPosition(pos);
     return player;
