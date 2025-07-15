@@ -120,7 +120,7 @@ private:
     void loadTasks();
     void startNextTask();
     std::vector<std::string> m_taskInstructions;
-    std::size_t m_currentTaskIndex = 0;
+    std::size_t m_currentTaskIndex = -1;
     bool m_isAwaitingTaskStart = false;
     sf::Text m_taskInstructionText;
 };

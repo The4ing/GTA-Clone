@@ -1270,9 +1270,9 @@ void GameManager::loadTasks() {
 }
 
 void GameManager::startNextTask() {
+    m_currentTaskIndex++;
     if (m_currentTaskIndex >= missions.size())
         return;
-
     m_taskInstructionText.setString(missions[m_currentTaskIndex]->getDescription());
     sf::FloatRect textRect = m_taskInstructionText.getLocalBounds();
     m_taskInstructionText.setOrigin(textRect.left + textRect.width / 2.f,
@@ -1281,6 +1281,4 @@ void GameManager::startNextTask() {
         window.getSize().y / 2.f - 50.f);
     updatePressStartPosition();
     m_isAwaitingTaskStart = true;
-
-    m_currentTaskIndex++; // הגדל את האינדקס רק אחרי שהגדרת את המשימה הנוכחית
 }
