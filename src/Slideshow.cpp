@@ -1,20 +1,26 @@
 #include "Slideshow.h"
 #include "ResourceManager.h"
+#include "ResourceInitializer.h"
 #include <iostream>
+#include <thread>
+#include <future>
 
 
 Slideshow::Slideshow(sf::RenderWindow& win, float duration)
     : window(win), durationPerImage(duration) {
-
+    imageKeys = { "SF", "SS", "ST" };
 }
 
 void Slideshow::run() {
     sf::Sprite sprite;
     sf::RectangleShape overlay;
     overlay.setSize(static_cast<sf::Vector2f>(window.getSize()));
-    overlay.setFillColor(sf::Color(0, 0, 0, 255));  // שחור, אטום
+    overlay.setFillColor(sf::Color(0, 0, 0, 255));  // Black, opaque
 
-   
+    // Start loading resources in a separate thread
+    std::future<void> loadingFuture = std::async(std::launch::async, []() {
+        ResourceInitializer::loadGameResources();
+        });
 
     for (const auto& key : imageKeys) {
         const sf::Texture& texture = ResourceManager::getInstance().getTexture(key);
@@ -29,6 +35,7 @@ void Slideshow::run() {
         );
         sprite.setPosition(0, 0);
 
+        // Fade in
         for (int alpha = 255; alpha >= 0; alpha -= 5) {
             sf::Event event;
             while (window.pollEvent(event)) {
@@ -44,6 +51,7 @@ void Slideshow::run() {
             sf::sleep(sf::milliseconds(10));
         }
 
+        // Hold image
         sf::Clock clock;
         while (clock.getElapsedTime().asSeconds() < durationPerImage) {
             sf::Event event;
@@ -57,6 +65,7 @@ void Slideshow::run() {
             window.display();
         }
 
+        // Fade out
         for (int alpha = 0; alpha <= 255; alpha += 5) {
             sf::Event event;
             while (window.pollEvent(event)) {
@@ -73,5 +82,6 @@ void Slideshow::run() {
         }
     }
 
-    
+    // Wait for the resource loading to finish
+    loadingFuture.get();
 }

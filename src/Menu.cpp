@@ -76,10 +76,6 @@ void Menu::update(sf::Event& event) {
                     }
                 }
                 else if (options[i].getString() == "Start Game") {
-                    // ✅ עצור את המוזיקה
-                    menuLoop.stop();
-                    SoundManager::getInstance().unregisterExternalSound(&menuLoop);
-
                     selectedIndex = static_cast<int>(i);
                     optionChosen = true;
                 }

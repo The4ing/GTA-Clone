@@ -13,6 +13,7 @@ public:
     bool isOptionChosen() const;
     std::string getSelectedOption() const;
     void reset();
+    sf::Sound& getMenuLoop() { return menuLoop; }
 
 private:
     sf::RenderWindow& window;

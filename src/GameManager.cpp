@@ -79,7 +79,7 @@ GameManager::GameManager()
 void GameManager::run()
 {
     Slideshow slideshow(window, 2.5f);       // לוגו/קרדיטים בהפעלה – אם תרצה
-    // slideshow.run();
+    //slideshow.run();
 
     while (window.isOpen()) {
         float deltaTime = clock.restart().asSeconds();
@@ -92,25 +92,17 @@ void GameManager::run()
 
                 /*‑‑‑ Start Game ‑‑‑*/
                 if (selected == "Start Game") {
-                    /* שלב 1 – הצג בר טעינה ריק */
-                    displayLoadingScreen("Loading Game...", 0.f);
-
                     sf::Clock loadingClock;
-
-                    /* שלב 2 – טען משאבים כבדים */
-                    ResourceInitializer::loadGameResources();
-
+                    slideshow.run();
                     std::cout << "Time to load game resources: "
-                        << loadingClock.getElapsedTime().asSeconds() << " s\n";
-
-                    /* שלב 3 – הצג בר טעינה מלא */
-                    displayLoadingScreen("Loading Game...", 1.f);
-
+                        << loadingClock.getElapsedTime().asSeconds() << " s\n";
                     loadingClock.restart();
                     startGameFullscreen();
-
                     std::cout << "Time for startGameFullscreen setup: "
-                        << loadingClock.getElapsedTime().asSeconds() << " s\n";
+                        << loadingClock.getElapsedTime().asSeconds() << " s\n";
+                    menu->getMenuLoop().stop();
+                    SoundManager::getInstance().unregisterExternalSound(&menu->getMenuLoop());
+
                 }
                 /*‑‑‑ Exit ‑‑‑*/
                 else if (selected == "Exit") {
