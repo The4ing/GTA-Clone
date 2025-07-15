@@ -524,6 +524,10 @@ void GameManager::update(float dt) {
             if (player) {
                 player->resetAfterDeath();
                 player->setPosition({ 100.f, 100.f });
+                if (m_currentTaskIndex < missions.size()) {
+                    // Restart mission with initial wanted level
+                    player->setWantedLevel(static_cast<int>(m_currentTaskIndex + 1));
+                }
             }
             if (m_currentTaskIndex < missions.size()) {
                 player->resetMissionKills();
