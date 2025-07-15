@@ -26,6 +26,7 @@ public:
     void registerExternalSound(sf::Sound* sound);
     void unregisterExternalSound(sf::Sound* sound);
     bool isWantedLoopPlaying() const;
+    void playLoopingSound(const std::string& name, sf::Sound& soundOut);
 
 private:
     SoundManager();
