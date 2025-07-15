@@ -17,7 +17,7 @@
 #include "Store.h"
 #include "QuadTree.h"
 #include "PatrolZone.h" 
-#include "PauseMenu.h" // Added PauseMenu include
+#include "PauseMenu.h" 
 #include "PlayerShooter.h"
 #include "Money.h"
 #include "Explosion.h"
@@ -33,7 +33,7 @@ enum class GameState {
     Playing,
     Inventory,
     Store,
-    Paused, // Added Paused state
+    Paused, 
     Exiting
 };
 
@@ -46,21 +46,26 @@ public:
         bool fromPlayer = false,
         bool ignoreBlocked = false);
 
-    void run();
-    PathfindingGrid* getPathfindingGrid() const;
-    const std::vector<PatrolZone>& getPatrolZones() const;
-    const std::vector<RoadSegment>& getRoads() const { return roads; }
-    CarManager* getCarManager() const { return carManager.get(); }
-    bool isPositionBlocked(const sf::Vector2f& pos) const;
-    BulletPool& getBulletPool() { return bulletPool; }
-    const QuadTree<std::vector<sf::Vector2f>>& getBlockedPolyTree() const { return blockedPolyTree; }
-    const sf::View& getGameView() const { return gameView; }
     void createExplosion(const sf::Vector2f& pos, float radius);
     void createBloodPuddle(const sf::Vector2f& pos);
+    void run();
+
+    PathfindingGrid* getPathfindingGrid() const;
+    CarManager* getCarManager() const { return carManager.get(); }
+    BulletPool& getBulletPool() { return bulletPool; }
+
+    const std::vector<PatrolZone>& getPatrolZones() const;
+    const std::vector<RoadSegment>& getRoads() const { return roads; }
+    const QuadTree<std::vector<sf::Vector2f>>& getBlockedPolyTree() const { return blockedPolyTree; }
+    const sf::View& getGameView() const { return gameView; }
+
+    bool isPositionBlocked(const sf::Vector2f& pos) const;
+    
+    
 
 private:
-    void setupPatrolZones(); // Method to initialize patrol zones
-    bool isFullscreen = false;
+    //function to change the game current position
+    void setupPatrolZones(); 
     void processEvents();
     void update(float dt);
     void render();
@@ -71,59 +76,66 @@ private:
     void updatePressStartPosition();
     void renderFrozenGame(sf::RenderTarget& target);
     void displayLoadingScreen(const std::string& message, float initialProgress = 0.0f);
+    void loadTasks();
+    void startNextTask();
 
-
-    std::vector<std::vector<sf::Vector2f>> blockedPolygons;
+   //variables for the view of the game and managing the diferents  
     QuadTree<std::vector<sf::Vector2f>> blockedPolyTree{ sf::FloatRect(0, 0, 4640, 4672) };
-    std::vector<RoadSegment> roads;
     BulletPool                  bulletPool;
     sf::RenderWindow            window;
+    sf::RenderTexture frozenBackgroundTexture;
     sf::View                    gameView;
-    std::unique_ptr<Menu>       menu;
+    sf::View                    m_hudView;
     sf::Sprite mapSprite;
-    sf::Texture* mapTexture = nullptr;
-    std::vector<std::unique_ptr<Store>> store;
-    std::vector<PatrolZone>     m_patrolZones; // Holds all patrol zones
+    sf::Sprite frozenBackgroundSprite;
+    sf::Texture* mapTexture ;
+    GameState                   currentState;
+    sf::Clock                   clock;
+    sf::Clock missionCompleteClock;
+    sf::Clock wastedClock;
+    sf::Time                    m_gameTime;
+    PauseMenu                   pauseMenu; 
+    sf::Text m_pressStartText;
+    sf::Text m_taskInstructionText;
+    InventoryUI inventoryUI;
+  
+    std::map<int, sf::Vector2f> missionDestinations;
+   
+    //all the main classes mainly opereted 
     std::unique_ptr<Player>     player;
     std::unique_ptr<CarManager> carManager;
     std::unique_ptr<PoliceManager> policeManager;
     std::unique_ptr<PedestrianManager> pedestrianManager;
     std::unique_ptr<PathfindingGrid> pathfindingGrid;
+    std::unique_ptr<Menu>       menu;
+    std::unique_ptr<HUD>        m_hud;
+
+    //all the storage for all the parts during the running
+    std::vector<RoadSegment> roads;
+    std::vector<std::vector<sf::Vector2f>> blockedPolygons;
+    std::vector<std::unique_ptr<Store>> store;
+    std::vector<PatrolZone>     m_patrolZones; 
     std::vector<std::unique_ptr<Present>> presents;
     std::vector<std::unique_ptr<Explosion>> explosions;
     std::vector<std::unique_ptr<BloodPuddle>> bloodPuddles;
-
-    GameState                   currentState;
-    sf::Clock                   clock;
-    sf::Time                    m_gameTime;
-    // HUD Members
-    std::unique_ptr<HUD>        m_hud;
-    sf::View                    m_hudView;
-    PauseMenu                   pauseMenu; // Added PauseMenu instance
-    static constexpr float GAME_TIME_SCALE = 60.0f;
-    static constexpr float MISSION_NEXT_TASK_DELAY = 5.f;
-    sf::Text m_pressStartText;
-    InventoryUI inventoryUI;
-    sf::RenderTexture frozenBackgroundTexture;
-    sf::Sprite frozenBackgroundSprite;
-    bool wasEscapePressedLastFrame = false;
-
-    int m_playingFrameCount = 0; // Counter for initial playing frames diagnostics
-    std::map<int, sf::Vector2f> missionDestinations;
-    int m_prevWantedLevel = 0; // Track previous wanted level for dispatch sound
     std::vector<std::unique_ptr<Mission>> missions;
-    bool showMissionComplete = false;
-    sf::Clock missionCompleteClock;
-    // Task/mission management
-    bool showWastedScreen = false;
-    sf::Clock wastedClock;
-    int freeNpcHits = 0;
-    int freeCopHits = 0;
-    float overSpeedTime = 0.f;
-    void loadTasks();
-    void startNextTask();
     std::vector<std::string> m_taskInstructions;
-    std::size_t m_currentTaskIndex = -1;
-    bool m_isAwaitingTaskStart = false;
-    sf::Text m_taskInstructionText;
+    
+    //variables to maintian changes
+    bool showWastedScreen;
+    bool showMissionComplete;
+    bool wasEscapePressedLastFrame ;
+    bool isFullscreen;
+    bool m_isAwaitingTaskStart;
+
+    int m_playingFrameCount ; 
+    int m_prevWantedLevel;
+    int freeNpcHits;
+    int freeCopHits;
+  
+    float overSpeedTime ;
+
+    std::size_t m_currentTaskIndex;
+   
+   
 };
