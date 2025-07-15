@@ -1,12 +1,18 @@
 #include "Settings.h"
 #include "ResourceManager.h"
-#include <iostream>
+#include "SoundManager.h"
+#include "Help.h"
+#include "StoryScreen.h"
+#include <algorithm>
 
-Settings::Settings(sf::RenderWindow& win)
-    : window(win), soundEnabled(true), volumeLevel(1.0f), brightnessLevel(1.0f), selectedOption(-1)
+Settings::Settings(sf::RenderWindow& win, sf::Sound& menuSound)
+    : window(win), menuMusic(menuSound), soundEnabled(true),
+    volumeLevel(SoundManager::getInstance().getVolume() / 100.f), // הגדרת ווליום התחלתי לפי המצב הנוכחי
+    brightnessLevel(1.0f), selectedOption(-1)
 {
     font = ResourceManager::getInstance().getFont("main");
 
+    // רקע
     background.setTexture(ResourceManager::getInstance().getTexture("background_set"));
     sf::Vector2u textureSize = background.getTexture()->getSize();
     sf::Vector2u windowSize = window.getSize();
@@ -16,50 +22,56 @@ Settings::Settings(sf::RenderWindow& win)
     );
     background.setPosition(0.f, 0.f);
 
+    // שכבת כהות לפי הבהירות
     brightnessOverlay.setSize(sf::Vector2f(windowSize));
     brightnessOverlay.setFillColor(sf::Color(0, 0, 0, 0)); // שקוף בהתחלה
 
-    setupOptions();
-    setupBars();
-    updateBars(); // עדכון ראשוני
+    setupOptions(); // יצירת הטקסטים
+    setupBars();    // יצירת הפסים
+    updateBars();   // עדכון התצוגה ההתחלתית
 }
 
 void Settings::setupOptions() {
     std::vector<std::string> texts = {
-        "Story",
-        "Help",
-        "Toggle Music",
-        "Volume +",
-        "Volume -",
-        "Brightness +",
-        "Brightness -",
-        "Back"
+        "Story", "Help", "Toggle Music", "Volume +", "Volume -",
+        "Brightness +", "Brightness -", "Back"
     };
 
     for (size_t i = 0; i < texts.size(); ++i) {
         sf::Text text;
         text.setFont(font);
         text.setString(texts[i]);
-        text.setCharacterSize(i == 0 ? 42 : 32);
+        text.setCharacterSize(i == 0 ? 42 : 32); // הכותרת קצת יותר גדולה
         text.setFillColor(sf::Color::White);
         text.setPosition(100, 100 + i * 60);
         options.push_back(text);
     }
+
+    musicStatusText.setFont(font);
+    musicStatusText.setCharacterSize(24);
+    musicStatusText.setFillColor(sf::Color::White);
+    musicStatusText.setPosition(350, 100 + 2 * 60); // ליד "Toggle Music"
+    musicStatusText.setString(SoundManager::getInstance().isMuted() ? "OFF" : "ON");
+
 }
 
 void Settings::setupBars() {
+    // הגדרת פסי עוצמה
     volumeBar.setSize(sf::Vector2f(volumeLevel * 200.f, 20.f));
     volumeBar.setFillColor(sf::Color::Green);
-    volumeBar.setPosition(400, 100 + 3 * 60); // מול "Volume +"
+    volumeBar.setPosition(400, 100 + 3 * 60);
 
     brightnessBar.setSize(sf::Vector2f(brightnessLevel * 200.f, 20.f));
     brightnessBar.setFillColor(sf::Color::Blue);
-    brightnessBar.setPosition(400, 100 + 5 * 60); // מול "Brightness +"
+    brightnessBar.setPosition(400, 100 + 5 * 60);
 }
 
 void Settings::updateBars() {
+    // עדכון האורך לפי הערכים הנוכחיים
     volumeBar.setSize(sf::Vector2f(volumeLevel * 200.f, 20.f));
     brightnessBar.setSize(sf::Vector2f(brightnessLevel * 200.f, 20.f));
+
+    // עדכון שכבת כהות על המסך לפי בהירות
     brightnessOverlay.setFillColor(sf::Color(0, 0, 0, static_cast<sf::Uint8>((1.0f - brightnessLevel) * 200)));
 }
 
@@ -105,38 +117,53 @@ void Settings::draw() {
     window.draw(volumeBar);
     window.draw(brightnessBar);
     window.draw(brightnessOverlay);
+    window.draw(musicStatusText);
+
 }
 
 // פעולות
 
+
+
 void Settings::toggleSound() {
-    soundEnabled = !soundEnabled;
-    // ResourceManager::getInstance().getMusic("main_theme").setVolume(soundEnabled ? volumeLevel * 100.f : 0.f);
+    SoundManager::getInstance().toggleMute();
+
+    // עדכון טקסט על סמך מצב חדש
+    if (SoundManager::getInstance().isMuted()) {
+        musicStatusText.setString("OFF");
+    }
+    else {
+        musicStatusText.setString("ON");
+    }
+
+    // עדכון עוצמת מוזיקה בפועל
+    menuMusic.setVolume(SoundManager::getInstance().isMuted() ? 0.f : volumeLevel * 100.f);
 }
 
+
 void Settings::increaseVolume() {
-    volumeLevel += 0.1f;
-    if (volumeLevel > 1.0f) volumeLevel = 1.0f;
+    volumeLevel = std::min(1.0f, volumeLevel + 0.1f);
     updateBars();
-    // ResourceManager::getInstance().getMusic("main_theme").setVolume(volumeLevel * 100.f);
+    SoundManager::getInstance().setVolume(volumeLevel * 100.f);
+    if (soundEnabled)
+        menuMusic.setVolume(volumeLevel * 100.f);
 }
 
 void Settings::decreaseVolume() {
-    volumeLevel -= 0.1f;
-    if (volumeLevel < 0.0f) volumeLevel = 0.0f;
+    volumeLevel = std::max(0.0f, volumeLevel - 0.1f);
     updateBars();
-    //ResourceManager::getInstance().getMusic("main_theme").setVolume(volumeLevel * 100.f);
+    SoundManager::getInstance().setVolume(volumeLevel * 100.f);
+    if (soundEnabled)
+        menuMusic.setVolume(volumeLevel * 100.f);
 }
 
 void Settings::increaseBrightness() {
-    brightnessLevel += 0.1f;
-    if (brightnessLevel > 1.0f) brightnessLevel = 1.0f;
+    brightnessLevel = std::min(1.0f, brightnessLevel + 0.1f);
     updateBars();
 }
 
 void Settings::decreaseBrightness() {
-    brightnessLevel -= 0.1f;
-    if (brightnessLevel < 0.0f) brightnessLevel = 0.0f;
+    brightnessLevel = std::max(0.0f, brightnessLevel - 0.1f);
     updateBars();
 }
 
