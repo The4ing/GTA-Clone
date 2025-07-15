@@ -643,9 +643,19 @@ void GameManager::update(float dt) {
 
     // --- 4. Collision with presents ---
     for (auto& present : presents) {
-        if (!present->isCollected() &&
-            player->getCollisionBounds().intersects(present->getSprite().getGlobalBounds())) {
-            player->onCollision(*present);  // Double Dispatch
+        if (!present->isCollected()) {
+            sf::CircleShape playerCircle = player->getCollisionCircle();
+            sf::Transform t = present->getSprite().getTransform();
+            sf::FloatRect lb = present->getSprite().getLocalBounds();
+            std::vector<sf::Vector2f> presentPoly = {
+                t.transformPoint({lb.left, lb.top}),
+                t.transformPoint({lb.left + lb.width, lb.top}),
+                t.transformPoint({lb.left + lb.width, lb.top + lb.height}),
+                t.transformPoint({lb.left, lb.top + lb.height})
+            };
+            if (CollisionUtils::circleIntersectsPolygon(playerCircle.getPosition(), playerCircle.getRadius(), presentPoly)) {
+                player->onCollision(*present);  // Double Dispatch
+            }
         }
     }
    
@@ -985,7 +995,7 @@ void GameManager::startGameFullscreen() {
     if (it != missionDestinations.end())
         mission->setDestination(it->second);
     player->getInventory().addItem("Package", ResourceManager::getInstance().getTexture("Package"));
-    player->setWantedLevel(3);
+    player->setWantedLevel(1);
     m_pressStartText.setString("Press Enter key to start");
 
     updatePressStartPosition();

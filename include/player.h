@@ -24,6 +24,7 @@ public:
     sf::FloatRect getCollisionBounds(const sf::Vector2f& offset = {}) const;
     sf::Vector2f getCenter() const;
     float getCollisionRadius() const;
+    sf::CircleShape getCollisionCircle() const;
     void takeDamage(int amount);
 
     // HUD Data Getters
@@ -74,7 +75,7 @@ private:
     Vehicle* m_currentVehicle;
     void setSpecificFrame(int row, int col);
     void playAnimation(const std::string& animName, bool loop = true, bool pingpong = false, bool forceRestart = false);
-    sf::CircleShape getCollisionCircle() const;
+
 
 
     sf::Sprite  sprite;

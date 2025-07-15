@@ -360,7 +360,7 @@ sf::Vector2f Player::getCenter() const {
 
 float Player::getCollisionRadius() const {
     // Set to match visual size — adjust as needed
-    return 10.f; // in pixels
+    return 9.f; // in pixels
 }
 
 

@@ -122,11 +122,22 @@ bool Bullet::checkCollision(const std::vector<std::vector<sf::Vector2f>>& blocke
             return true;
         }
     }
-    if (!m_firedByPlayer && m_sprite.getGlobalBounds().intersects(player.getCollisionBounds())) {
-        player.takeDamage(static_cast<int>(m_damage));
-        m_active = false;
-        applyExplosionDamage(npcs, police, cars);
-        return true;
+    if (!m_firedByPlayer) {
+        sf::CircleShape playerCircle = player.getCollisionCircle();
+        sf::FloatRect localBounds = m_sprite.getLocalBounds();
+        sf::Transform transform = m_sprite.getTransform();
+        std::vector<sf::Vector2f> bulletPoly = {
+            transform.transformPoint({localBounds.left, localBounds.top}),
+            transform.transformPoint({localBounds.left + localBounds.width, localBounds.top}),
+            transform.transformPoint({localBounds.left + localBounds.width, localBounds.top + localBounds.height}),
+            transform.transformPoint({localBounds.left, localBounds.top + localBounds.height})
+        };
+        if (CollisionUtils::circleIntersectsPolygon(playerCircle.getPosition(), playerCircle.getRadius(), bulletPoly)) {
+            player.takeDamage(static_cast<int>(m_damage));
+            m_active = false;
+            applyExplosionDamage(npcs, police, cars);
+            return true;
+        }
     }
     for (const auto* car : cars) {
         if (car && m_sprite.getGlobalBounds().intersects(car->getSprite().getGlobalBounds())) {
