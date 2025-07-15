@@ -505,6 +505,14 @@ void GameManager::update(float dt) {
         if (showMissionComplete && missionCompleteClock.getElapsedTime().asSeconds() > 5.f) {
             showMissionComplete = false;
         }
+        if (!showWastedScreen && player->getHealth() <= 0) {
+            showWastedScreen = true;
+            wastedClock.restart();
+            SoundManager::getInstance().playSound("wasted");
+        }
+        if (showWastedScreen && wastedClock.getElapsedTime().asSeconds() > 5.f) {
+            showWastedScreen = false;
+        }
         if (mission && mission->getState() == MissionState::Completed &&
             missionCompleteClock.getElapsedTime().asSeconds() > MISSION_NEXT_TASK_DELAY &&
             !m_isAwaitingTaskStart) {
@@ -725,7 +733,18 @@ void GameManager::render() {
         doneText.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f);
         window.draw(doneText);
     }
-
+    if (showWastedScreen) {
+        sf::RectangleShape overlay(sf::Vector2f(window.getSize()));
+        overlay.setFillColor(sf::Color(0, 0, 0, 150));
+        window.draw(overlay);
+        sf::Text wastedText = m_pressStartText;
+        wastedText.setString("WASTED");
+        wastedText.setFillColor(sf::Color::Red);
+        sf::FloatRect rect = wastedText.getLocalBounds();
+        wastedText.setOrigin(rect.left + rect.width / 2.f, rect.top + rect.height / 2.f);
+        wastedText.setPosition(window.getSize().x / 2.f, window.getSize().y / 2.f);
+        window.draw(wastedText);
+    }
 
 
 
@@ -933,7 +952,7 @@ void GameManager::startGameFullscreen() {
     if (it != missionDestinations.end())
         mission->setDestination(it->second);
     player->getInventory().addItem("Package", ResourceManager::getInstance().getTexture("Package"));
-    player->setWantedLevel(1);
+    player->setWantedLevel(3);
     m_pressStartText.setString("Press Enter key to start");
 
     updatePressStartPosition();

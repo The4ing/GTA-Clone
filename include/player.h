@@ -88,7 +88,8 @@ private:
     sf::Vector2f position;
     bool wasShooting = false;
     bool isFinishingShootAnim = false;
-    int killCount = 0; 
+    int killCount = 0;
+    bool m_isDead = false;
     int m_money;
     int m_health;
     int m_armor;

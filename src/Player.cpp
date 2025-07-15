@@ -126,7 +126,13 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
             playAnimation("Hurt", true);
             return;
         }
-
+        if (m_health <= 0) {
+            m_isDead = true;
+            playAnimation("HurtDie", false);
+            if (animationManager)
+                animationManager->update(dt);
+            return;
+        }
         sf::Vector2f movement(0.f, 0.f);
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
@@ -141,7 +147,6 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
         bool isMoving = (movement.x != 0.f || movement.y != 0.f);
         bool isShooting = sf::Keyboard::isKeyPressed(sf::Keyboard::Space);
         bool isHit = false;
-        bool isDead = false;
 
         if (speedBoostTimer > 0.f)
             speedBoostTimer -= dt;
@@ -174,10 +179,7 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
             // shootingAnimPlaying = isShootAnim && !animationManager->isAnimationFinished(); 
         }
 
-        if (isDead) {
-            playAnimation("HurtDie", false); // loop = false
-        }
-        else if (isHit) {
+        if (isHit) {
             playAnimation("Hurt", false); // loop = false
         }
         else {
@@ -538,6 +540,10 @@ int Player::getMoney() const {
 
 int Player::getHealth() const {
     return m_health;
+}
+void Player::setHealth(int health)
+{
+    m_health = std::clamp(health, 0, MaxHealth);
 }
 
 int Player::getArmor() const {

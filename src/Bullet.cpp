@@ -73,6 +73,7 @@ void Bullet::onCollision(GameObject& other) {
 }
 
 void Bullet::collideWithPlayer(Player& player) {
+    player.takeDamage(static_cast<int>(m_damage));
     setActive(false);
 }
 

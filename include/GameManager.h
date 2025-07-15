@@ -109,6 +109,8 @@ private:
     bool showMissionComplete = false;
     sf::Clock missionCompleteClock;
     // Task/mission management
+    bool showWastedScreen = false;
+    sf::Clock wastedClock;
     void loadTasks();
     void startNextTask();
     std::vector<std::string> m_taskInstructions;
