@@ -548,6 +548,39 @@ void GameManager::update(float dt) {
                 carPtrs.push_back(vPtr.get());
         }
 
+        static float meleeCooldown = 0.f;
+        if (meleeCooldown > 0.f)
+            meleeCooldown -= dt;
+
+        if (!player->isInVehicle() && meleeCooldown <= 0.f &&
+            sf::Keyboard::isKeyPressed(sf::Keyboard::Space) &&
+            player->getCurrentWeaponName() == "Fists") {
+
+            sf::Vector2f pPos = player->getPosition();
+
+            for (auto* npc : npcPtrs) {
+                if (npc && !npc->isDead()) {
+                    sf::Vector2f nPos = npc->getPosition();
+                    float dx = nPos.x - pPos.x;
+                    float dy = nPos.y - pPos.y;
+                    if (dx * dx + dy * dy <= BATON_MELEE_RANGE * BATON_MELEE_RANGE)
+                        npc->takeDamage(BATON_DAMAGE);
+                }
+            }
+
+            for (auto* cop : policePtrs) {
+                if (cop && !cop->isDead()) {
+                    sf::Vector2f cPos = cop->getPosition();
+                    float dx = cPos.x - pPos.x;
+                    float dy = cPos.y - pPos.y;
+                    if (dx * dx + dy * dy <= BATON_MELEE_RANGE * BATON_MELEE_RANGE)
+                        cop->takeDamage(BATON_DAMAGE);
+                }
+            }
+
+            meleeCooldown = BATON_MELEE_RATE;
+        }
+
         player->getShooter().update(dt, blockedPolygons, npcPtrs, policePtrs, carPtrs, *player);
         for (auto& exp : explosions)
             exp->update(dt, blockedPolygons);

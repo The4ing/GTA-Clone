@@ -8,6 +8,7 @@
 #include <iostream>
 #include "Present.h"
 #include "Vehicle.h"
+#include <vector>
 
 Player::Player(GameManager& gameManager) // Modified constructor
     : m_gameManager(gameManager), // Store GameManager reference
@@ -71,6 +72,10 @@ void Player::takeDamage(int amount)
     if (amount > 0) {
         m_health -= amount;
         if (m_health < 0) m_health = 0;
+        static const std::vector<std::string> hurtSounds = {
+         "hurt1", "hurt2", "hurt3", "hurt4"
+        };
+        SoundManager::getInstance().playRandomSound(hurtSounds, 0.95f, 1.05f);
     }
 }
 
@@ -322,15 +327,9 @@ void Player::draw(sf::RenderTarget& window) {
         // assuming the vehicle itself will be drawn by CarManager.
         return;
     }
-    sf::FloatRect bounds = getCollisionBounds();
-    sf::RectangleShape rect;
-    rect.setSize({ bounds.width, bounds.height });
-    rect.setPosition({ bounds.left, bounds.top });
-    rect.setFillColor(sf::Color::Transparent);
-    rect.setOutlineColor(sf::Color::Red);
-    rect.setOutlineThickness(1.f);
-   // window.draw(rect);
 
+    sf::CircleShape hitCircle = getCollisionCircle();
+    window.draw(hitCircle);
 
 
     window.draw(sprite);
@@ -361,7 +360,7 @@ sf::Vector2f Player::getCenter() const {
 
 float Player::getCollisionRadius() const {
     // Set to match visual size — adjust as needed
-    return 6.f; // in pixels
+    return 10.f; // in pixels
 }
 
 
@@ -591,4 +590,15 @@ void Player::collideWithPlayer(Player& /*player*/) {
 void Player::playThrowAnimation() {
     playAnimation("ThrowGrenade", false, false, true);
     SoundManager::getInstance().playSound("ThrowGrenade");
+}
+
+sf::CircleShape Player::getCollisionCircle() const {
+    sf::CircleShape circle;
+    circle.setRadius(getCollisionRadius()); // נניח שזה 6.f
+    circle.setOrigin(getCollisionRadius(), getCollisionRadius()); // שיהיה ממורכז
+    circle.setPosition(getPosition()); // שים במרכז השחקן
+    circle.setFillColor(sf::Color::Transparent);
+    circle.setOutlineColor(sf::Color::Cyan);
+    circle.setOutlineThickness(1.f);
+    return circle;
 }

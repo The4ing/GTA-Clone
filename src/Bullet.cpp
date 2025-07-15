@@ -38,15 +38,26 @@ void Bullet::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
 void Bullet::draw(sf::RenderTarget& target) {
     if (m_active)
         target.draw(m_sprite);
-    // Debug: draw line showing bullet trajectory
+
+    // Trajectory debug
     sf::VertexArray trajectory(sf::Lines, 2);
     trajectory[0].position = m_startPos;
     trajectory[0].color = sf::Color::Red;
-    trajectory[1].position = m_position + m_direction * 1000.f; // arbitrary long line
+    trajectory[1].position = m_position + m_direction * 1000.f;
     trajectory[1].color = sf::Color::Red;
-
     target.draw(trajectory);
+
+    // --- DEBUG: draw bullet collision rect ---
+    sf::FloatRect bulletBounds = m_sprite.getGlobalBounds();
+    sf::RectangleShape bulletRect;
+    bulletRect.setPosition(bulletBounds.left, bulletBounds.top);
+    bulletRect.setSize({ bulletBounds.width, bulletBounds.height });
+    bulletRect.setFillColor(sf::Color::Transparent);
+    bulletRect.setOutlineColor(sf::Color::Yellow);
+    bulletRect.setOutlineThickness(1.f);
+    target.draw(bulletRect);
 }
+
 
 sf::Vector2f Bullet::getPosition() const {
     return m_position;

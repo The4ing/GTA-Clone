@@ -74,6 +74,7 @@ private:
     Vehicle* m_currentVehicle;
     void setSpecificFrame(int row, int col);
     void playAnimation(const std::string& animName, bool loop = true, bool pingpong = false, bool forceRestart = false);
+    sf::CircleShape getCollisionCircle() const;
 
 
     sf::Sprite  sprite;
