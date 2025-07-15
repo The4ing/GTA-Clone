@@ -1,6 +1,7 @@
 #include "CarMission.h"
 #include "Vehicle.h"
 
+
 CarMission::CarMission(const std::string& description)
     : Mission(description), inCar(false), timeInCar(0.f), timeAtSpeed(0.f) {
 }
