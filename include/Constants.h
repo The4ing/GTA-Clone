@@ -1,13 +1,20 @@
 #pragma once
 
-const float STATIC_POLICE_GRID_SIZE = 500.0f; // Size of the grid for placing static police units
-constexpr int LOAD_RADIUS = 2;
+//gameMnanger
+static constexpr float GAME_TIME_SCALE = 60.0f;
+static constexpr float MISSION_NEXT_TASK_DELAY = 5.f;
+
+//for the path finding
 static constexpr float PATHFINDING_GRID_SIZE = 32.0f;
+
+//size of window
 const unsigned int WINDOW_WIDTH = 1920;
 const unsigned int WINDOW_HEIGHT = 1080;
 const unsigned int MAP_WIDTH = 4640;
 const unsigned int MAP_HEIGHT = 4672;
 
+
+//police + gameManager
 const int POLICE_CAR_SPAWN_CHANCE = 15; // 15% chance
 const float SPAWN_COOLDOWN_SECONDS = 2.0f;
 const sf::FloatRect MAP_BOUNDS(0.f, 0.f, 4640.f, 4670.f);
@@ -19,7 +26,7 @@ const float PLAYER_MOVE_THRESHOLD_FOR_REPATH_SQ = (PATHFINDING_GRID_SIZE * 2.0f)
 const float TARGET_REACHED_DISTANCE = PATHFINDING_GRID_SIZE;
 const float RUN_OVER_DISTANCE = 30.f;
 
-
+//pistol +bullets
 const float PISTOL_FIRE_RATE = 1.5f;
 const float PISTOL_SHOOTING_RANGE = 200.f;
 const float PISTOL_LINE_OF_SIGHT_RANGE = 250.f;
@@ -39,31 +46,23 @@ const float CANNON_RANGE = 400.f;
 const float TIME_TO_START_WANTED_REDUCTION = 30.0f; // Seconds player must be unseen before reduction starts
 const float WANTED_REDUCTION_COOLDOWN_SECONDS = 10.0f; // Seconds before another star can be lost
 
+//checking the collision of player for radius
 #define M_PI 3.14159265358979323846
 
+//stats for player
 const float BasicSpeed = 50.f;
 const int MaxHealth = 100;
-
 const int MaxMoney = 100;
 const int PlayerMoney = 20;
-
 const int MaxArmor = 100;
 
 
-enum CurrentWepapon {
-    W_Fists = -1,
-    W_Pistol,
-    W_Rifle,
-    W_Minigun,
-    W_Bazooka,
-    W_Knife,
-    W_Grenade,
-};
-
+//stats for the weapons
 struct AmmoSetting {
     int Ammo = 0;
     int MaxAmmo = 0;
 
 };
 
+//range from the store with the player
 const float STORE_INTERACT_RADIUS = 60.f;
