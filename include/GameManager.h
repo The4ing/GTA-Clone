@@ -21,7 +21,8 @@
 #include "PlayerShooter.h"
 #include "Money.h"
 #include "Explosion.h"
-#include "Mission.h"
+#include "CarMission.h"
+#include "PackageMission.h"
 #include <map>
 
 enum class GameState {
@@ -105,7 +106,7 @@ private:
     int m_playingFrameCount = 0; // Counter for initial playing frames diagnostics
     std::map<int, sf::Vector2f> missionDestinations;
     int m_prevWantedLevel = 0; // Track previous wanted level for dispatch sound
-    std::unique_ptr<Mission> mission;
+    std::vector<std::unique_ptr<Mission>> missions;
     bool showMissionComplete = false;
     sf::Clock missionCompleteClock;
     // Task/mission management

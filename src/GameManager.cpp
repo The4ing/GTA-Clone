@@ -197,9 +197,12 @@ void GameManager::processEvents() {
             if (m_isAwaitingTaskStart) {
                 if (event.key.code == sf::Keyboard::Enter) {
                     m_isAwaitingTaskStart = false;
-                    ++m_currentTaskIndex;
-                    if (mission && mission->getState() == MissionState::NotStarted)
-                        mission->start();
+                    if (m_currentTaskIndex < missions.size()) {
+                        missions[m_currentTaskIndex]->start();
+                    }
+                    else {
+                        m_currentTaskIndex++;
+                    }
                     continue; // Skip other handling while task screen is active
                 }
             }
@@ -423,7 +426,7 @@ void GameManager::renderFrozenGame(sf::RenderTarget& target) {
         pedestrianManager->draw(target);
     for (auto& present : presents)
         present->draw(target);
-    
+
     for (auto& s : store)
         s->drawUI(target);
     for (const auto& bullet_ptr : bulletPool.getAllBullets()) { // Draw bullets from pool
@@ -459,13 +462,13 @@ void GameManager::update(float dt) {
                     auto money = std::make_unique<Money>(
                         ResourceManager::getInstance().getTexture("Money"), p->getPosition());
                     money->setTempMoney(true);
-                    presents.push_back(std::move(money)); 
+                    presents.push_back(std::move(money));
                 }
             }
             policeManager->update(dt, *player, blockedPolygons);
         }
 
-            
+
 
         if (pedestrianManager)
             for (auto& ped : pedestrianManager->getPedestrians()) {
@@ -478,13 +481,13 @@ void GameManager::update(float dt) {
                 }
 
             }
-            pedestrianManager->update(dt, blockedPolygons);
+        pedestrianManager->update(dt, blockedPolygons);
 
         for (auto& present : presents) {
             present->update(dt, blockedPolygons);
         }
 
-        
+
         presents.erase(std::remove_if(presents.begin(), presents.end(),
             [](const std::unique_ptr<Present>& present) {
                 if (auto money = dynamic_cast<Money*>(present.get())) {
@@ -492,9 +495,9 @@ void GameManager::update(float dt) {
                 }
                 return false;
             }), presents.end());
-        if (mission) {
-            mission->update(dt, *player);
-            if (!showMissionComplete && mission->getState() == MissionState::Completed) {
+        if (m_currentTaskIndex < missions.size()) {
+            missions[m_currentTaskIndex]->update(dt, *player);
+            if (!showMissionComplete && missions[m_currentTaskIndex]->isCompleted()) {
                 std::cout << "compklete";
                 showMissionComplete = true;
                 missionCompleteClock.restart();
@@ -513,21 +516,13 @@ void GameManager::update(float dt) {
         if (showWastedScreen && wastedClock.getElapsedTime().asSeconds() > 5.f) {
             showWastedScreen = false;
         }
-        if (mission && mission->getState() == MissionState::Completed &&
+        if (m_currentTaskIndex < missions.size() && missions[m_currentTaskIndex]->isCompleted() &&
             missionCompleteClock.getElapsedTime().asSeconds() > MISSION_NEXT_TASK_DELAY &&
             !m_isAwaitingTaskStart) {
             startNextTask();
-
-            if (m_currentTaskIndex < m_taskInstructions.size()) {
-                mission = std::make_unique<Mission>();
-                mission->setDescription(m_taskInstructions[m_currentTaskIndex]);
-                auto it = missionDestinations.find(static_cast<int>(m_currentTaskIndex + 1));
-                if (it != missionDestinations.end())
-                    mission->setDestination(it->second);
-            }
         }
 
-           
+
 
         std::vector<Pedestrian*> npcPtrs;
         if (pedestrianManager) {
@@ -537,8 +532,8 @@ void GameManager::update(float dt) {
         std::vector<Police*> policePtrs;
         if (policeManager) {
             for (const auto& p : policeManager->getPoliceOfficers()) {
-                
-               policePtrs.push_back(p.get());
+
+                policePtrs.push_back(p.get());
             }
         }
 
@@ -624,7 +619,7 @@ void GameManager::update(float dt) {
             }
         }
 
-        
+
     }
 
     // --- 3. Camera follow player or vehicle ---
@@ -658,7 +653,7 @@ void GameManager::update(float dt) {
             }
         }
     }
-   
+
 
     // --- 5. HUD Update ---
     if (m_hud && currentState == GameState::Playing) {
@@ -955,8 +950,8 @@ void GameManager::startGameFullscreen() {
 
     for (int i = 0; i < 1; ++i) {
         carManager->spawnSingleVehicleOnRoad();
-    //carManager->spawnSingleVehicleOnRoad();
-      }
+        //carManager->spawnSingleVehicleOnRoad();
+    }
     player = GameFactory::createPlayer(*this, { 100.f, 100.f }); // Pass *this (GameManager instance)
     //presents = GameFactory::createPresents(30, blockedPolygons);
     presents = GameFactory::createPresents(5, blockedPolygons);
@@ -988,12 +983,17 @@ void GameManager::startGameFullscreen() {
     m_hud->updateElementPositions(window.getSize().x, window.getSize().y);
     // Load first mission and initial inventory item
     // Load first mission description from tasks file and destination from map
-    mission = std::make_unique<Mission>();
-    if (!m_taskInstructions.empty())
-        mission->setDescription(m_taskInstructions[0]);
-    auto it = missionDestinations.find(1);
-    if (it != missionDestinations.end())
-        mission->setDestination(it->second);
+    for (size_t i = 0; i < m_taskInstructions.size(); ++i) {
+        if (i == 1) { // Assuming the second mission is the car mission
+            missions.push_back(std::make_unique<CarMission>(m_taskInstructions[i]));
+        }
+        else {
+            auto it = missionDestinations.find(static_cast<int>(i + 1));
+            if (it != missionDestinations.end()) {
+                missions.push_back(std::make_unique<PackageMission>(m_taskInstructions[i], it->second));
+            }
+        }
+    }
     player->getInventory().addItem("Package", ResourceManager::getInstance().getTexture("Package"));
     player->setWantedLevel(1);
     m_pressStartText.setString("Press Enter key to start");
@@ -1002,7 +1002,7 @@ void GameManager::startGameFullscreen() {
 
     currentState = GameState::Playing;
     startNextTask();
-   // SoundManager::getInstance().playSound("gameplay");
+    // SoundManager::getInstance().playSound("gameplay");
 }
 
 void GameManager::setFullscreen(bool fullscreen) {
@@ -1207,9 +1207,10 @@ void GameManager::loadTasks() {
 }
 
 void GameManager::startNextTask() {
-    if (m_currentTaskIndex >= m_taskInstructions.size())
+    m_currentTaskIndex++;
+    if (m_currentTaskIndex >= missions.size())
         return;
-    m_taskInstructionText.setString(m_taskInstructions[m_currentTaskIndex]);
+    m_taskInstructionText.setString(missions[m_currentTaskIndex]->getDescription());
     sf::FloatRect textRect = m_taskInstructionText.getLocalBounds();
     m_taskInstructionText.setOrigin(textRect.left + textRect.width / 2.f,
         textRect.top + textRect.height / 2.f);

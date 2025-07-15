@@ -1,31 +1,13 @@
 #include "Mission.h"
-#include "player.h"
-#include <SFML/Window/Keyboard.hpp>
-#include <iostream>
 
-Mission::Mission() : state(MissionState::NotStarted), destination(0.f, 0.f), delivered(false) {}
-
-void Mission::setDestination(const sf::Vector2f& dest) { destination = dest; }
-void Mission::setDescription(const std::string& desc) { description = desc; }
-const std::string& Mission::getDescription() const { return description; }
-const sf::Vector2f& Mission::getDestination() const { return destination; }
-void Mission::start() { state = MissionState::InProgress; }
-MissionState Mission::getState() const { return state; }
-void Mission::setState() {
-    state = MissionState::InProgress;
+Mission::Mission(const std::string& description)
+    : description(description), state(MissionState::NotStarted) {
 }
 
+const std::string& Mission::getDescription() const {
+    return description;
+}
 
-void Mission::update(float, Player& player) {
-    sf::Vector2f pos = player.getPosition();
-    float dx = pos.x - destination.x;
-    float dy = pos.y - destination.y;
-    bool inArea = dx * dx + dy * dy < 32.f * 32.f;
-
-    if (!delivered && inArea && player.getWantedLevel() == 0) {
-        player.playThrowAnimation();
-        player.getInventory().useItem("Package");
-        delivered = true;
-        state = MissionState::Completed;
-    }
+MissionState Mission::getState() const {
+    return state;
 }

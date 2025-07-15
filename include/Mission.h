@@ -6,19 +6,17 @@ enum class MissionState { NotStarted, InProgress, Completed };
 
 class Mission {
 public:
-    Mission();
-    void setDestination(const sf::Vector2f& dest);
-    void setDescription(const std::string& desc);
-    const std::string& getDescription() const;
-    const sf::Vector2f& getDestination() const;
-    void start();
-    MissionState getState() const;
-    void setState();
-    void update(float dt, class Player& player);
+    Mission(const std::string& description);
+    virtual ~Mission() = default;
 
-private:
-    MissionState state;
-    sf::Vector2f destination;
+    virtual void start() = 0;
+    virtual void update(float dt, class Player& player) = 0;
+    virtual bool isCompleted() const = 0;
+
+    const std::string& getDescription() const;
+    MissionState getState() const;
+
+protected:
     std::string description;
-    bool delivered;
+    MissionState state;
 };
