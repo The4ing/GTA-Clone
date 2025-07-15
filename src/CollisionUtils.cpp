@@ -8,12 +8,16 @@ bool CollisionUtils::pointInPolygon(const sf::Vector2f& p, const std::vector<sf:
 
     for (size_t i = 0, j = n - 1; i < n; j = i++) {
         const sf::Vector2f& pi = poly[i];
-        const sf::Vector2f& pj = poly[j];   
+        const sf::Vector2f& pj = poly[j];
 
-        bool intersect = ((pi.y > p.y) != (pj.y > p.y)) &&
-            (p.x < (pj.x - pi.x) * (p.y - pi.y) / (pj.y - pi.y + 0.0001f) + pi.x);
-        if (intersect)
-            inside = !inside;
+        float denominator = pj.y - pi.y;
+        if (std::abs(denominator) > 1e-6) { // Avoid division by zero
+            bool intersect = ((pi.y > p.y) != (pj.y > p.y)) &&
+                (p.x < (pj.x - pi.x) * (p.y - pi.y) / denominator + pi.x);
+            if (intersect) {
+                inside = !inside;
+            }
+        }
     }
 
     return inside;

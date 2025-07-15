@@ -359,9 +359,8 @@ void GameManager::processEvents() {
             PauseMenu::MenuAction action = pauseMenu.getAndClearAction();
 
             if (action == PauseMenu::MenuAction::RequestNewGame) {
-                currentState = GameState::Menu;
-                if (menu) menu->reset();
-                std::cout << "Transitioning to Main Menu for New Game." << std::endl;
+                m_currentTaskIndex = -1;
+                startGameFullscreen();
             }
             else if (action == PauseMenu::MenuAction::RequestOpenMap) {
                 if (player && mapTexture) {
@@ -524,17 +523,18 @@ void GameManager::update(float dt) {
         if (showWastedScreen && wastedClock.getElapsedTime().asSeconds() > 5.f) {
             showWastedScreen = false;
             if (player) {
+                bool diedInMission =
+                    m_currentTaskIndex < missions.size() &&
+                    missions[m_currentTaskIndex]->getState() == MissionState::InProgress;
+
                 player->resetAfterDeath();
                 player->setPosition({ 100.f, 100.f });
-                if (m_currentTaskIndex < missions.size()) {
-                    // Restart mission with initial wanted level
-                    player->setWantedLevel(static_cast<int>(m_currentTaskIndex + 1));
+
+                if (diedInMission && m_currentTaskIndex > 0) {
+                    --m_currentTaskIndex;      // rollback only when death happened during a mission
                 }
             }
-            if (m_currentTaskIndex < missions.size()) {
-                player->resetMissionKills();
-                missions[m_currentTaskIndex]->start();
-            }
+            startGameFullscreen();             // restart the game view
         }
         if (m_currentTaskIndex < missions.size() && missions[m_currentTaskIndex]->isCompleted() &&
             missionCompleteClock.getElapsedTime().asSeconds() > MISSION_NEXT_TASK_DELAY &&
