@@ -365,7 +365,7 @@ void CarManager::spawnSingleVehicleOnRoad() {
     }
 
     int roadIdx = rand() % roads.size();
-  //  roadIdx = 0;
+    roadIdx = 0;
     const RoadSegment& road = roads[roadIdx];
     int laneIndex = rand() % std::max(1, road.lanes);
     sf::Vector2f laneCenter = road.getLaneCenter(laneIndex);

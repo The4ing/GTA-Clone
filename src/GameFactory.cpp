@@ -55,7 +55,7 @@ std::unique_ptr<PoliceManager> GameFactory::createPoliceManager(GameManager& gam
 
 std::unique_ptr<PedestrianManager> GameFactory::createPedestrianManager(const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     auto pedestrianManager = std::make_unique<PedestrianManager>();
-    const int numInitialPedestrians = 100;
+    const int numInitialPedestrians = 500;
     int attempts = 0;
 
     for (int i = 0; i < numInitialPedestrians && attempts < 3000; ) {

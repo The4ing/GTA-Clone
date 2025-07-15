@@ -248,7 +248,7 @@ void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<s
         updateChaseBehavior(dt, player, blockedPolygons);
 
         if (m_bumpCooldown <= 0.f && attemptRunOverPlayer(player, blockedPolygons)) {
-            player.takeDamage(static_cast<int>(m_currentSpeed / 4.f));
+            player.takeDamage(4);  //cahnge to const
             m_bumpCooldown = 3.f;
         }
     }
@@ -486,7 +486,7 @@ bool PoliceCar::attemptRunOverPlayer(Player& player, const std::vector<std::vect
 
         float pushStrength = m_currentSpeed;//* 0.75f; // Increased knockback strength
         player.applyKnockback(pushDir * pushStrength, 0.4f);
-        player.takeDamage(static_cast<int>(m_currentSpeed / 4.f)); // Damage calculation remains the same
+        player.takeDamage(5); // Damage calculation remains the same
         if (m_currentSpeed > 10.f)
             m_currentSpeed *= 0.6f;
 

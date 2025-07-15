@@ -424,6 +424,16 @@ void GameManager::renderFrozenGame(sf::RenderTarget& target) {
         target.draw(shape);
     }
 
+    for (const auto& road : roads) {
+        sf::RectangleShape shape;
+        shape.setSize({ road.bounds.width, road.bounds.height });
+        shape.setPosition({ road.bounds.left, road.bounds.top });
+        shape.setFillColor(sf::Color::Transparent);
+        shape.setOutlineColor(sf::Color::Red);
+        shape.setOutlineThickness(1.f);
+        target.draw(shape);
+    }
+
     if (carManager)
         carManager->draw(target);
     if (policeManager)
@@ -774,6 +784,23 @@ void GameManager::render() {
         shape.setOutlineThickness(1.f);
         window.draw(shape);
     }
+    for (const auto& road : roads) {
+        sf::RectangleShape shape;
+        shape.setSize({ std::round(road.bounds.width), std::round(road.bounds.height) });
+        shape.setPosition({ std::round(road.bounds.left), std::round(road.bounds.top) });
+        shape.setFillColor(sf::Color::Transparent);
+        shape.setOutlineColor(sf::Color::Red);
+        shape.setOutlineThickness(1.f);
+        window.draw(shape);
+
+        // הוספת נקודה אדומה בפינה:
+        sf::CircleShape dot(1.f);
+        dot.setFillColor(sf::Color::Yellow);
+        dot.setOrigin(1.f, 1.f); // שיהיה ממורכז
+        dot.setPosition(std::round(road.bounds.left), std::round(road.bounds.top));
+        window.draw(dot);
+
+    }
 
     if (carManager)
         carManager->draw(window);
@@ -1005,7 +1032,7 @@ void GameManager::startGameFullscreen() {
 
     carManager = GameFactory::createCarManager(roads, *policeManager);
 
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 1; ++i) {
         carManager->spawnSingleVehicleOnRoad();
         //carManager->spawnSingleVehicleOnRoad();
     }
@@ -1050,10 +1077,10 @@ void GameManager::startGameFullscreen() {
             missions.push_back(std::make_unique<CarMission>(m_taskInstructions[i]));
         }
         else if (i == 2) {
-            missions.push_back(std::make_unique<KillMission>(m_taskInstructions[i], KillTarget::NPC, 5));
+            missions.push_back(std::make_unique<KillMission>(m_taskInstructions[i], KillTarget::NPC, 10));
         }
         else if (i == 3) {
-            missions.push_back(std::make_unique<KillMission>(m_taskInstructions[i], KillTarget::Cop, 10));
+            missions.push_back(std::make_unique<KillMission>(m_taskInstructions[i], KillTarget::Cop, 5));
         }
         else if (i == 4) {
             missions.push_back(std::make_unique<SurviveMission>(m_taskInstructions[i], 60.f));
