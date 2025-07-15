@@ -1,6 +1,7 @@
 #include "Character.h"
 
-Character::Character() {}
+Character::Character():speed(100.f), health(100)
+{}
    
 
 void Character::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
