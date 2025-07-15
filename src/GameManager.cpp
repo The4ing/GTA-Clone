@@ -993,10 +993,10 @@ void GameManager::buildBlockedPolyTree() {
 
 
 void GameManager::startGameFullscreen() {
-    sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-    window.create(desktop, "Top-Down GTA Clone", sf::Style::Fullscreen);
-    window.setFramerateLimit(60);
-    isFullscreen = true;
+   // sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+  //  window.create(desktop, "Top-Down GTA Clone", sf::Style::Fullscreen);
+   // window.setFramerateLimit(60);
+    isFullscreen = false;
 
     updatePressStartPosition();
 
@@ -1014,10 +1014,10 @@ void GameManager::startGameFullscreen() {
     // Note: The actual resource loading for the game happens after this.
     // The old code here was only for the visual display of "Loading..."
 
-    gameView.setSize(static_cast<float>(desktop.width), static_cast<float>(desktop.height));
-    gameView.setCenter(gameView.getSize().x / 2.f, gameView.getSize().y / 2.f);
-    window.setView(gameView);
-    updatePressStartPosition();
+    //gameView.setSize(static_cast<float>(desktop.width), static_cast<float>(desktop.height));
+    //gameView.setCenter(gameView.getSize().x / 2.f, gameView.getSize().y / 2.f);
+  //  window.setView(gameView);
+  //  updatePressStartPosition();
 
 
     loadCollisionRectsFromJSON("resources/map.tmj");

@@ -1,8 +1,6 @@
 ﻿#include "AmmoRifle.h"
 #include "Player.h"
 
-
-
 AmmoRifle::AmmoRifle()
     
 {
