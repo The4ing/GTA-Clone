@@ -51,4 +51,4 @@ private:
     std::vector<sf::Vector2f> reconstructPath(Node* goalNode);
 };
 
-#endif // PATHFINDER_H
+#endif 

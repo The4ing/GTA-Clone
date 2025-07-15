@@ -79,3 +79,23 @@ sf::Vector2f PathfindingGrid::gridToWorld(const sf::Vector2i& gridPos) const {
     float worldY = mapOrigin.y + (static_cast<float>(gridPos.y) + 0.5f) * gridSize;
     return { worldX, worldY };
 }
+
+int PathfindingGrid::getWidth() const
+{
+    return gridWidth;
+}
+
+int PathfindingGrid::getHeight() const
+{
+    return gridHeight;
+}
+
+float PathfindingGrid::getGridSize() const
+{
+    return gridSize;
+}
+
+const sf::Vector2f& PathfindingGrid::getMapOrigin() const
+{
+    return mapOrigin;
+}

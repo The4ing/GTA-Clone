@@ -9,19 +9,20 @@ public:
     Menu(sf::RenderWindow& win);
     void update(sf::Event& event);
     void draw();
+    void reset();
+
     int getSelectedIndex() const;
     bool isOptionChosen() const;
+    
+    sf::Sound& getMenuLoop();
     std::string getSelectedOption() const;
-    void reset();
-    sf::Sound& getMenuLoop() { return menuLoop; }
 
 private:
     sf::RenderWindow& window;
     sf::Font font;
     sf::Sprite background;
     std::vector<sf::Text> options;
-    int selectedIndex = 0;
-    bool optionChosen = false;
-
-    sf::Sound menuLoop; // ✅ ניגון מוזיקת רקע
+    int selectedIndex ;
+    bool optionChosen;
+    sf::Sound menuLoop; 
 };

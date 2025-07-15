@@ -86,3 +86,6 @@ const unsigned int WEAPON_CHAR_SIZE = 62;
 const unsigned int TIME_CHAR_SIZE = 88;
 static const int MAX_STARS = 6;
 const sf::Vector2f SHADOW_OFFSET = sf::Vector2f(2.f, 2.f);
+
+//money
+static constexpr float MAX_LIFETIME = 5.f;

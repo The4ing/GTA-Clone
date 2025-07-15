@@ -4,7 +4,7 @@
 #include "SoundManager.h"
 #include <iostream>
 
-Menu::Menu(sf::RenderWindow& win) : window(win) {
+Menu::Menu(sf::RenderWindow& win) : window(win), selectedIndex(0), optionChosen(false){
     font = ResourceManager::getInstance().getFont("main");
 
     background.setTexture(ResourceManager::getInstance().getTexture("background_menu"));
@@ -115,4 +115,9 @@ void Menu::reset() {
     optionChosen = false;
     selectedIndex = 0;
     std::cout << "Menu reset." << std::endl;
+}
+
+sf::Sound& Menu::getMenuLoop()
+{
+    return menuLoop;
 }

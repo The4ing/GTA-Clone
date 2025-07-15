@@ -24,10 +24,10 @@ public:
     // Converts grid coordinates to world coordinates (center of the cell).
     sf::Vector2f gridToWorld(const sf::Vector2i& gridPos) const;
 
-    int getWidth() const { return gridWidth; }
-    int getHeight() const { return gridHeight; }
-    float getGridSize() const { return gridSize; }
-    const sf::Vector2f& getMapOrigin() const { return mapOrigin; }
+    int getWidth() const;
+    int getHeight() const;
+    float getGridSize() const;
+    const sf::Vector2f& getMapOrigin() const;
 
 
 private:

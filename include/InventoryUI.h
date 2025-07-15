@@ -2,9 +2,9 @@
 
 #include <SFML/Graphics.hpp>
 #include "Inventory.h"
-//#include "Player.h"
 
-class Player;  // Forward declaration
+
+class Player;  
 
 
 class InventoryUI {
