@@ -9,6 +9,15 @@ void ResourceInitializer::loadInitialResources() {
     rm.loadTexture("background_menu", "resources/GtaLogo.png");
     rm.loadTexture("loading_background", "resources/SF.png"); // Placeholder for loading screen
      rm.loadTexture("background_set", "resources/set_bk.png");
+
+    // Other UI/background elements previously in loadAll
+    rm.loadTexture("SF", "resources/SF.png"); 
+    rm.loadTexture("SS", "resources/SS.png");
+   rm.loadTexture("ST", "resources/ST.png");
+   //for slide show
+
+
+    rm.loadSoundBuffer("LoadScreen", "C:/Users/User/OneDrive/OOP/GTA2/resources/sounds/LoadScreen.wav");
 }
 
 void ResourceInitializer::loadGameResources() {
@@ -21,10 +30,7 @@ void ResourceInitializer::loadGameResources() {
     rm.loadTexture("pedestrian", "resources/NPC.png");
     rm.loadTexture("police", "resources/PoliceOfficer.png");
 
-    // Other UI/background elements previously in loadAll
-    rm.loadTexture("SF", "resources/SF.png"); // Retained if used elsewhere, otherwise can be removed if only for placeholder
-    rm.loadTexture("SS", "resources/SS.png");
-    rm.loadTexture("ST", "resources/ST.png");
+    
    
 
     // Weapon Textures

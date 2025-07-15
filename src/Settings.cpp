@@ -111,14 +111,14 @@ void Settings::draw() {
 
 void Settings::toggleSound() {
     soundEnabled = !soundEnabled;
-   // ResourceManager::getInstance().getMusic("main_theme").setVolume(soundEnabled ? volumeLevel * 100.f : 0.f);
+    // ResourceManager::getInstance().getMusic("main_theme").setVolume(soundEnabled ? volumeLevel * 100.f : 0.f);
 }
 
 void Settings::increaseVolume() {
     volumeLevel += 0.1f;
     if (volumeLevel > 1.0f) volumeLevel = 1.0f;
     updateBars();
-   // ResourceManager::getInstance().getMusic("main_theme").setVolume(volumeLevel * 100.f);
+    // ResourceManager::getInstance().getMusic("main_theme").setVolume(volumeLevel * 100.f);
 }
 
 void Settings::decreaseVolume() {
