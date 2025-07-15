@@ -59,7 +59,7 @@ void Menu::update(sf::Event& event) {
                 event.mouseButton.button == sf::Mouse::Left) {
 
                 if (options[i].getString() == "Settings") {
-                    Settings settings(window);
+                    Settings settings(window, menuLoop);  // 🔁 שלח את הסאונד
                     while (!settings.shouldExit()) {
                         sf::Event settingsEvent;
                         while (window.pollEvent(settingsEvent)) {
@@ -75,7 +75,12 @@ void Menu::update(sf::Event& event) {
                         window.display();
                     }
                 }
+
                 else if (options[i].getString() == "Start Game") {
+                    // ✅ עצור את המוזיקה
+                    menuLoop.stop();
+                    SoundManager::getInstance().unregisterExternalSound(&menuLoop);
+
                     selectedIndex = static_cast<int>(i);
                     optionChosen = true;
                 }
