@@ -1,4 +1,4 @@
-﻿// GameFactory.cpp
+// GameFactory.cpp
 #include "GameFactory.h"
 #include "HealthPresent.h"
 #include "Pistol.h"
@@ -73,13 +73,25 @@ std::unique_ptr<PedestrianManager> GameFactory::createPedestrianManager(const st
     return pedestrianManager;
 }
 
-std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons)
+std::vector<std::unique_ptr<Present>> GameFactory::createPresents(
+    int count,
+    const std::vector<std::vector<sf::Vector2f>>& blockedPolygons)
 {
     std::vector<std::unique_ptr<Present>> result;
     int attempts = 0;
     const int maxAttempts = 1000;
 
-    while (result.size() < count && attempts < maxAttempts) {
+    // ✅ הוספת Minigun במיקום קבוע (אם אינו חסום)
+    sf::Vector2f fixedMinigunPos(70.f, 70.f);
+    if (!isBlocked(fixedMinigunPos, blockedPolygons)) {
+        result.push_back(std::make_unique<Minigun>(
+            ResourceManager::getInstance().getTexture("Minigun"), fixedMinigunPos));
+    }
+    else {
+        std::cout << "Warning: Fixed Minigun position (70,70) is blocked.\n";
+    }
+
+    while (result.size() < static_cast<size_t>(count) && attempts < maxAttempts) {
         ++attempts;
 
         int type = rand() % 9;
@@ -90,78 +102,95 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(int count, con
         if (isBlocked(pos, blockedPolygons))
             continue;
 
-      //  switch (type) {
-    switch (4) {
+        // אל תיצור שוב Minigun – כבר הוספנו אותו
+        if (type == 4)
+            continue;
+
+        switch (type) {
         case 0:
-                result.push_back(std::make_unique<HealthPresent>(
-                    ResourceManager::getInstance().getTexture("Health"), pos));
+            result.push_back(std::make_unique<HealthPresent>(
+                ResourceManager::getInstance().getTexture("Health"), pos));
             break;
         case 1:
             result.push_back(std::make_unique<Pistol>(
                 ResourceManager::getInstance().getTexture("Pistol"), pos));
             break;
         case 2:
-               result.push_back(std::make_unique<SpeedBoost>(
-                   ResourceManager::getInstance().getTexture("Speed"), pos));
+            result.push_back(std::make_unique<SpeedBoost>(
+                ResourceManager::getInstance().getTexture("Speed"), pos));
             break;
-        
         case 3:
             result.push_back(std::make_unique<Rifle>(
                 ResourceManager::getInstance().getTexture("Rifle"), pos));
             break;
-        case 4:
-            result.push_back(std::make_unique<Minigun>(
-                ResourceManager::getInstance().getTexture("Minigun"), sf::Vector2f(70.f, 70.f)));
-            break;
         case 5:
             result.push_back(std::make_unique<Bazooka>(
                 ResourceManager::getInstance().getTexture("Bazooka"), pos));
-                
             break;
         case 6:
             result.push_back(std::make_unique<Knife>(
                 ResourceManager::getInstance().getTexture("Knife"), pos));
-
             break;
         case 7:
             result.push_back(std::make_unique<Grenade>(
                 ResourceManager::getInstance().getTexture("Grenade"), pos));
-
             break;
         case 8:
-          result.push_back(std::make_unique<Money>(
-               ResourceManager::getInstance().getTexture("Money"), pos));
-
-     break;
-
+            result.push_back(std::make_unique<Money>(
+                ResourceManager::getInstance().getTexture("Money"), pos));
+            break;
         }
+    }
+
+    if (result.size() < static_cast<size_t>(count)) {
+        std::cout << "Warning: Only created " << result.size() << " presents out of " << count << ".\n";
     }
 
     return result;
 }
 
+
 std::vector<std::unique_ptr<Store>> GameFactory::createStores(const std::vector<std::vector<sf::Vector2f>>& blockedPolygons)
 {
     std::vector<std::unique_ptr<Store>> tempStores;
 
+    sf::Vector2f fixedPos(50.f, 50.f);
+    if (!isBlocked(fixedPos, blockedPolygons)) {
+        tempStores.push_back(std::make_unique<Store>(fixedPos));
+    }
+    else {
+        std::cout << "Warning: fixed store position (50,50) is blocked.\n";
+    }
+
+    const int totalStoresToCreate = 5;
     const int maxAttempts = 1000;
     int attempts = 0;
 
-    while (attempts < maxAttempts) {
+    while (tempStores.size() < totalStoresToCreate && attempts < maxAttempts) {
         ++attempts;
 
         float x = static_cast<float>(rand() % MAP_WIDTH);
         float y = static_cast<float>(rand() % MAP_HEIGHT);
         sf::Vector2f storePos(x, y);
 
-        if (!isBlocked(storePos, blockedPolygons)) {
-            tempStores.push_back(std::make_unique<Store>(sf::Vector2f(50.f, 50.f)));
-            break; // found a valid location
+        if (isBlocked(storePos, blockedPolygons))
+            continue;
+
+        bool tooClose = false;
+        for (const auto& store : tempStores) {
+            if (std::hypot(store->getPosition().x - storePos.x, store->getPosition().y - storePos.y) < 60.f) {
+                tooClose = true;
+                break;
+            }
+        }
+
+        if (!tooClose) {
+            tempStores.push_back(std::make_unique<Store>(storePos));
         }
     }
 
-    if (tempStores.empty()) {
-        std::cout << "Could not place a store after " << maxAttempts << " attempts.\n";
+    if (tempStores.size() < totalStoresToCreate) {
+        std::cout << "Warning: Only created " << tempStores.size() << " stores after " << maxAttempts << " attempts.\n";
     }
 
     return tempStores;
