@@ -764,33 +764,8 @@ void GameManager::render() {
         blood->draw(window);
     player->draw(window);
 
-    for (const auto& poly : blockedPolygons) {
-        sf::ConvexShape shape;
-        shape.setPointCount(poly.size());
-        for (size_t i = 0; i < poly.size(); ++i)
-            shape.setPoint(i, poly[i]);
-        shape.setFillColor(sf::Color::Transparent);
-        shape.setOutlineColor(sf::Color::Green);
-        shape.setOutlineThickness(1.f);
-        window.draw(shape);
-    }
-    for (const auto& road : roads) {
-        sf::RectangleShape shape;
-        shape.setSize({ std::round(road.bounds.width), std::round(road.bounds.height) });
-        shape.setPosition({ std::round(road.bounds.left), std::round(road.bounds.top) });
-        shape.setFillColor(sf::Color::Transparent);
-        shape.setOutlineColor(sf::Color::Red);
-        shape.setOutlineThickness(1.f);
-        window.draw(shape);
-
-        // הוספת נקודה אדומה בפינה:
-        sf::CircleShape dot(1.f);
-        dot.setFillColor(sf::Color::Yellow);
-        dot.setOrigin(1.f, 1.f); // שיהיה ממורכז
-        dot.setPosition(std::round(road.bounds.left), std::round(road.bounds.top));
-        window.draw(dot);
-
-    }
+   
+    
 
     if (carManager)
         carManager->draw(window);

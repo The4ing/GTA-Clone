@@ -100,3 +100,7 @@ static constexpr int frameWidth = 64;
 static constexpr int frameHeight = 64;
 static constexpr int framesPerRow = 3;
 static constexpr int numCharacters = 7;
+
+//EXPLOSION
+const int sheetCols = 5;
+const int sheetRows = 5;

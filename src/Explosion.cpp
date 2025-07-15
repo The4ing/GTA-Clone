@@ -4,7 +4,7 @@
 
 Explosion::Explosion(const sf::Vector2f& pos, float radius)
     : position(pos), timer(0.f), frameTimer(0.f), frameDuration(0.05f),
-    currentFrame(0), sheetCols(5), sheetRows(5), frameWidth(0), frameHeight(0), duration(1.f),
+    currentFrame(0), frameWidth(0), frameHeight(0), duration(1.f),
     m_radius(1.f)
 {
     if (radius <= 0.f) {

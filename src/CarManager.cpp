@@ -279,71 +279,13 @@ void CarManager::spawnVehicleOffScreen(const sf::View& view) {
 
 
 void CarManager::draw(sf::RenderTarget& window) {
-    // Draw rejected roads in gray with yellow outline and reason text
-    for (const auto& [road, reason] : rejectedRoads) {
-        sf::RectangleShape rect;
-        rect.setPosition(road->bounds.left, road->bounds.top);
-        rect.setSize({ road->bounds.width, road->bounds.height });
-        rect.setFillColor(sf::Color(60, 60, 60, 100)); // Gray + transparent
-        rect.setOutlineColor(sf::Color::Yellow);
-        rect.setOutlineThickness(1.5f);
-        window.draw(rect);
-
-        // Text label of reason
-        if (debugFont.getInfo().family != "") {
-            sf::Text text;
-            text.setFont(debugFont);
-            text.setString(reason);
-            text.setCharacterSize(10);
-            text.setFillColor(sf::Color::White);
-            text.setPosition(road->bounds.left + 2.f, road->bounds.top + 2.f);
-            window.draw(text);
-        }
-    }
+    
 
     for (auto* vehiclePtr : vehicles) {
         Vehicle& vehicle = *vehiclePtr;
         if (!vehicle.isActive())
             continue;
-        // Highlight current road in blue
-        const RoadSegment* current = vehicle.getCurrentRoad();
-        if (current) {
-            sf::RectangleShape rect;
-            rect.setPosition(current->bounds.left, current->bounds.top);
-            rect.setSize({ current->bounds.width, current->bounds.height });
-            rect.setFillColor(sf::Color::Transparent);
-            rect.setOutlineColor(sf::Color::Blue);
-            rect.setOutlineThickness(2.f);
-            window.draw(rect);
-        }
 
-        // Highlight previous road in red if vehicle is turning
-        if (vehicle.isInTurn()) {
-            const RoadSegment* prev = vehicle.getPreviousRoad();
-            if (prev) {
-                sf::RectangleShape rect;
-                rect.setPosition(prev->bounds.left, prev->bounds.top);
-                rect.setSize({ prev->bounds.width, prev->bounds.height });
-                rect.setFillColor(sf::Color::Transparent);
-                rect.setOutlineColor(sf::Color::Red);
-                rect.setOutlineThickness(2.f);
-                window.draw(rect);
-            }
-        }
-        for (const auto& dp : driveableDebugPoints) {
-            sf::CircleShape dot(2.f);
-            dot.setOrigin(2.f, 2.f);
-            dot.setPosition(dp.pos);
-            dot.setFillColor(dp.valid ? sf::Color::Green : sf::Color::Red);
-            window.draw(dot);
-        }
-
-        sf::CircleShape dot(6.f);
-        dot.setOrigin(6.f, 6.f);
-        dot.setPosition(forwardPoint);
-        dot.setFillColor(sf::Color::Red);
-        window.draw(dot);
-        vehicle.draw(window);
     }
 }
 

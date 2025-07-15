@@ -1,6 +1,7 @@
 #pragma once
 #include "GameObject.h"
 #include <SFML/Graphics.hpp>
+#include "Constants.h"
 
 class Explosion : public GameObject {
 public:
@@ -29,9 +30,8 @@ private:
     int frameWidth;
     int frameHeight;
     int currentFrame ;
-    const int sheetCols;
-    const int sheetRows ;
    
+    
 
     
 };

@@ -5,7 +5,10 @@ set (MY_AUTHORS "Or_Ram_Atar-Romi_sinizkey")
 
 include (cmake/CompilerSettings.cmake)
 
+
 add_executable (${CMAKE_PROJECT_NAME})
+
+
 
 target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:-fsanitize=address>)
 if (NOT MSVC)
