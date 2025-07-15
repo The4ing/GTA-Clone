@@ -15,9 +15,9 @@ void ResourceInitializer::loadInitialResources() {
     rm.loadTexture("SS", "resources/SS.png");
    rm.loadTexture("ST", "resources/ST.png");
    //for slide show
-   rm.loadSoundBuffer("MenuSound", "resources/sounds/MenuSound.wav");
+   rm.loadSoundBuffer("MenuSound", "resources/sounds/MenuSound.ogg");
 
-    //rm.loadSoundBuffer("LoadScreen", "C:/Users/User/OneDrive/OOP/GTA2/resources/sounds/LoadScreen.wav");
+    //rm.loadSoundBuffer("LoadScreen", "C:/Users/User/OneDrive/OOP/GTA2/resources/sounds/LoadScreen.ogg");
 }
 
 void ResourceInitializer::loadGameResources() {
@@ -57,34 +57,34 @@ void ResourceInitializer::loadGameResources() {
 
 
     // Sound Buffers
-    //rm.loadSoundBuffer("startup", "resources/sounds/startup.wav"); // Example, if you have one
-    rm.loadSoundBuffer("mission_complete", "resources/sounds/mission_complete.wav");
-    rm.loadSoundBuffer("gunshot", "resources/sounds/gunshot.wav");
-    rm.loadSoundBuffer("rifleShot", "resources/sounds/rifleShot.wav");
-    rm.loadSoundBuffer("minigunShot", "resources/sounds/minigunShot.wav");
-    rm.loadSoundBuffer("RPGshot", "resources/sounds/RPGshot.wav");
-    rm.loadSoundBuffer("helicopterMove", "resources/sounds/helicopterMove.wav");
-    rm.loadSoundBuffer("helicopterShot", "resources/sounds/helicopterShot.wav");
-    rm.loadSoundBuffer("KnifeAttack", "resources/sounds/KnifeAttack.wav");
-    rm.loadSoundBuffer("ThrowGrenade", "resources/sounds/ThrowGrenade.wav");
-    rm.loadSoundBuffer("noAmmo", "resources/sounds/noAmmo.wav");
-    rm.loadSoundBuffer("NPC_hurt", "resources/sounds/NPChurt.wav");
-    rm.loadSoundBuffer("hurt1", "resources/sounds/hurt1.wav");
-    rm.loadSoundBuffer("hurt2", "resources/sounds/hurt2.wav");
-    rm.loadSoundBuffer("hurt3", "resources/sounds/hurt3.wav");  
-    rm.loadSoundBuffer("hurt4", "resources/sounds/hurt4.wav");
-    rm.loadSoundBuffer("Death1", "resources/sounds/Death1.wav");
-    rm.loadSoundBuffer("Death2", "resources/sounds/Death2.wav");
-    rm.loadSoundBuffer("Death3", "resources/sounds/Death3.wav");
-    rm.loadSoundBuffer("Death4", "resources/sounds/Death4.wav");
-    rm.loadSoundBuffer("notWanted", "resources/sounds/noWantedLevel.wav");
-    rm.loadSoundBuffer("wanted", "resources/sounds/wanted.wav");
-    rm.loadSoundBuffer("dispatch", "resources/sounds/dispatch.wav");
-    rm.loadSoundBuffer("wasted", "resources/sounds/wasted.wav");
-    rm.loadSoundBuffer("gameplay", "resources/sounds/gameplay.wav");
+    //rm.loadSoundBuffer("startup", "resources/sounds/startup.ogg"); // Example, if you have one
+    rm.loadSoundBuffer("mission_complete", "resources/sounds/mission_complete.ogg");
+    rm.loadSoundBuffer("gunshot", "resources/sounds/gunshot.ogg");
+    rm.loadSoundBuffer("rifleShot", "resources/sounds/rifleShot.ogg");
+    rm.loadSoundBuffer("minigunShot", "resources/sounds/minigunShot.ogg");
+    rm.loadSoundBuffer("RPGshot", "resources/sounds/RPGshot.ogg");
+    rm.loadSoundBuffer("helicopterMove", "resources/sounds/helicopterMove.ogg");
+    rm.loadSoundBuffer("helicopterShot", "resources/sounds/helicopterShot.ogg");
+    rm.loadSoundBuffer("KnifeAttack", "resources/sounds/KnifeAttack.ogg");
+    rm.loadSoundBuffer("ThrowGrenade", "resources/sounds/ThrowGrenade.ogg");
+    rm.loadSoundBuffer("noAmmo", "resources/sounds/noAmmo.ogg");
+    rm.loadSoundBuffer("NPC_hurt", "resources/sounds/NPChurt.ogg");
+    rm.loadSoundBuffer("hurt1", "resources/sounds/hurt1.ogg");
+    rm.loadSoundBuffer("hurt2", "resources/sounds/hurt2.ogg");
+    rm.loadSoundBuffer("hurt3", "resources/sounds/hurt3.ogg");  
+    rm.loadSoundBuffer("hurt4", "resources/sounds/hurt4.ogg");
+    rm.loadSoundBuffer("Death1", "resources/sounds/Death1.ogg");
+    rm.loadSoundBuffer("Death2", "resources/sounds/Death2.ogg");
+    rm.loadSoundBuffer("Death3", "resources/sounds/Death3.ogg");
+    rm.loadSoundBuffer("Death4", "resources/sounds/Death4.ogg");
+    rm.loadSoundBuffer("notWanted", "resources/sounds/noWantedLevel.ogg");
+    rm.loadSoundBuffer("wanted", "resources/sounds/wanted.ogg");
+    rm.loadSoundBuffer("dispatch", "resources/sounds/dispatch.ogg");
+    rm.loadSoundBuffer("wasted", "resources/sounds/wasted.ogg");
+    rm.loadSoundBuffer("gameplay", "resources/sounds/gameplay.ogg");
 
 
-    // rm.loadSoundBuffer("explosion", "resources/sounds/explosion.wav");
+    // rm.loadSoundBuffer("explosion", "resources/sounds/explosion.ogg");
 
     //inventory 
     rm.loadTexture("StoreAmmo", "resources/StoreAmmo.png");
