@@ -1,22 +1,18 @@
 #include "PauseMenu.h"
-#include "Constants.h" // For screen dimensions, or define them if not available
-#include "ResourceManager.h" // Assuming a ResourceManager exists for fonts
-#include "SoundManager.h" // Added for volume controls
-#include <iostream> // For placeholder cout statements
+#include "Constants.h" 
+#include "ResourceManager.h" 
+#include "SoundManager.h" 
+#include <iostream> 
 #include <cmath>
 
 // It's good practice to put Constants.h inclusion within an ifdef
 // or ensure it's included correctly by the build system.
 // For now, we'll assume it defines SCREEN_WIDTH and SCREEN_HEIGHT if used.
 
-PauseMenu::PauseMenu() : m_isOpen(false), selectedIndex(0), selectedOption(MenuOption::Resume), showingMap(false), showingStats(false) {
-    // Attempt to load font via ResourceManager
-    // This is a common pattern; adjust if your ResourceManager API differs.
-    // Example: font = ResourceManager::getInstance().getFont("Miskan.ttf");
-    // For now, direct loading with fallback:
-    //if (!font.loadFromFile("resources/Miskan.ttf")) {
-    //    std::cerr << "Error loading font: resources/Miskan.ttf. Pause menu text might not display correctly." << std::endl;
-    //}
+PauseMenu::PauseMenu() : m_isOpen(false), selectedIndex(0), selectedOption(MenuOption::Resume), showingMap(false), showingStats(false),
+   destinationBlinkInterval(0.5f), newGameConfirmIndex(0), statsDataLoaded(false), showingNewGameConfirm(false),mapResourcesInitialized(false),
+  wasEscapePressed(false) {
+   
     font = ResourceManager::getInstance().getFont("main");
 
     menuItems = { "Resume Game", "Start New Game", "Map", "Stats", "Volume Up", "Volume Down", "Mute", "Exit" };

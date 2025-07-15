@@ -12,20 +12,21 @@ public:
 
     void open();
     void close();
-    bool isOpen() const;
-
     void update(float dt);
     void draw(sf::RenderTarget& target);
     void handleEvent(const sf::Event& event);
-
-
-
-    enum class MenuAction { None, RequestNewGame, Resume, RequestOpenMap, RequestOpenStats, Exit};
-    MenuAction getAndClearAction();
     void prepareMapScreen(const sf::Texture& mapTex, sf::Vector2f playerPos,
         sf::Vector2u windowSize,
         const std::map<int, sf::Vector2f>& destinations);
 
+    bool isOpen() const;
+
+    
+
+
+    enum class MenuAction { None, RequestNewGame, Resume, RequestOpenMap, RequestOpenStats, Exit};
+    MenuAction getAndClearAction();
+   
     struct PlayerGameStats { // Renamed to avoid conflict
         sf::Time gameTime = sf::Time::Zero;
         int kills = 0;
@@ -38,47 +39,54 @@ public:
 private:
     MenuAction m_currentAction = MenuAction::None;
     PlayerGameStats displayedStats; 
-    bool statsDataLoaded = false;   
-    sf::Clock escCooldownClock;
+    enum class MenuOption { Resume, NewGame, Map, Stats, VolumeUp, VolumeDown, Mute, Exit, Count }; 
+    MenuOption selectedOption = MenuOption::Resume;
 
-    // Map related members
-    sf::Sprite mapDisplaySprite; 
+    sf::Font font;
 
-    // New Game confirmation
-    bool showingNewGameConfirm = false;
-    int newGameConfirmIndex = 0; // 0 for Yes, 1 for No
-    std::vector<std::string> newGameConfirmOptions = {"Yes", "No"};
-    sf::RectangleShape confirmDialogBackground;
-    sf::Text confirmDialogText;
-    sf::Text confirmOptionText;
-
-    // Volume display
-    sf::Text volumeLevelText;
-    void updateVolumeDisplayText(); // Helper to update the volume text
-
-    sf::View mapDisplayView;
     sf::CircleShape playerMarker;
     sf::CircleShape destinationMarker;
-    sf::Clock destinationBlinkClock;
-    float destinationBlinkInterval = 0.5f;
-    std::map<int, sf::Vector2f> missionPoints;
+
+    sf::View mapDisplayView;
+
+    std::vector<std::string> newGameConfirmOptions = { "Yes", "No" };
+
     sf::Vector2f playerMapPosition;
-    bool mapResourcesInitialized = false;
 
-    enum class MenuOption { Resume, NewGame, Map, Stats, VolumeUp, VolumeDown, Mute, Exit, Count }; // Added Count for easier iteration if needed
-    std::vector<std::string> menuItems;
-    MenuOption selectedOption = MenuOption::Resume; // Store as enum for type safety
-    int selectedIndex = 0; // Kept for easier navigation with % operator, will sync with selectedOption
-
-    bool m_isOpen = false;
-    bool showingMap = false;
-    bool showingStats = false;
-    bool wasEscapePressed = false;
-
-    sf::Font font; // Consider moving font loading to ResourceManager if available
-    sf::Text menuText;
+    sf::RectangleShape confirmDialogBackground;
     sf::RectangleShape background;
+
+    sf::Text confirmDialogText;
+    sf::Text confirmOptionText;
+    sf::Text volumeLevelText;
+    sf::Text menuText;
     sf::Text titleText;
+
+    sf::Clock escCooldownClock;
+    sf::Clock destinationBlinkClock;
+
+    sf::Sprite mapDisplaySprite; 
+
+    std::map<int, sf::Vector2f> missionPoints;
+    
+    float destinationBlinkInterval;
+
+    int newGameConfirmIndex ; 
+    int selectedIndex ; 
+
+    void updateVolumeDisplayText(); // Helper to update the volume text
+ 
+
+    std::vector<std::string> menuItems;
+  
+    bool statsDataLoaded ;
+    bool showingNewGameConfirm ;
+    bool mapResourcesInitialized;
+    bool m_isOpen ;
+    bool showingMap  ;
+    bool showingStats ;
+    bool wasEscapePressed ;
+
 
     void navigateUp();
     void navigateDown();

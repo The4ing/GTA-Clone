@@ -43,6 +43,16 @@ void Pedestrian::setMoneyDropped(bool change)
     moneyDropped = change;
 }
 
+bool Pedestrian::getBloodSpawned() const
+{
+    return bloodSpawned;
+}
+
+void Pedestrian::setBloodSpawned(bool val)
+{
+    bloodSpawned = val;
+}
+
 void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
 
     if (dying) {

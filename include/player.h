@@ -84,38 +84,46 @@ private:
     void setSpecificFrame(int row, int col);
     void playAnimation(const std::string& animName, bool loop = true, bool pingpong = false, bool forceRestart = false);
 
-    int npcKills = 0;
-    int copKills = 0;
 
     sf::Sprite  sprite;
+
+    float       animTimer;
+    float       animDelay;
     float       speed = 50.f;
+    float m_knockbackTimer = 0.f;
+
     int         frameWidth;
     int         frameHeight;
     int         currentFrame;
     int         sheetCols;
     int         sheetRows;
-    float       animTimer;
-    float       animDelay;
-    sf::Vector2f position;
-    bool wasShooting = false;
-    bool isFinishingShootAnim = false;
-    int killCount = 0;
-    bool m_isDead = false;
     int m_money;
     int m_health;
     int m_armor;
-    std::string m_currentWeaponName;
+    int killCount = 0;
+    int Bullets = 0;
     int m_maxWeaponAmmo;
     int m_wantedLevel;
+    int npcKills = 0;
+    int copKills = 0;
+
+    sf::Vector2f position;
+    bool wasShooting = false;
+    bool isFinishingShootAnim = false;
+    bool m_isDead = false;
+    
+    std::string m_currentWeaponName;
+    std::string currentAnimationName;
+
     std::unique_ptr<PlayerShooter> m_shooter;
 
     Inventory inventory;
-    int Bullets = 0;
+   
     float speedBoostTimer = 0.f;
     sf::Vector2f m_knockbackVelocity = { 0.f, 0.f };
-    float m_knockbackTimer = 0.f;
-    std::string currentAnimationName;
+   
+   
     std::unique_ptr<AnimationManager> animationManager;
     std::unordered_map<std::string, AmmoSetting> WeaponsAmmo;
-    GameManager& m_gameManager;  // ????? ????
+    GameManager& m_gameManager;  
 };

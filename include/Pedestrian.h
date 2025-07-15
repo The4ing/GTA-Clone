@@ -1,6 +1,7 @@
 #pragma once
 #include "MovingObject.h"
 #include <SFML/Graphics.hpp>
+#include "Constants.h"
 
 class Pedestrian : public MovingObject {
 public:
@@ -24,8 +25,8 @@ public:
     bool getIsBackingUp() const;
     bool getMoneyDropped() const;
     void setMoneyDropped(bool change);
-    bool getBloodSpawned() const { return bloodSpawned; }
-    void setBloodSpawned(bool val) { bloodSpawned = val; }
+    bool getBloodSpawned() const;
+    void setBloodSpawned(bool val);
 
     void onCollision(GameObject&) {};
     void collideWithPresent(Present&) {};
@@ -33,7 +34,8 @@ public:
     sf::FloatRect getCollisionBounds() const;
 
 private:
-    bool checkCollision(const sf::Vector2f& currentPos, const sf::Vector2f& nextPos, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons, float radius);
+    bool checkCollision(const sf::Vector2f& currentPos, const sf::Vector2f& nextPos, 
+               const std::vector<std::vector<sf::Vector2f>>& blockedPolygons, float radius);
 
     sf::Sprite sprite;
     sf::Vector2f position;
@@ -55,17 +57,9 @@ private:
     int currentFrame;
    
 
-    const float animationSpeed = 0.12f;
-    const float directionChangeInterval = 2.0f;
-    const float backupDistance = 30.f;
-    const float deathDuration = 3.f;
-
-    static constexpr int frameWidth = 64;
-    static constexpr int frameHeight = 64;
-    static constexpr int framesPerRow = 3;
-    static constexpr int numCharacters = 7;
-    bool bloodSpawned = false;
    
+   
+    bool bloodSpawned ;
     bool isBackingUp ;
     bool dying ;
     bool remove ;

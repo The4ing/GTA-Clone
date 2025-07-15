@@ -89,3 +89,14 @@ const sf::Vector2f SHADOW_OFFSET = sf::Vector2f(2.f, 2.f);
 
 //money
 static constexpr float MAX_LIFETIME = 5.f;
+
+
+//for pedestrian
+const float animationSpeed = 0.12f;
+const float directionChangeInterval = 2.0f;
+const float backupDistance = 30.f;
+const float deathDuration = 3.f;
+static constexpr int frameWidth = 64;
+static constexpr int frameHeight = 64;
+static constexpr int framesPerRow = 3;
+static constexpr int numCharacters = 7;
