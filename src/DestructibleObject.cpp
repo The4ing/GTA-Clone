@@ -1,12 +1,11 @@
 #include "DestructibleObject.h"
 #include "ResourceManager.h"
 
-DestructibleObject::DestructibleObject() {
+DestructibleObject::DestructibleObject():health(100){
     sprite.setTexture(ResourceManager::getInstance().getTexture("barrel"));
     position = { 400.f, 300.f };
     sprite.setPosition(position);
 }
-
 void DestructibleObject::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
     //nothing
 }
