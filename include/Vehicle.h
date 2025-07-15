@@ -62,6 +62,8 @@ public:
     std::vector<sf::Vector2f> getHitboxPolygon() const;
     bool isDestroyed() const;
     void setDestroyed(bool value);
+    bool isActive() const;
+    void setActive(bool value);
 
     // Indicates if the derived class handles its own AI rotation, preventing generic Vehicle AI rotation.
     virtual bool handlesOwnAIRotation() const { return false; }
@@ -94,6 +96,7 @@ private:
     const RoadSegment* previousRoad = nullptr;
     int currentLaneIndex = 0;
     float stopTimer = 0.f;
+    bool active = false;
 
 
 };

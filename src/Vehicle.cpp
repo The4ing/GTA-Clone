@@ -25,6 +25,7 @@ Vehicle::Vehicle() : m_driver(nullptr), parking(false) {
     // Initialize angle based on initial directionVec if needed, or default to 0
     // For now, player will control angle directly. AI uses directionVec.
     angle = sprite.getRotation(); // Assuming initial rotation is set by setDirectionVec if AI
+    active = false;
 }
 
 void Vehicle::update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
@@ -416,4 +417,13 @@ bool Vehicle::isDestroyed() const {
 
 void Vehicle::setDestroyed(bool value) {
     destroyed = value;
+}
+
+
+bool Vehicle::isActive() const {
+    return active;
+}
+
+void Vehicle::setActive(bool value) {
+    active = value;
 }

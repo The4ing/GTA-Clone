@@ -6,7 +6,7 @@
 #include <SFML/Graphics.hpp>
 #include <memory>
 #include <iostream>
-
+#include "VehiclePool.h"
 
 class PoliceManager;
 
@@ -17,8 +17,8 @@ public:
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons, const sf::View& view);
     void draw(sf::RenderTarget& window);
 
-    std::vector<std::unique_ptr<Vehicle>>& getVehicles();
-    void addVehicle(std::unique_ptr<Vehicle> vehicle);
+    std::vector<Vehicle*>& getVehicles();
+    void addVehicle(Vehicle* vehicle);
 
     void setRoads(const std::vector<RoadSegment>& newRoads);
     void buildRoadTree();
@@ -41,7 +41,8 @@ private:
 
     std::vector<std::pair<const RoadSegment*, std::string>> rejectedRoads;  // debug
 
-    std::vector<std::unique_ptr<Vehicle>> vehicles;
+    std::vector<Vehicle*> vehicles;
+    VehiclePool vehiclePool;
     QuadTree<Vehicle*> vehicleTree;
 
     std::vector<RoadSegment> roads;

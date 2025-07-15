@@ -13,7 +13,8 @@ using json = nlohmann::json;
 
 CarManager::CarManager(PoliceManager& policeMgr)
     : vehicleTree(sf::FloatRect(0.f, 0.f, 4640.f, 4672.f)),
-    m_policeManager(policeMgr) {
+    m_policeManager(policeMgr),
+    vehiclePool(20) {
     if (!debugFont.loadFromFile("resources/Miskan.ttf")) {
         std::cerr << "Failed to load debug font for road debug text\n";
     }
@@ -27,11 +28,13 @@ void CarManager::setRoads(const std::vector<RoadSegment>& newRoads) {
     roads = newRoads;
 }
 
-void CarManager::addVehicle(std::unique_ptr<Vehicle> vehicle) {
-    vehicles.push_back(std::move(vehicle));
+void CarManager::addVehicle(Vehicle* vehicle) {
+    if (vehicle) {
+        vehicles.push_back(vehicle);
+    }
 }
 
-std::vector<std::unique_ptr<Vehicle>>& CarManager::getVehicles() {
+std::vector<Vehicle*>& CarManager::getVehicles() {
     return vehicles;
 }
 
@@ -48,15 +51,18 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
     bool turnFound;
 
     vehicleTree.clear();
-    for (auto& vPtr : vehicles) {
-        Vehicle& v = *vPtr;
-        sf::Vector2f pos = v.getPosition();
+    for (auto* vPtr : vehicles) {
+        if (!vPtr->isActive())
+            continue;
+        sf::Vector2f pos = vPtr->getPosition();
         sf::FloatRect area(pos.x - 0.5f, pos.y - 0.5f, 1.f, 1.f);
-        vehicleTree.insert(area, vPtr.get());
+        vehicleTree.insert(area, vPtr);
     }
 
     for (size_t i = 0; i < vehicles.size(); ++i) {
         Vehicle& vehicle = *vehicles[i];
+        if (!vehicle.isActive())
+            continue;
         // First, call the vehicle's own update method.
         // This handles player input if present, or basic AI movement (like Bezier curve execution if inTurn is true for AI).
         vehicle.update(dt, blockedPolygons);
@@ -203,8 +209,9 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
     sf::FloatRect viewRect(view.getCenter() - view.getSize() / 2.f, view.getSize());
 
     for (size_t i = 0; i < vehicles.size(); ) {
-        Vehicle& v = *vehicles[i];
-        if (v.isDestroyed() && !viewRect.intersects(v.getSprite().getGlobalBounds())) {
+        Vehicle* v = vehicles[i];
+        if (v->isDestroyed() && !viewRect.intersects(v->getSprite().getGlobalBounds())) {
+            vehiclePool.returnVehicle(v);
             vehicles.erase(vehicles.begin() + i);
             spawnVehicleOffScreen(view);
         }
@@ -243,7 +250,11 @@ void CarManager::spawnVehicleOffScreen(const sf::View& view) {
                 : road.bounds.left + offset;
         }
 
-        auto car = std::make_unique<Vehicle>();
+        Vehicle* car = vehiclePool.getVehicle();
+        if (!car)
+            return;
+        car->setActive(true);
+        car->setDestroyed(false);
         car->setTexture(ResourceManager::getInstance().getTexture("car_sheet"));
         int carIndex = rand() % 7;
         int frameWidth = 600;
@@ -260,8 +271,8 @@ void CarManager::spawnVehicleOffScreen(const sf::View& view) {
         car->setCurrentRoad(&road);
         car->setCurrentLaneIndex(laneIndex);
 
-        addVehicle(std::move(car));
-        vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), vehicles.back().get());
+        addVehicle(car);
+        vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), vehicles.back());
         return;
     }
 }
@@ -290,8 +301,10 @@ void CarManager::draw(sf::RenderTarget& window) {
         }
     }
 
-    for (auto& vehiclePtr : vehicles) {
+    for (auto* vehiclePtr : vehicles) {
         Vehicle& vehicle = *vehiclePtr;
+        if (!vehicle.isActive())
+            continue;
         // Highlight current road in blue
         const RoadSegment* current = vehicle.getCurrentRoad();
         if (current) {
@@ -373,7 +386,11 @@ void CarManager::spawnSingleVehicleOnRoad() {
             : road.bounds.left + offset;
     }
 
-    auto car = std::make_unique<Vehicle>();
+    Vehicle* car = vehiclePool.getVehicle();
+    if (!car)
+        return;
+    car->setActive(true);
+    car->setDestroyed(false);
     car->setTexture(ResourceManager::getInstance().getTexture("car_sheet"));
     int carIndex = rand() % 7; // 7 car variants in the sprite sheet
     int frameWidth = 600;
@@ -410,8 +427,8 @@ void CarManager::spawnSingleVehicleOnRoad() {
     //}
     //else {
         // Spawn a regular car
-    addVehicle(std::move(car));
-    vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), vehicles.back().get());
+    addVehicle(car);
+    vehicleTree.insert(sf::FloatRect(laneCenter.x, laneCenter.y, 1.f, 1.f), vehicles.back());
     // std::cout << "Spawned REGULAR car at (" << laneCenter.x << ", " << laneCenter.y
     //           << ") on lane " << laneIndex << " direction: " << actualDir
     //           << " (road#" << roadIdx << ")\n";

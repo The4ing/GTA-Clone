@@ -313,7 +313,7 @@ void GameManager::processEvents() {
 
                         if (carManager) {
                             for (auto& carPtr : carManager->getVehicles()) {
-                                Vehicle* car = carPtr.get();
+                                Vehicle* car = carPtr;
                                 if (car->getDriver() == nullptr) {
                                     float distSq = distanceSquared(playerPos, car->getPosition());
                                     if (distSq < enterRadiusSq && distSq < minOverallDistanceSq) {
@@ -558,7 +558,7 @@ void GameManager::update(float dt) {
         std::vector<Vehicle*> carPtrs;
         if (carManager) {
             for (auto& vPtr : carManager->getVehicles())
-                carPtrs.push_back(vPtr.get());
+                carPtrs.push_back(vPtr);
         }
 
         static float meleeCooldown = 0.f;
@@ -1005,7 +1005,7 @@ void GameManager::startGameFullscreen() {
 
     carManager = GameFactory::createCarManager(roads, *policeManager);
 
-    for (int i = 0; i < 1; ++i) {
+    for (int i = 0; i < 5; ++i) {
         carManager->spawnSingleVehicleOnRoad();
         //carManager->spawnSingleVehicleOnRoad();
     }
