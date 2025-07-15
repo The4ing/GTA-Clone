@@ -50,7 +50,7 @@ void ControllersHelp::run() {
                 return;
         }
 
-        window.clear(); // ניקוי
+        window.clear(sf::Color(30, 30, 30)); // כהה לקריאה נוחה
         window.draw(background); // ✅ ציור הרקע
 
         for (auto& line : lines)

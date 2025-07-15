@@ -5,6 +5,14 @@ GameHelp::GameHelp(sf::RenderWindow& window)
     : window(window)
 {
     font = ResourceManager::getInstance().getFont("main");
+    background.setTexture(ResourceManager::getInstance().getTexture("background_set"));
+    sf::Vector2u textureSize = background.getTexture()->getSize();
+    sf::Vector2u windowSize = window.getSize();
+    background.setScale(
+        static_cast<float>(windowSize.x) / textureSize.x,
+        static_cast<float>(windowSize.y) / textureSize.y
+    );
+    background.setPosition(0.f, 0.f);
     setupText();
 }
 
@@ -43,6 +51,7 @@ void GameHelp::run() {
         }
 
         window.clear(sf::Color(30, 30, 30)); // כהה לקריאה נוחה
+        window.draw(background); // ✅ ציור הרקע
         for (auto& line : lines)
             window.draw(line);
         window.display();
