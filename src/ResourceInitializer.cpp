@@ -15,7 +15,7 @@ void ResourceInitializer::loadInitialResources() {
     rm.loadTexture("SS", "resources/SS.png");
    rm.loadTexture("ST", "resources/ST.png");
    //for slide show
-   rm.loadSoundBuffer("MenuSound", "C:/Users/User/OneDrive/OOP/GTA2/resources/sounds/MenuSound.wav");
+   rm.loadSoundBuffer("MenuSound", "resources/sounds/MenuSound.wav");
 
     //rm.loadSoundBuffer("LoadScreen", "C:/Users/User/OneDrive/OOP/GTA2/resources/sounds/LoadScreen.wav");
 }
@@ -53,10 +53,12 @@ void ResourceInitializer::loadGameResources() {
  //   rm.loadTexture("bullet", "resources/bullet.png");
     rm.loadTexture("car_sheet", "resources/cars_spritesheet.png");
     rm.loadTexture("explosion", "resources/explosion.png");
-    rm.loadSoundBuffer("mission_complete", "resources/sounds/mission_complete.wav");
+    rm.loadTexture("blood_puddle", "resources/blood_puddle.png");
+
 
     // Sound Buffers
     //rm.loadSoundBuffer("startup", "resources/sounds/startup.wav"); // Example, if you have one
+    rm.loadSoundBuffer("mission_complete", "resources/sounds/mission_complete.wav");
     rm.loadSoundBuffer("gunshot", "resources/sounds/gunshot.wav");
     rm.loadSoundBuffer("rifleShot", "resources/sounds/rifleShot.wav");
     rm.loadSoundBuffer("minigunShot", "resources/sounds/minigunShot.wav");

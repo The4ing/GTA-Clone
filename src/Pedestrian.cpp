@@ -9,8 +9,8 @@
 Pedestrian::Pedestrian(sf::Vector2f pos) : position(pos),
 idleTimer(0.f), idleDurationMin(1.f), idleDurationMax(3.f), idleProbability(0.15f) , 
 speed(50.f), animationTimer(90.f), timeSinceLastDirectionChange(0.f), backupProgress(0.f),
-deathTimer(0.f), health(100), characterRow(0), currentFrame(0), isBackingUp(false), 
-dying(false), remove(false), isIdle(false), moneyDropped(false)
+deathTimer(0.f), health(100), characterRow(0), currentFrame(0), isBackingUp(false),
+dying(false), remove(false), isIdle(false), moneyDropped(false), bloodSpawned(false)
 
 {
     sprite.setTexture(ResourceManager::getInstance().getTexture("pedestrian"));

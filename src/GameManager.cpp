@@ -79,7 +79,6 @@ GameManager::GameManager()
 void GameManager::run()
 {
     Slideshow slideshow(window, 2.5f);       // לוגו/קרדיטים בהפעלה – אם תרצה
-    slideshow.run();
 
     while (window.isOpen()) {
         float deltaTime = clock.restart().asSeconds();
@@ -402,6 +401,8 @@ void GameManager::processEvents() {
 
 void GameManager::renderFrozenGame(sf::RenderTarget& target) {
     target.draw(mapSprite);
+    for (auto& blood : bloodPuddles)
+        blood->draw(target);
     player->draw(target);
 
     for (const auto& poly : blockedPolygons) {
@@ -464,6 +465,10 @@ void GameManager::update(float dt) {
 
         if (policeManager) {
             for (const auto& p : policeManager->getPoliceOfficers()) {
+                if (p->isDead() && !p->getBloodSpawned()) {
+                    createBloodPuddle(p->getPosition());
+                    p->setBloodSpawned(true);
+                }
                 if (p->isDead() && !p->getMoneyDropped()) {
                     p->setMoneyDropped(true);
                     player->incrementCopKills();
@@ -480,6 +485,10 @@ void GameManager::update(float dt) {
 
         if (pedestrianManager)
             for (auto& ped : pedestrianManager->getPedestrians()) {
+                if (ped->isDead() && !ped->getBloodSpawned()) {
+                    createBloodPuddle(ped->getPosition());
+                    ped->setBloodSpawned(true);
+                }
                 if (ped->isDead() && !ped->getMoneyDropped()) {
                     ped->setMoneyDropped(true);
                     player->incrementNpcKills();
@@ -605,6 +614,8 @@ void GameManager::update(float dt) {
         }
 
         player->getShooter().update(dt, blockedPolygons, npcPtrs, policePtrs, carPtrs, *player);
+        for (auto& blood : bloodPuddles)
+            blood->update(dt, blockedPolygons);
         for (auto& exp : explosions)
             exp->update(dt, blockedPolygons);
         explosions.erase(std::remove_if(explosions.begin(), explosions.end(),
@@ -764,6 +775,8 @@ void GameManager::render() {
     window.clear(sf::Color::Black);
     window.setView(gameView);
     window.draw(mapSprite);
+    for (auto& blood : bloodPuddles)
+        blood->draw(window);
     player->draw(window);
 
     for (const auto& poly : blockedPolygons) {
@@ -840,6 +853,7 @@ void GameManager::render() {
         overlay.setFillColor(sf::Color(0, 0, 0, 150));
         window.draw(overlay);
         sf::Text doneText = m_pressStartText;
+        doneText.setCharacterSize(100);
         doneText.setString("Mission Completed");
         doneText.setFillColor(sf::Color::Green);
         sf::FloatRect rect = doneText.getLocalBounds();
@@ -852,6 +866,7 @@ void GameManager::render() {
         overlay.setFillColor(sf::Color(0, 0, 0, 150));
         window.draw(overlay);
         sf::Text wastedText = m_pressStartText;
+        wastedText.setCharacterSize(100);
         wastedText.setString("WASTED");
         wastedText.setFillColor(sf::Color::Red);
         sf::FloatRect rect = wastedText.getLocalBounds();
@@ -1143,6 +1158,9 @@ void GameManager::createExplosion(const sf::Vector2f& pos, float radius) {
     explosions.push_back(std::make_unique<Explosion>(pos, radius));
 }
 
+void GameManager::createBloodPuddle(const sf::Vector2f& pos) {
+    bloodPuddles.push_back(std::make_unique<BloodPuddle>(pos));
+}
 
 PathfindingGrid* GameManager::getPathfindingGrid() const {
     return pathfindingGrid.get();

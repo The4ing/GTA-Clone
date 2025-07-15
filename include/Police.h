@@ -53,6 +53,8 @@ public:
     void setPosition(const sf::Vector2f& pos) override;
     bool getMoneyDropped() const;
     void setMoneyDropped(bool change);
+    bool getBloodSpawned() const { return bloodSpawned; }
+    void setBloodSpawned(bool val) { bloodSpawned = val; }
     bool getNeedsCleanup() const;
     void setNeedsCleanup(bool change);
     
@@ -86,6 +88,7 @@ private:
     float m_fieldOfViewAngle;
     float deathTimer ;
     const float deathDuration = 1.f;
+    bool bloodSpawned = false;
 
     bool m_isStatic;
     bool moneyDropped;

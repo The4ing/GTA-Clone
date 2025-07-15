@@ -22,7 +22,7 @@ Police::Police(GameManager & gameManager, PoliceWeaponType weaponType) :
     state(PoliceState::Idle),
     currentPathIndex(0), repathTimer(0.f), pathFailCooldown(0.f),
     fireCooldownTimer(0.f), meleeCooldownTimer(0.f),
-    m_assignedZone(nullptr), moneyDropped(false),  isPaused(false),
+    m_assignedZone(nullptr), moneyDropped(false), bloodSpawned(false), isPaused(false),
     needsCleanup(false), debugPrintTimer(0.f), speed(40.f),
     health(100),detectionRadius(150.f), backUpDistance(30.f), backedUpSoFar(0.f),
     pauseTimer(0.f), nextPauseTime(0.f), sheetCols(10), sheetRows(10), radarTimer(0.f),
@@ -53,7 +53,7 @@ Police::Police(GameManager & gameManager, PoliceWeaponType weaponType) :
 
     sprite.setTextureRect({ 0, 0, frameWidth, frameHeight });
     sprite.setOrigin(static_cast<float>(frameWidth) / 2.f, static_cast<float>(frameHeight) / 2.f);
-    sprite.setScale(0.15f, 0.15f); // Ensure this scale is appropriate for collisionRadius
+    sprite.setScale(0.10f, 0.10f); // Ensure this scale is appropriate for collisionRadius
     // speed = 40.f; // Initialized in header
     pathTargetPosition = sf::Vector2f(-1, -1);
 

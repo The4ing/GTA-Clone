@@ -27,12 +27,12 @@ Player::Player(GameManager& gameManager) // Modified constructor
     frameHeight = sheetH / sheetRows;
 
     sprite.setOrigin(frameWidth / 2.f, frameHeight / 2.f);
-    sprite.setScale(0.25f, 0.25f);
+    //sprite.setScale(0.20f, 0.20f);
     sprite.setTextureRect(sf::IntRect(0, 0, frameWidth, frameHeight));
 
     position = { 100.f, 100.f };
     sprite.setPosition(position);
-    sprite.setScale(0.07, 0.07);
+    sprite.setScale(0.05, 0.05);
 
     animationManager = std::make_unique<AnimationManager>(sprite, frameWidth, frameHeight, sheetCols, sheetRows);
     animationManager->initAnimations();
@@ -132,7 +132,10 @@ void Player::update(float dt, const std::vector<std::vector<sf::Vector2f>>& bloc
             return;
         }
         if (m_health <= 0) {
-            m_isDead = true;
+            if (!m_isDead) {
+                m_gameManager.createBloodPuddle(getPosition());
+                m_isDead = true;
+            }
             playAnimation("HurtDie", false);
             if (animationManager)
                 animationManager->update(dt);
@@ -360,7 +363,7 @@ sf::Vector2f Player::getCenter() const {
 
 float Player::getCollisionRadius() const {
     // Set to match visual size — adjust as needed
-    return 9.f; // in pixels
+    return 6.f; // in pixels
 }
 
 

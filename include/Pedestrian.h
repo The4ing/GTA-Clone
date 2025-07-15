@@ -24,6 +24,8 @@ public:
     bool getIsBackingUp() const;
     bool getMoneyDropped() const;
     void setMoneyDropped(bool change);
+    bool getBloodSpawned() const { return bloodSpawned; }
+    void setBloodSpawned(bool val) { bloodSpawned = val; }
 
     void onCollision(GameObject&) {};
     void collideWithPresent(Present&) {};
@@ -62,6 +64,7 @@ private:
     static constexpr int frameHeight = 64;
     static constexpr int framesPerRow = 3;
     static constexpr int numCharacters = 7;
+    bool bloodSpawned = false;
    
     bool isBackingUp ;
     bool dying ;

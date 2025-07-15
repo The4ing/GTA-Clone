@@ -26,6 +26,7 @@
 #include <map>
 #include "KillMission.h"
 #include "SurviveMission.h"
+#include "BloodPuddle.h"
 
 enum class GameState {
     Menu,
@@ -55,6 +56,7 @@ public:
     const QuadTree<std::vector<sf::Vector2f>>& getBlockedPolyTree() const { return blockedPolyTree; }
     const sf::View& getGameView() const { return gameView; }
     void createExplosion(const sf::Vector2f& pos, float radius);
+    void createBloodPuddle(const sf::Vector2f& pos);
 
 private:
     void setupPatrolZones(); // Method to initialize patrol zones
@@ -89,6 +91,7 @@ private:
     std::unique_ptr<PathfindingGrid> pathfindingGrid;
     std::vector<std::unique_ptr<Present>> presents;
     std::vector<std::unique_ptr<Explosion>> explosions;
+    std::vector<std::unique_ptr<BloodPuddle>> bloodPuddles;
 
     GameState                   currentState;
     sf::Clock                   clock;
