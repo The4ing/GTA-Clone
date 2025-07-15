@@ -537,8 +537,7 @@ void PoliceManager::managePolicePopulation(int wantedLevel, const sf::Vector2f& 
     for (auto& car : m_policeCars) {
         if (policeCarsToRetreat <= 0 || retreated >= MAX_RETREATS_PER_FRAME) break;
         if (!car->isStatic() && !car->isRetreating() && !car->isAmbient()) {
-            sf::Vector2f retreatPos = findOffScreenSpawnPosition(gameView, playerPos, minSpawnDistFromPlayer, minSpawnDistFromScreenEdge, blockedPolygons, m_gameManager);
-            car->startRetreating(retreatPos);
+            car->setNeedsCleanup(true);
             policeCarsToRetreat--;
             retreated++;
         }
@@ -548,22 +547,21 @@ void PoliceManager::managePolicePopulation(int wantedLevel, const sf::Vector2f& 
 }
 
 
-void PoliceManager::retreatAllCars(Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    const sf::View& view = m_gameManager.getGameView();
-    sf::Vector2f playerPos = player.getPosition();
-
-    auto issueRetreat = [&](std::unique_ptr<PoliceCar>& car) {
-        if (car->getDriver() == &player || car->isRetreating())
-            return;
-        sf::Vector2f target = findOffScreenSpawnPosition(view, playerPos, 300.f, 150.f, blockedPolygons, m_gameManager);
-        car->startRetreating(target);
-        };
+void PoliceManager::retreatAllCars(Player& player, const std::vector<std::vector<sf::Vector2f>>&) {
+    // Spawning retreat paths for many cars at once can be extremely expensive
+    // due to pathfinding.  Instead of calculating individual paths, simply mark
+    // each car for cleanup. The regular update loop will remove them in a few
+    // frames without stalling the game
 
     for (auto& car : m_policeCars) {
-        issueRetreat(car);
+        if (car->getDriver() == &player)
+            continue;
+        car->setNeedsCleanup(true);
     }
     for (auto& car : m_staticPoliceCars) {
-        issueRetreat(car);
+        if (car->getDriver() == &player)
+            continue;
+        car->setNeedsCleanup(true);
     }
 }
 
