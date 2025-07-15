@@ -1030,7 +1030,7 @@ void GameManager::startGameFullscreen() {
     }
     player = GameFactory::createPlayer(*this, { 100.f, 100.f }); // Pass *this (GameManager instance)
     //presents = GameFactory::createPresents(30, blockedPolygons);
-    presents = GameFactory::createPresents(5, blockedPolygons);
+    presents = GameFactory::createPresents(50, blockedPolygons);
 
     // Initialize HUD View
     m_hudView.setSize(static_cast<float>(window.getSize().x), static_cast<float>(window.getSize().y));
