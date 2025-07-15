@@ -21,6 +21,7 @@ public:
     int getCount(const std::string& name) const;
     const std::unordered_map<std::string, InventoryItem>& getAllItems() const;
     std::vector<std::string> getCollectedWeaponNames() const; // Added for stats
+    void clearExceptFists();
 
     const sf::Texture* getItemTexture(const std::string& name) const;
 

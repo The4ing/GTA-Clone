@@ -69,3 +69,17 @@ std::vector<std::string> Inventory::getCollectedWeaponNames() const {
     // std::sort(names.begin(), names.end()); // Optional: sort names alphabetically
     return names;
 }
+
+
+void Inventory::clearExceptFists() {
+    for (auto it = items.begin(); it != items.end();) {
+        if (it->first != "Fists") {
+            it = items.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+    items["Fists"].count = 1;
+    items["Fists"].infinite = true;
+}

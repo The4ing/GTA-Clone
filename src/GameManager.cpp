@@ -23,6 +23,8 @@
 #include "PoliceCar.h"
 #include "SoundManager.h"
 #include "Explosion.h"
+#include "KillMission.h"
+#include "SurviveMission.h"
 // Uncomment to time‑profile את 10 הפריימים הראשונים
 // #define DEBUG_TIMING
 
@@ -200,6 +202,8 @@ void GameManager::processEvents() {
                     if (m_currentTaskIndex < missions.size()) {
                         if (player)
                             player->setWantedLevel(static_cast<int>(m_currentTaskIndex + 1));
+                        if (player)
+                            player->resetMissionKills();
                         missions[m_currentTaskIndex]->start();
                     }
                     else {
@@ -461,6 +465,7 @@ void GameManager::update(float dt) {
             for (const auto& p : policeManager->getPoliceOfficers()) {
                 if (p->isDead() && !p->getMoneyDropped()) {
                     p->setMoneyDropped(true);
+                    player->incrementCopKills();
                     auto money = std::make_unique<Money>(
                         ResourceManager::getInstance().getTexture("Money"), p->getPosition());
                     money->setTempMoney(true);
@@ -476,6 +481,7 @@ void GameManager::update(float dt) {
             for (auto& ped : pedestrianManager->getPedestrians()) {
                 if (ped->isDead() && !ped->getMoneyDropped()) {
                     ped->setMoneyDropped(true);
+                    player->incrementNpcKills();
                     auto money = std::make_unique<Money>(
                         ResourceManager::getInstance().getTexture("Money"), ped->getPosition());
                     money->setTempMoney(true);
@@ -517,6 +523,14 @@ void GameManager::update(float dt) {
         }
         if (showWastedScreen && wastedClock.getElapsedTime().asSeconds() > 5.f) {
             showWastedScreen = false;
+            if (player) {
+                player->resetAfterDeath();
+                player->setPosition({ 100.f, 100.f });
+            }
+            if (m_currentTaskIndex < missions.size()) {
+                player->resetMissionKills();
+                missions[m_currentTaskIndex]->start();
+            }
         }
         if (m_currentTaskIndex < missions.size() && missions[m_currentTaskIndex]->isCompleted() &&
             missionCompleteClock.getElapsedTime().asSeconds() > MISSION_NEXT_TASK_DELAY &&
@@ -560,8 +574,12 @@ void GameManager::update(float dt) {
                     sf::Vector2f nPos = npc->getPosition();
                     float dx = nPos.x - pPos.x;
                     float dy = nPos.y - pPos.y;
-                    if (dx * dx + dy * dy <= BATON_MELEE_RANGE * BATON_MELEE_RANGE)
+                    if (dx * dx + dy * dy <= BATON_MELEE_RANGE * BATON_MELEE_RANGE) {
                         npc->takeDamage(BATON_DAMAGE);
+                        if (m_currentTaskIndex >= missions.size()) {
+                            freeNpcHits++;
+                        }
+                    }
                 }
             }
 
@@ -570,8 +588,12 @@ void GameManager::update(float dt) {
                     sf::Vector2f cPos = cop->getPosition();
                     float dx = cPos.x - pPos.x;
                     float dy = cPos.y - pPos.y;
-                    if (dx * dx + dy * dy <= BATON_MELEE_RANGE * BATON_MELEE_RANGE)
+                    if (dx * dx + dy * dy <= BATON_MELEE_RANGE * BATON_MELEE_RANGE) {
                         cop->takeDamage(BATON_DAMAGE);
+                        if (m_currentTaskIndex >= missions.size()) {
+                            freeCopHits++;
+                        }
+                    }
                 }
             }
 
@@ -583,6 +605,37 @@ void GameManager::update(float dt) {
             exp->update(dt, blockedPolygons);
         explosions.erase(std::remove_if(explosions.begin(), explosions.end(),
             [](const std::unique_ptr<Explosion>& e) { return e->isFinished(); }), explosions.end());
+
+        if (player->isInVehicle()) {
+            Vehicle* v = player->getCurrentVehicle();
+            if (v && v->getSpeed() >= 100.f) {
+                overSpeedTime += dt;
+            }
+            else {
+                overSpeedTime = 0.f;
+            }
+        }
+        else {
+            overSpeedTime = 0.f;
+        }
+
+        if (m_currentTaskIndex >= missions.size()) {
+            if (freeNpcHits > 5) {
+                int wl = std::min(5, player->getWantedLevel() + 1);
+                player->setWantedLevel(wl);
+                freeNpcHits = 0;
+            }
+            if (freeCopHits > 3) {
+                int wl = std::min(5, player->getWantedLevel() + 1);
+                player->setWantedLevel(wl);
+                freeCopHits = 0;
+            }
+            if (overSpeedTime >= 20.f) {
+                int wl = std::min(5, player->getWantedLevel() + 1);
+                player->setWantedLevel(wl);
+                overSpeedTime = 0.f;
+            }
+        }
 
         // Vehicle-to-Vehicle collision (Player-driven vs AI)
         if (player->isInVehicle() && carManager) {
@@ -986,14 +1039,22 @@ void GameManager::startGameFullscreen() {
     // Load first mission and initial inventory item
     // Load first mission description from tasks file and destination from map
     for (size_t i = 0; i < m_taskInstructions.size(); ++i) {
-        if (i == 1) { // Assuming the second mission is the car mission
+        if (i == 0) {
+            auto it = missionDestinations.find(static_cast<int>(i + 1));
+            if (it != missionDestinations.end())
+                missions.push_back(std::make_unique<PackageMission>(m_taskInstructions[i], it->second));
+        }
+        else if (i == 1) {
             missions.push_back(std::make_unique<CarMission>(m_taskInstructions[i]));
         }
-        else {
-            auto it = missionDestinations.find(static_cast<int>(i + 1));
-            if (it != missionDestinations.end()) {
-                missions.push_back(std::make_unique<PackageMission>(m_taskInstructions[i], it->second));
-            }
+        else if (i == 2) {
+            missions.push_back(std::make_unique<KillMission>(m_taskInstructions[i], KillTarget::NPC, 5));
+        }
+        else if (i == 3) {
+            missions.push_back(std::make_unique<KillMission>(m_taskInstructions[i], KillTarget::Cop, 10));
+        }
+        else if (i == 4) {
+            missions.push_back(std::make_unique<SurviveMission>(m_taskInstructions[i], 60.f));
         }
     }
     player->getInventory().addItem("Package", ResourceManager::getInstance().getTexture("Package"));
@@ -1209,9 +1270,9 @@ void GameManager::loadTasks() {
 }
 
 void GameManager::startNextTask() {
-    m_currentTaskIndex++;
     if (m_currentTaskIndex >= missions.size())
         return;
+
     m_taskInstructionText.setString(missions[m_currentTaskIndex]->getDescription());
     sf::FloatRect textRect = m_taskInstructionText.getLocalBounds();
     m_taskInstructionText.setOrigin(textRect.left + textRect.width / 2.f,
@@ -1220,4 +1281,6 @@ void GameManager::startNextTask() {
         window.getSize().y / 2.f - 50.f);
     updatePressStartPosition();
     m_isAwaitingTaskStart = true;
+
+    m_currentTaskIndex++; // הגדל את האינדקס רק אחרי שהגדרת את המשימה הנוכחית
 }

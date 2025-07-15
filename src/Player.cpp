@@ -602,3 +602,24 @@ sf::CircleShape Player::getCollisionCircle() const {
     circle.setOutlineThickness(1.f);
     return circle;
 }
+
+
+void Player::resetMissionKills() {
+    npcKills = 0;
+    copKills = 0;
+}
+
+void Player::resetAfterDeath() {
+    m_health = MaxHealth;
+    m_armor = 0;
+    m_money = 0;
+    m_wantedLevel = 0;
+    currentAnimationName.clear();
+    inventory.clearExceptFists();
+    for (auto& pair : WeaponsAmmo) {
+        pair.second.Ammo = 0;
+    }
+    m_currentWeaponName = "Fists";
+    npcKills = 0;
+    copKills = 0;
+}

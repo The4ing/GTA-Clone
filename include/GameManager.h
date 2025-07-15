@@ -24,6 +24,8 @@
 #include "CarMission.h"
 #include "PackageMission.h"
 #include <map>
+#include "KillMission.h"
+#include "SurviveMission.h"
 
 enum class GameState {
     Menu,
@@ -112,6 +114,9 @@ private:
     // Task/mission management
     bool showWastedScreen = false;
     sf::Clock wastedClock;
+    int freeNpcHits = 0;
+    int freeCopHits = 0;
+    float overSpeedTime = 0.f;
     void loadTasks();
     void startNextTask();
     std::vector<std::string> m_taskInstructions;

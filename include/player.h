@@ -65,18 +65,27 @@ public:
     bool isInVehicle() const;
     int getKills() const { return killCount; }
 
-    void incrementKills() { ++killCount; } 
+    void incrementKills() { ++killCount; }
+
+    void incrementNpcKills() { ++npcKills; }
+    void incrementCopKills() { ++copKills; }
+    int getNpcKills() const { return npcKills; }
+    int getCopKills() const { return copKills; }
+   // void resetMissionKills() { npcKills = 0; copKills = 0; }
 
     PlayerShooter& getShooter();
     GameManager& getGameManager();
     void applyKnockback(const sf::Vector2f& velocity, float duration);
+    void resetAfterDeath();
+    void resetMissionKills();
 
 private:
     Vehicle* m_currentVehicle;
     void setSpecificFrame(int row, int col);
     void playAnimation(const std::string& animName, bool loop = true, bool pingpong = false, bool forceRestart = false);
 
-
+    int npcKills = 0;
+    int copKills = 0;
 
     sf::Sprite  sprite;
     float       speed = 50.f;
