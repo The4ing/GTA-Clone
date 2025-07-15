@@ -12,12 +12,19 @@ void Inventory::addItem(const std::string& name, const sf::Texture& texture) {
     auto it = items.find(name);
     if (it == items.end()) {
         items[name].count = 1;
-        items[name].texture = &texture; // 🟢 עובד, כי הטיפוס תואם
+        items[name].texture = &texture;
+
+        
+        if (name == "Pistol" || name == "Rifle" || name == "Minigun" ||
+            name == "Bazooka" || name == "Knife" || name == "Grenade") {
+            items[name].infinite = true;
+        }
     }
     else {
         it->second.count++;
     }
 }
+
 
 
 
