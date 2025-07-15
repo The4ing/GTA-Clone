@@ -19,7 +19,18 @@ private:
     sf::RenderWindow& window;
     sf::Font font;
     sf::Sprite background;
-    
+
+    sf::RectangleShape volumeBarBackground;
+    sf::RectangleShape volumeBarFill;
+    sf::RectangleShape brightnessBarBackground;
+    sf::RectangleShape brightnessBarFill;
+
+    sf::RectangleShape brightnessOverlay;
+    sf::RectangleShape volumeBar;
+    sf::RectangleShape brightnessBar;
+
+
+
 
     bool shouldClose = false;
     bool soundEnabled;
@@ -29,6 +40,8 @@ private:
     std::vector<sf::Text> options;
     int selectedOption;
 
+    void setupBars();
+    void updateBars();
     void toggleSound();
     void increaseVolume();
     void decreaseVolume();
