@@ -41,8 +41,12 @@ static float distanceSquared(const sf::Vector2f& p1, const sf::Vector2f& p2)
 /*‑‑‑‑‑  ctor  ‑‑‑‑‑*/
 GameManager::GameManager()
     : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Top‑Down GTA Clone"),
-    m_gameTime(sf::Time::Zero)
+    m_gameTime(sf::Time::Zero), mapTexture(nullptr), wasEscapePressedLastFrame(false), 
+    isFullscreen(false), m_playingFrameCount(0), m_prevWantedLevel(0), showMissionComplete(false),
+    showWastedScreen(false), freeNpcHits(0), freeCopHits(0), overSpeedTime(0.f), m_currentTaskIndex(-1), 
+    m_isAwaitingTaskStart(false)
 {
+
     frozenBackgroundTexture.create(window.getSize().x, window.getSize().y);
     window.setFramerateLimit(60);
 
