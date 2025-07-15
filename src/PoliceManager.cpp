@@ -679,7 +679,6 @@ void PoliceManager::clearAllPolice() {
     m_policeTanks.clear();
     m_staticPoliceOfficers.clear(); // Static
     m_staticPoliceCars.clear();     // Static
-    // std::cout << "All police units cleared." << std::endl;
 }
 
 

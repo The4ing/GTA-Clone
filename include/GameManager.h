@@ -55,7 +55,7 @@ public:
     const QuadTree<std::vector<sf::Vector2f>>& getBlockedPolyTree() const { return blockedPolyTree; }
     const sf::View& getGameView() const { return gameView; }
     void createExplosion(const sf::Vector2f& pos, float radius);
-
+    void resetGame();
 private:
     void setupPatrolZones(); // Method to initialize patrol zones
     bool isFullscreen = false;

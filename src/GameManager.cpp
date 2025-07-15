@@ -359,8 +359,8 @@ void GameManager::processEvents() {
             PauseMenu::MenuAction action = pauseMenu.getAndClearAction();
 
             if (action == PauseMenu::MenuAction::RequestNewGame) {
-                currentState = GameState::Menu;
-                if (menu) menu->reset();
+                resetGame();
+                currentState = GameState::Playing;
                 std::cout << "Transitioning to Main Menu for New Game." << std::endl;
             }
             else if (action == PauseMenu::MenuAction::RequestOpenMap) {
@@ -1302,4 +1302,58 @@ void GameManager::startNextTask() {
         window.getSize().y / 2.f - 50.f);
     updatePressStartPosition();
     m_isAwaitingTaskStart = true;
+}
+
+void GameManager::resetGame()
+{
+    // Reset player's stats
+    if (player) {
+        player->resetAfterDeath();
+        player->setPosition({ 100.f, 100.f });
+    }
+
+    // Clear game objects
+    presents.clear();
+    explosions.clear();
+    bulletPool.reset();
+    if (carManager) {
+        carManager->getVehicles().clear();
+    }
+    if (pedestrianManager) {
+        pedestrianManager->getPedestrians().clear();
+    }
+    if (policeManager) {
+        policeManager->clearAllPolice();
+    }
+
+    // Reset missions
+    missions.clear();
+    missionDestinations.clear();
+    loadTasks();
+    m_currentTaskIndex = -1;
+    loadCollisionRectsFromJSON("resources/map.tmj");
+    for (size_t i = 0; i < m_taskInstructions.size(); ++i) {
+        if (i == 0) {
+            auto it = missionDestinations.find(static_cast<int>(i + 1));
+            if (it != missionDestinations.end())
+                missions.push_back(std::make_unique<PackageMission>(m_taskInstructions[i], it->second));
+        }
+        else if (i == 1) {
+            missions.push_back(std::make_unique<CarMission>(m_taskInstructions[i]));
+        }
+        else if (i == 2) {
+            missions.push_back(std::make_unique<KillMission>(m_taskInstructions[i], KillTarget::NPC, 10));
+        }
+        else if (i == 3) {
+            missions.push_back(std::make_unique<KillMission>(m_taskInstructions[i], KillTarget::Cop, 5));
+        }
+        else if (i == 4) {
+            missions.push_back(std::make_unique<SurviveMission>(m_taskInstructions[i], 60.f));
+        }
+    }
+    player->getInventory().addItem("Package", ResourceManager::getInstance().getTexture("Package"));
+    player->setWantedLevel(1);
+    m_pressStartText.setString("Press Enter key to start");
+    // Restart the first mission
+    startNextTask();
 }
