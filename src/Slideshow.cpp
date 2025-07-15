@@ -1,4 +1,4 @@
-﻿#include "Slideshow.h"
+#include "Slideshow.h"
 #include "ResourceManager.h"
 #include <iostream>
 
@@ -14,8 +14,7 @@ void Slideshow::run() {
     overlay.setSize(static_cast<sf::Vector2f>(window.getSize()));
     overlay.setFillColor(sf::Color(0, 0, 0, 255));  // שחור, אטום
 
-    sf::Sound loadingLoop;
-    SoundManager::getInstance().playLoopingSound("LoadScreen", loadingLoop);
+   
 
     for (const auto& key : imageKeys) {
         const sf::Texture& texture = ResourceManager::getInstance().getTexture(key);
@@ -74,6 +73,5 @@ void Slideshow::run() {
         }
     }
 
-    loadingLoop.stop();
-    SoundManager::getInstance().unregisterExternalSound(&loadingLoop);
+    
 }
