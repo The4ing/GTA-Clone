@@ -25,12 +25,10 @@
 #include "Explosion.h"
 #include "KillMission.h"
 #include "SurviveMission.h"
-// Uncomment to time‑profile את 10 הפריימים הראשונים
-// #define DEBUG_TIMING
 
 using json = nlohmann::json;
 
-/*‑‑‑‑‑  כלי עזר  ‑‑‑‑‑*/
+//help tool
 static float distanceSquared(const sf::Vector2f& p1, const sf::Vector2f& p2)
 {
     float dx = p1.x - p2.x;
@@ -388,6 +386,9 @@ void GameManager::processEvents() {
                 }
             }
             else if (action == PauseMenu::MenuAction::Exit) {
+                backgroundMusic.stop();
+                SoundManager::getInstance().unregisterExternalSound(&backgroundMusic);
+
                 window.close();
             }
             else {
@@ -929,8 +930,7 @@ void GameManager::loadCollisionRectsFromJSON(const std::string& filename) {
         }
     }
 
-    //std::cout << "Loaded " << blockedPolygons.size() << " polygons\n";
-  //  std::cout << "Loaded " << roads.size() << " road segments\n";
+   
 }
 
 
@@ -953,9 +953,7 @@ void GameManager::buildBlockedPolyTree() {
 
 
 void GameManager::startGameFullscreen() {
-   // sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
-  //  window.create(desktop, "Top-Down GTA Clone", sf::Style::Fullscreen);
-   // window.setFramerateLimit(60);
+ 
     isFullscreen = false;
 
     updatePressStartPosition();
@@ -971,13 +969,7 @@ void GameManager::startGameFullscreen() {
         window.clear(sf::Color::Black); // Clear with a fallback color
         window.display();
     }
-    // Note: The actual resource loading for the game happens after this.
-    // The old code here was only for the visual display of "Loading..."
-
-    //gameView.setSize(static_cast<float>(desktop.width), static_cast<float>(desktop.height));
-    //gameView.setCenter(gameView.getSize().x / 2.f, gameView.getSize().y / 2.f);
-  //  window.setView(gameView);
-  //  updatePressStartPosition();
+   
 
 
     loadCollisionRectsFromJSON("resources/map.tmj");
@@ -1005,7 +997,7 @@ void GameManager::startGameFullscreen() {
     }
     player = GameFactory::createPlayer(*this, { 100.f, 100.f }); // Pass *this (GameManager instance)
     //presents = GameFactory::createPresents(30, blockedPolygons);
-    presents = GameFactory::createPresents(50, blockedPolygons);
+    presents = GameFactory::createPresents(500, blockedPolygons);
 
     // Initialize HUD View
     m_hudView.setSize(static_cast<float>(window.getSize().x), static_cast<float>(window.getSize().y));
@@ -1061,7 +1053,7 @@ void GameManager::startGameFullscreen() {
 
     currentState = GameState::Playing;
     startNextTask();
-    SoundManager::getInstance().playSound("gameplay");
+    SoundManager::getInstance().playLoopingSound("gameplay", backgroundMusic);
 }
 
 void GameManager::setFullscreen(bool fullscreen) {

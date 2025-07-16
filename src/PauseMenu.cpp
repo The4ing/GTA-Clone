@@ -72,6 +72,7 @@ void PauseMenu::close() {
     m_isOpen = false;
     showingMap = false;
     showingStats = false;
+    SoundManager::getInstance().resumeAll();
     std::cout << "PauseMenu closed." << std::endl; // For debugging
     // Consider resuming game-specific sounds/music here
 }
@@ -465,9 +466,9 @@ void PauseMenu::handleEvent(const sf::Event& event) {
             selectCurrent();
             break;
         case sf::Keyboard::Escape:
-            // ?? ???? ?? ????? ???:
+          
             if (escCooldownClock.getElapsedTime().asMilliseconds() < 150) {
-                // ????? ???ESC ?????? ????? ??? ???? ??????
+                
                 return;
             }
             if (!wasEscapePressed) {

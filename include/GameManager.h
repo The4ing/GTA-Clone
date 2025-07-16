@@ -98,6 +98,7 @@ private:
     sf::Text m_pressStartText;
     sf::Text m_taskInstructionText;
     InventoryUI inventoryUI;
+    sf::Sound backgroundMusic;
   
     std::map<int, sf::Vector2f> missionDestinations;
    
