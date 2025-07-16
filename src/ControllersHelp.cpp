@@ -19,15 +19,16 @@ ControllersHelp::ControllersHelp(sf::RenderWindow& window)
 
 void ControllersHelp::setupText() {
     std::vector<std::string> texts = {
-        "W - Move Up",
-        "A - Move Left",
-        "S - Move Down",
-        "D - Move Right",
+        "W or Up Arrow - Move Up",
+        "A or Left Arrow - Move Left",
+        "S or Down Arrow - Move Down",
+        "D or Right Arrow - Move Right"
         "Space - Attack",
-        "1-7 - Switch Weapon",
-        "E - Interact",
+        "I - Switch Weapon + INVENTORY",
+        "E - open store",
         "M - Open Map",
-        "ESC - Pause/Exit"
+        "ESC - Pause/Exit",
+        "F - get into the car"
     };
 
     for (size_t i = 0; i < texts.size(); ++i) {
