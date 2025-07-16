@@ -187,7 +187,7 @@ void PoliceCar::update(float dt, Player& player, const std::vector<std::vector<s
             bool collision = false;
             // NOTE: This simple collision check might be insufficient. Ideally, use Vehicle's collision.
             for (const auto& poly : blockedPolygons) {
-                // ???? ?? ???????? ?????? ??? ?????? ???????
+   
                 sf::Transform moveTransform;
                 moveTransform.translate(nextPosCandidate - getPosition());
 
@@ -504,36 +504,16 @@ bool PoliceCar::attemptRunOverPlayer(Player& player, const std::vector<std::vect
 
 
 void PoliceCar::draw(sf::RenderTarget& target) {
-    // If Vehicle base class handles drawing, call Vehicle::draw(target);
-    // Otherwise, draw m_sprite directly:
-    target.draw(m_sprite);
-
-    //for debug
-    std::vector<sf::Vector2f> corners = getHitboxPolygon();
-
-    sf::Vertex outline[] = {
-        sf::Vertex(corners[0], sf::Color::Red),
-        sf::Vertex(corners[1], sf::Color::Red),
-        sf::Vertex(corners[2], sf::Color::Red),
-        sf::Vertex(corners[3], sf::Color::Red),
-        sf::Vertex(corners[0], sf::Color::Red) // ?????
-    };
-
-    target.draw(outline, 5, sf::LineStrip);
+   target.draw(m_sprite);
 }
 
-// Implementing getPosition and setPosition to fulfill Vehicle virtuals if needed,
-// and to ensure m_sprite is consistent with Vehicle's state.
+
 sf::Vector2f PoliceCar::getPosition() const {
-    // Prefer Vehicle's position if it's the source of truth
-    // return Vehicle::getPosition(); 
-    // If PoliceCar's m_sprite is the source of truth:
     return m_sprite.getPosition();
 }
 
 void PoliceCar::setPosition(const sf::Vector2f& pos) {
-    // Vehicle::setPosition(pos); // Update base class state
-    m_sprite.setPosition(pos);   // Update sprite position
+    m_sprite.setPosition(pos);   
 }
 
 std::vector<sf::Vector2f> PoliceCar::getHitboxPolygon() const {

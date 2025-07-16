@@ -10,7 +10,7 @@
 class PlayerShooter;
 
 class Vehicle;
-class GameManager; // Forward declaration ????
+class GameManager; 
 
 class Player : public Character {
 public:

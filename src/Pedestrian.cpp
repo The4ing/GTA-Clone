@@ -64,8 +64,6 @@ void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
     }
 
     float stepSize = speed * dt;
-
-    // ????? ?????
     if (isBackingUp) {
         float remaining = backupDistance - backupProgress;
         float moveStep = std::min(stepSize, remaining);
@@ -94,7 +92,6 @@ void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
         return;
     }
 
-    // ????? ??????
     if (isIdle) {
         idleTimer -= dt;
         if (idleTimer <= 0.f) {
@@ -116,8 +113,6 @@ void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
             updateSprite();
             return;
         }
-
-        // ??? ????? ??? ??? (nextDirection)
         sf::Vector2f newDir;
         do {
             newDir = {
@@ -131,8 +126,6 @@ void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
 
         nextDirection = newDir;
     }
-
-    // ????? ?????? ?? ?????
     float turnSpeed = 3.f;
     direction += (nextDirection - direction) * turnSpeed * dt;
 
@@ -151,8 +144,6 @@ void Pedestrian::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
         position = nextPos;
         sprite.setPosition(position);
     }
-
-    // ????? ??????? ??????
     animationTimer += dt;
     if (animationTimer >= animationSpeed) {
         animationTimer = 0.f;

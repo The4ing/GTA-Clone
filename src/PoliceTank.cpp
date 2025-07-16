@@ -239,7 +239,7 @@ void PoliceTank::updateAIBehavior(float dt, Player& player, const std::vector<st
 // OLD updateMovement function is now removed.
 
 void PoliceTank::updateTankMovementAsCar(float dt, Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) {
-    // ?? ????, ???? ?? ????? ????? ????? — ????
+
     if (m_tankState == TankState::Chasing && m_hasLineOfSightToPlayer && m_distanceToPlayer <= STOP_DISTANCE) {
         m_currentSpeed = 0;
         return;
@@ -259,7 +259,6 @@ void PoliceTank::updateTankMovementAsCar(float dt, Player& player, const std::ve
         float moveStep = m_currentSpeed * dt;
         sf::Vector2f nextPosCandidate = currentPos + direction * std::min(moveStep, distanceToWaypoint);
 
-        // ????? ??????? ????? ?? ??????? ??????
         bool collision = false;
         for (const auto& poly : blockedPolygons) {
             if (CollisionUtils::pointInPolygon(nextPosCandidate, poly)) {
@@ -274,17 +273,12 @@ void PoliceTank::updateTankMovementAsCar(float dt, Player& player, const std::ve
             setPosition(nextPosCandidate);
             Vehicle::getSprite().setPosition(nextPosCandidate);
 
-            // ????? ????? ?????
             if (distanceToWaypoint > 0.01f) {
                 float targetAngle = std::atan2(direction.y, direction.x) * 180.f / M_PI + 90.f;
                 float currentAngle = Vehicle::getSprite().getRotation();
                 float angleDiff = targetAngle - currentAngle;
-
-                // ????? ???? ?? ?????? ????? ????? ??? ????? ??? 359 ??0
                 while (angleDiff > 180.f) angleDiff -= 360.f;
                 while (angleDiff < -180.f) angleDiff += 360.f;
-
-                // ???? ?? ?????? ??????? ????? (???? 90 ????? ??????)
                 float maxRotation = 10.f * dt;
                 float rotationAmount = std::clamp(angleDiff, -maxRotation, maxRotation);
                 Vehicle::getSprite().rotate(rotationAmount);
@@ -470,7 +464,6 @@ bool PoliceTank::canSeePlayer(const Player& player, const std::vector<std::vecto
 }
 
 std::vector<sf::Vector2f> PoliceTank::getVisibleHitboxCorners() const {
-    // ????? ????? ????? ?????? ???? policeTank.png
     sf::FloatRect visibleBox(15.f, 24.f, 143.f, 245.f);
 
     sf::Transform transform = getSprite().getTransform();

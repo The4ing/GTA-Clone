@@ -210,8 +210,8 @@ std::vector<sf::Vector2f> Vehicle::getHitboxPolygon() const {
     sf::FloatRect localBounds = sprite.getLocalBounds();
     sf::Transform transform = sprite.getTransform();
 
-    const float widthShrinkFactor = 0.3f;   // 70% ??????
-    const float heightShrinkFactor = 0.8f;  // 80% ??????
+    const float widthShrinkFactor = 0.3f;  
+    const float heightShrinkFactor = 0.8f; 
 
     const float shrinkX = (1.f - widthShrinkFactor) * localBounds.width / 2.f;
     const float shrinkY = (1.f - heightShrinkFactor) * localBounds.height / 2.f;
@@ -256,9 +256,6 @@ void Vehicle::startTurn(sf::Vector2f from, sf::Vector2f control, sf::Vector2f to
     inTurn = true;
     position = from;
     sprite.setPosition(position);
-    //std::cout << "[START TURN] from: " << from.x << "," << from.y
-    //    << " control: " << control.x << "," << control.y
-    //    << " to: " << to.x << "," << to.y << std::endl;
 }
 
 
@@ -272,7 +269,6 @@ json loadRoadsFromFile(const std::string& filename) {
 void Vehicle::setTexture(const sf::Texture& texture) {
     sprite.setTexture(texture);
 
-    // ????? origin ?? ??? (????? ????????? ????)
     sf::FloatRect bounds = sprite.getLocalBounds();
     sprite.setOrigin(bounds.width / 2.f, bounds.height / 2.f);
 }
@@ -297,7 +293,7 @@ void Vehicle::setDirectionVec(const std::string& dir) {
     }
     else {
         directionVec = { 0.f, 0.f };
-        sprite.setRotation(0.f);  // ????? ????
+        sprite.setRotation(0.f);  
     }
 }
 

@@ -25,7 +25,6 @@ bool HUD::loadResources(const std::string& fontPath, const std::string& starText
     m_weaponIconsTexture.setSmooth(true);
     m_weaponIcon.setTexture(m_weaponIconsTexture);
 
-    // ??? ?????? ?? ????
     if (!m_heartTexture.loadFromFile("resources/heart.png")) {
         std::cerr << "Failed to load heart texture\n";
         return false;
@@ -48,9 +47,6 @@ bool HUD::loadResources(const std::string& fontPath, const std::string& starText
     m_weaponIconRects["Bazooka"] = sf::IntRect(925, 0, 185, 185);
     m_weaponIconRects["Minigun"] = sf::IntRect(1110, 0, 185, 185);
 
-
-
-    // ?????? ???????? ????? ?????
     m_moneyText.setString("$9999999");
     m_healthText.setString("100");
     m_armorText.setString("100");
@@ -74,7 +70,6 @@ bool HUD::loadResources(const std::string& fontPath, const std::string& starText
 
     updateElementPositions(1920.f, 1080.f);
 
-    // ????? ???????? ???????
     m_moneyText.setString("$0");
     m_healthText.setString("100");
     m_armorText.setString("0");
@@ -215,27 +210,13 @@ void HUD::update(const PlayerData& playerData, int wantedLevel, const sf::Time& 
         m_ammoText.setString("");
     }
    
-
-   
-
-    // ????? ?????? ???? ??? ?? ????
     auto it = m_weaponIconRects.find(playerData.weaponName);
-   // std::cout << "Updating weapon icon: " << playerData.weaponName << std::endl;
     if (it != m_weaponIconRects.end()) {
-        //std::cout << "Texture rect: " << it->second.left << ", " << it->second.top
-        //    << ", " << it->second.width << ", " << it->second.height << std::endl;
         m_weaponIcon.setTextureRect(it->second);
-
-        // ????? ????? ?? ????
-        //float desiredSize = 48.f; // ???? ???? ?? ??????? ????????
-        //float scaleX = desiredSize / it->second.width;
-        //float scaleY = desiredSize / it->second.height;
-        //m_weaponIcon.setScale(scaleX, scaleY);
     }
     else {
-        // ??? ?? ???? - ???? ?????? ?? ?????? ?????? ????? ????
         std::cout << "Weapon icon not found!\n";
-        m_weaponIcon.setTextureRect(sf::IntRect()); // ???
+        m_weaponIcon.setTextureRect(sf::IntRect()); 
     }
 
     int totalSeconds = static_cast<int>(gameTime.asSeconds());
@@ -249,8 +230,6 @@ void HUD::update(const PlayerData& playerData, int wantedLevel, const sf::Time& 
     m_currentWantedLevel = wantedLevel;
     if (m_currentWantedLevel < 0) m_currentWantedLevel = 0;
     if (m_currentWantedLevel > MAX_STARS) m_currentWantedLevel = MAX_STARS;
-
-    // ????? ?????? ??????? ?? ????? ???? / ????
     {
         sf::FloatRect bounds = m_moneyText.getLocalBounds();
         m_moneyText.setOrigin(bounds.left + bounds.width, bounds.top);
@@ -278,26 +257,13 @@ void HUD::drawTextWithShadow(sf::RenderWindow& window, sf::Text& text, const sf:
     text.move(-offset);
     text.setFillColor(originalColor);
     window.draw(text);
-
-   // std::cout << "drew \n";
 }
 
 void HUD::draw(sf::RenderWindow& window) {
     float viewWidth = static_cast<float>(window.getView().getSize().x);
     float viewHeight = static_cast<float>(window.getView().getSize().y);
-
-    // ????? ?? ?????? ????????
-    //std::cout << "HUD Elements positions:" << std::endl;
-    //std::cout << "Money: " << m_moneyText.getPosition().x << ", " << m_moneyText.getPosition().y << std::endl;
-    //std::cout << "Health: " << m_healthText.getPosition().x << ", " << m_healthText.getPosition().y << std::endl;
-    //std::cout << "Armor: " << m_armorText.getPosition().x << ", " << m_armorText.getPosition().y << std::endl;
-    //std::cout << "Weapon Name: " << m_weaponNameText.getPosition().x << ", " << m_weaponNameText.getPosition().y << std::endl;
-    //std::cout << "Ammo: " << m_ammoText.getPosition().x << ", " << m_ammoText.getPosition().y << std::endl;
-    //std::cout << "Time: " << m_timeText.getPosition().x << ", " << m_timeText.getPosition().y << std::endl;
-
     if (m_currentWantedLevel > 0) {
         for (int i = 0; i < m_currentWantedLevel; ++i) {
-       //     std::cout << "Star " << i << ": " << m_starSprites[i].getPosition().x << ", " << m_starSprites[i].getPosition().y << std::endl;
         }
     }
     if (m_currentWantedLevel > 0) {
@@ -305,35 +271,14 @@ void HUD::draw(sf::RenderWindow& window) {
             window.draw(m_starSprites[i]);
         }
     }
-
-
-    // ??? ???? ?????
     drawTextWithShadow(window, m_moneyText, SHADOW_OFFSET, GTA_SHADOW_BLACK);
     drawTextWithShadow(window, m_healthText, SHADOW_OFFSET, GTA_SHADOW_BLACK);
     drawTextWithShadow(window, m_armorText, SHADOW_OFFSET, GTA_SHADOW_BLACK);
     drawTextWithShadow(window, m_weaponNameText, SHADOW_OFFSET, GTA_SHADOW_BLACK);
     drawTextWithShadow(window, m_ammoText, SHADOW_OFFSET, GTA_SHADOW_BLACK);
     drawTextWithShadow(window, m_timeText, SHADOW_OFFSET, GTA_SHADOW_BLACK);
-
-    //if (m_currentWantedLevel > 0) {
-    //    float starWidth = m_starTexture.getSize().x * m_starSprites[0].getScale().x;
-    //    float totalStarsWidth = (m_currentWantedLevel * starWidth) + ((m_currentWantedLevel - 1) * m_starSpacing);
-    //    // x ????? ??? ????, ???? m_padding ?????, ????? ???? ?? ???????
-    //    float startX = viewWidth - m_padding - totalStarsWidth;
-    //    // y ???? ????? ???? ?? ????? ??? (?????? 5 ???????)
-    //    float startY = m_moneyText.getPosition().y + m_moneyText.getCharacterSize() + 5.f;
-
-    //    for (int i = 0; i < m_currentWantedLevel; ++i) {
-    //        m_starSprites[i].setColor(GTA_STAR_YELLOW);
-    //        m_starSprites[i].setPosition(startX + i * (starWidth + m_starSpacing), startY);
-    //        window.draw(m_starSprites[i]);
-    //    }
-    //}
-    //std::cout << "Weapon Icon position at draw: ("
-    //    << m_weaponIcon.getPosition().x << ", "
-    //    << m_weaponIcon.getPosition().y << ")" << std::endl;
     window.draw(m_heartSprite);
     window.draw(m_armorSprite);
-    window.draw(m_weaponIcon); // ????? ?????? ????
+    window.draw(m_weaponIcon); 
 }
 

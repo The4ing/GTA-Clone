@@ -85,7 +85,7 @@ void CarManager::update(float dt, const std::vector<std::vector<sf::Vector2f>>& 
             if (other->hasDriver()) continue;
 
             if (myBounds.intersects(other->getSprite().getGlobalBounds())) {
-                vehicle.stopForSeconds(1.f); // ?? ???? ??? ????
+                vehicle.stopForSeconds(1.f);
                 hasCollision = true;
                 break;
             }
