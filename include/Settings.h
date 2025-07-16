@@ -5,17 +5,17 @@
 
 class Settings {
 public:
-    // קונסטרקטור שמקבל גם את חלון המשחק וגם את המוזיקה של התפריט כדי לשלוט עליה
+   
     Settings(sf::RenderWindow& win, sf::Sound& menuSound);
 
-    void handleEvent(const sf::Event& event); // טיפול בלחיצות
-    void update();                            // שינוי צבע וגודל הטקסטים כשהעכבר מעל
-    void draw();                              // ציור המסך
-    bool shouldExit() const;                 // האם לצאת ממסך ההגדרות
+    void handleEvent(const sf::Event& event); 
+    void update();                          
+    void draw();                             
+    bool shouldExit() const;                
 
 private:
     sf::RenderWindow& window;
-    sf::Sound& menuMusic; // הפניה למוזיקת התפריט לשליטה בעוצמה והשמעה
+    sf::Sound& menuMusic; 
 
     sf::Font font;
     sf::Sprite background;
@@ -32,12 +32,10 @@ private:
     int selectedOption;
     bool shouldClose = false;
 
-    // פונקציות עזר
-    void setupOptions();   // יצירת הטקסטים של האפשרויות
-    void setupBars();      // יצירת פסי ווליום ובהירות
-    void updateBars();     // עדכון האורך והצבע של פסי השליטה
+    void setupOptions();  
+    void setupBars();      
+    void updateBars();    
 
-    // פונקציות של פעולות
     void toggleSound();
     void increaseVolume();
     void decreaseVolume();

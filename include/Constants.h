@@ -104,3 +104,4 @@ static constexpr int numCharacters = 7;
 //EXPLOSION
 const int sheetCols = 5;
 const int sheetRows = 5;
+

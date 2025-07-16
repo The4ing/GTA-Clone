@@ -2,7 +2,8 @@
 
 #include <iostream>
 
-Store::Store(const sf::Vector2f& pos) : position(pos), isOpen(false), PlayerClose(false)
+Store::Store(const sf::Vector2f& pos) : position(pos), isOpen(false), PlayerClose(false),
+mouseHeld(false)
 {
     font = ResourceManager::getInstance().getFont("main");
 

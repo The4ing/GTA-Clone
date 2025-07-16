@@ -59,7 +59,7 @@ private:
     bool m_hasLineOfSightToPlayer ;
     bool m_usingBezier ;
     bool m_readyForCleanup ;
-    bool m_wasUsingBezierLastFrame ; // For logging Bezier starts
+    bool m_wasUsingBezierLastFrame ;
    
     float m_distanceToPlayer;
     int m_health ;

@@ -42,9 +42,11 @@ PoliceManager::PoliceManager(GameManager& gameManager)
     m_numSeeingPlayer(0),
     m_timePlayerNotSeen(0.0f),
     m_wantedReductionCooldownTimer(0.0f),
-    m_prevWantedLevel(0) {
-    // Seed for random number generation
-    // generator.seed(std::random_device{}()); // This was commented out, ensure it's initialized if used.
+    m_prevWantedLevel(0), m_batonOfficerSpawnTimer(0.f), m_pistolOfficerSpawnTimer(0.f),
+    m_policeCarSpawnTimer(0.f), m_policeHelicopterSpawnTimer(0.f),m_policeTankSpawnTimer(0.f),
+     spawnCooldown(0.f), m_desiredBatonOfficers(0) ,m_desiredPistolOfficers(0), m_desiredPoliceCars(0),
+    m_desiredPoliceHelicopters(0) , m_desiredPoliceTanks(0){
+   
 }
 
 bool PoliceManager::canRequestPath() {

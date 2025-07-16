@@ -42,7 +42,7 @@ std::unique_ptr<PoliceManager> GameFactory::createPoliceManager(GameManager& gam
 
         if (!gameManager.isPositionBlocked(pos)) {
             policeManager->spawnPolice(pos, PoliceWeaponType::BATON);
-            ++i; // רק אם הצלחנו למקם
+            ++i; 
         }
     }
 
@@ -81,7 +81,7 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(
     int attempts = 0;
     const int maxAttempts = 1000;
 
-    // ✅ הוספת Minigun במיקום קבוע (אם אינו חסום)
+  
     sf::Vector2f fixedMinigunPos(70.f, 70.f);
     if (!isBlocked(fixedMinigunPos, blockedPolygons)) {
         result.push_back(std::make_unique<Minigun>(
@@ -102,7 +102,7 @@ std::vector<std::unique_ptr<Present>> GameFactory::createPresents(
         if (isBlocked(pos, blockedPolygons))
             continue;
 
-        // אל תיצור שוב Minigun – כבר הוספנו אותו
+       
         if (type == 4)
             continue;
 

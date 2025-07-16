@@ -2,7 +2,7 @@
 #include "MovingObject.h"
 #include "RoadSegment.h"
 #include <vector>
-
+#include "Constants.h"
 class Player;
 
 class Vehicle : public MovingObject {
@@ -10,93 +10,95 @@ public:
     Vehicle();
     void update(float dt, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons) override;
     void draw(sf::RenderTarget& target) override;
-
-    sf::Vector2f getPosition() const override;
-    void setPosition(const sf::Vector2f& pos) override;
-
     void move(const sf::Vector2f& direction, float dt) override;
-    float getSpeed() const override;
     void setTexture(const sf::Texture& texture);
     void setDirectionVec(const std::string& dir);
     void setScale(float scaleX, float scaleY);
     void startTurn(sf::Vector2f from, sf::Vector2f control, sf::Vector2f to);
-    //bool shouldTurnTo(const RoadSegment& nextRoad) const;
+    void setPosition(const sf::Vector2f& pos) override;
     void setCurrentRoad(const RoadSegment* road);
-    bool isInTurn() const;
-    std::string getDirection() const;
     void setTextureRect(const sf::IntRect& rect);
-
-    static sf::Vector2f bezier(float t, const sf::Vector2f& P0, const sf::Vector2f& P1, const sf::Vector2f& P2);
     void stop();
     void stopForSeconds(float seconds);
+    void setCurrentLaneIndex(int idx);
+    void setPreviousRoad(const RoadSegment* road);
+    void setDestroyed(bool value);
+    // Player control methods
+    void accelerate(float dt);
+    void brake(float dt);
+    void steerLeft(float dt);
+    void steerRight(float dt);
+    void setDriver(Player* driver);
+    void setActive(bool value);
 
+    float getSpeed() const override;
+    int getCurrentLaneIndex() const;
+   
+   
+    bool isInTurn() const;
+    bool isActive() const;
+    bool isDestroyed() const;
+    bool hasDriver() const;
+
+    std::string getDirection() const;
+   
+
+    static sf::Vector2f bezier(float t, const sf::Vector2f& P0, const sf::Vector2f& P1, const sf::Vector2f& P2);
+   
     const RoadSegment* getCurrentRoad() const;
-
     const RoadSegment* currentRoad = nullptr;
-    int getCurrentLaneIndex() const { return currentLaneIndex; }
-    void setCurrentLaneIndex(int idx) { currentLaneIndex = idx; }
-    sf::Vector2f bezierP0, bezierP1, bezierP2; // from, control, to
+    const RoadSegment* getPreviousRoad() const;
+    const sf::Sprite& getSprite() const; // Accessor for the sprite
 
-
-
-    void setPreviousRoad(const RoadSegment* road) { previousRoad = road; }
-    const RoadSegment* getPreviousRoad() const { return previousRoad; }
+   
+    sf::Vector2f getPosition() const override;
+   
 
 
     void onCollision(GameObject& other) {};
     void collideWithPresent(Present& present) {};
     void collideWithPlayer(Player& /*player*/) {} // This might need actual implementation laterAdd commentMore actions
 
-    // Player control methods
-    void accelerate(float dt);
-    void brake(float dt);
-    void steerLeft(float dt);
-    void steerRight(float dt);
-
-    void setDriver(Player* driver);
+ 
     Player* getDriver() const;
-    bool hasDriver() const;
-
-    const sf::Sprite& getSprite() const; // Accessor for the sprite
+   
     sf::Sprite& getSprite();
     std::vector<sf::Vector2f> getHitboxPolygon() const;
-    bool isDestroyed() const;
-    void setDestroyed(bool value);
-    bool isActive() const;
-    void setActive(bool value);
-
+  
+   
     // Indicates if the derived class handles its own AI rotation, preventing generic Vehicle AI rotation.
-    virtual bool handlesOwnAIRotation() const { return false; }
+    virtual bool handlesOwnAIRotation() const;
 
 protected:
     bool destroyed = false;
 
 private:
     bool parking;
-    Player* m_driver; // Pointer to the player driving this vehicleAdd commentMore actions
+    Player* m_driver; 
 
-    std::string currentDirectionStr; // Used by AI
+    std::string currentDirectionStr; 
     sf::Sprite sprite;
     sf::Vector2f position;
-    float speed = 70.f;
-    float angle = 0.f; // Current angle in degrees, for player steering
-    sf::Vector2f directionVec; // Used by AI, and potentially for player if not using angle-based steering
+    sf::Vector2f directionVec;
 
-    // Player control parameters
-    float accelerationRate = 50.f;
-    float decelerationRate = 80.f;
-    float maxSpeed = 200.f;
-    float reverseSpeed = -50.f; // Max reverse speed
-    float turnRate = 90.f; // Degrees per second
-
-    // AI specific members
-    bool inTurn = false; // AI Bezier turn
-    float bezierT = 0.f;
-    float bezierSpeed = 0.0004f;
-    const RoadSegment* previousRoad = nullptr;
-    int currentLaneIndex = 0;
-    float stopTimer = 0.f;
+    float bezierT ;
+    float bezierSpeed ;
+    float speed ;
+    float angle ; 
+    float accelerationRate ;
+    float decelerationRate ;
+    float maxSpeed ;
+    float reverseSpeed ;
+    float turnRate ; 
+    float stopTimer ;
+  
+    bool inTurn = false; 
     bool active = false;
 
+    const RoadSegment* previousRoad = nullptr;
+    int currentLaneIndex = 0;
+    
+  
+    sf::Vector2f bezierP0, bezierP1, bezierP2;
 
 };

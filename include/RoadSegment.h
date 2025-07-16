@@ -15,7 +15,7 @@ struct RoadSegment {
         if (is2D && lanes > 1) {
             int half = lanes / 2;
             if (laneIndex < half) {
-                // ??????? ???????? - ??? ?????
+                
                 reverse = true;
             }
         }
@@ -54,7 +54,6 @@ struct RoadSegment {
             }
         }
 
-        // ??????: atStart ???? ?-!atStart ???????? ????
         bool effectiveAtStart = reverse ? !atStart : atStart;
 
         if (dir == "up") {

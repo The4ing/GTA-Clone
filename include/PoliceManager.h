@@ -77,20 +77,20 @@ private:
     float m_policeCarSpawnTimer = 0.f;
     float m_policeHelicopterSpawnTimer = 0.f;
     float m_policeTankSpawnTimer = 0.f;
+    float m_timePlayerNotSeen = 0.0f;
+    float m_wantedReductionCooldownTimer = 0.0f;
+    float spawnCooldown = 0.f;
 
     int m_desiredBatonOfficers = 0;
     int m_desiredPistolOfficers = 0;
     int m_desiredPoliceCars = 0;
     int m_desiredPoliceHelicopters = 0;
     int m_desiredPoliceTanks = 0;
-
-
-    int m_numSeeingPlayer = 0;
-    float m_timePlayerNotSeen = 0.0f;
-    float m_wantedReductionCooldownTimer = 0.0f; // Cooldown between successive wanted level reductions
-    float spawnCooldown = 0.f;
-
     int m_prevWantedLevel = 0;
+    int m_numSeeingPlayer = 0;
+   
+
+   
 
     void retreatAllCars(Player& player, const std::vector<std::vector<sf::Vector2f>>& blockedPolygons);
 };

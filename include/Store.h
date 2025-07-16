@@ -16,15 +16,12 @@ struct StoreItem {
     std::function<void(Player&)> action; 
 };
 
-//class Player;
-
 class Store {
 public:
     Store(const sf::Vector2f& pos);
     void open(Player& player);
     void update(float dt);
    
-    // מצייר את חלון ה־UI כשהחנות פתוחה
     void drawUI(sf::RenderTarget& target);
    
     void handleInput(Player& player, const sf::RenderWindow& window);
@@ -40,7 +37,7 @@ private:
     sf::Font font;
     bool isOpen;
     bool PlayerClose;
-    bool mouseHeld = false; // חדש
+    bool mouseHeld;
     sf::Sprite icon;
     sf::Sprite Inv;
 };

@@ -12,7 +12,9 @@
 
 using json = nlohmann::json;
 
-Vehicle::Vehicle() : m_driver(nullptr), parking(false) {
+Vehicle::Vehicle() : m_driver(nullptr), parking(false), bezierT(0.f), 
+bezierSpeed(0.0004f),speed(70.f),angle(0.f), accelerationRate(50.f),decelerationRate(80.f),
+maxSpeed(200.f),reverseSpeed(- 50.f),turnRate(90.f), stopTimer(0.f),inTurn(false), active(false) {
     sprite.setTexture(ResourceManager::getInstance().getTexture("car_sheet"));
     sprite.setTextureRect(sf::IntRect(0, 0, 600, 600));
 
@@ -328,6 +330,26 @@ const RoadSegment* Vehicle::getCurrentRoad() const {
     return currentRoad;
 }
 
+int Vehicle::getCurrentLaneIndex() const
+{
+    return currentLaneIndex;
+}
+
+void Vehicle::setCurrentLaneIndex(int idx)
+{
+    currentLaneIndex = idx;
+}
+
+void Vehicle::setPreviousRoad(const RoadSegment* road)
+{
+    previousRoad = road;
+}
+
+const RoadSegment* Vehicle::getPreviousRoad() const
+{
+    return previousRoad;
+}
+
 bool Vehicle::isInTurn() const {
     return inTurn;
 }
@@ -426,4 +448,9 @@ bool Vehicle::isActive() const {
 
 void Vehicle::setActive(bool value) {
     active = value;
+}
+
+bool Vehicle::handlesOwnAIRotation() const
+{
+    return false;
 }
