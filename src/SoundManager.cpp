@@ -39,7 +39,7 @@ void SoundManager::playRandomSound(const std::vector<std::string>& names,
 
     int index = std::rand() % names.size();
     float pitch = minPitch;
-    if (maxPitch > minPitch && RAND_MAX > 0) { // check RAND_MAX to avoid division by zero if it's misconfigured
+    if (maxPitch > minPitch && RAND_MAX > 0) { 
         float t = static_cast<float>(std::rand()) / RAND_MAX;
         pitch = minPitch + t * (maxPitch - minPitch);
     }
@@ -58,34 +58,27 @@ void SoundManager::setVolume(float vol) {
             sound.setVolume(volume);
         }
     }
-    // If muted, 'volume' is updated, but sounds remain at 0 until unmuted.
-    // std::cout << "SoundManager::setVolume to " << volume << ". Muted: " << muted << std::endl;
+    
 }
 
 void SoundManager::increaseVolume(float step) {
-    // std::cout << "Attempting to increase volume. Current: " << volume << ", Muted: " << muted << ", Step: " << step << std::endl;
+   
     float newVolume = std::min(100.f, volume + step);
 
     if (muted && newVolume > 0) {
-        // If was muted and increasing volume would make it audible, then unmute.
-        // The act of increasing volume implies the user wants to hear sound.
         muted = false;
-        // volume is already set to volumeBeforeMute by toggleMute logic if we called it.
-        // Here, we are directly setting muted = false, so 'volume' should be our new target.
+        
     }
     setVolume(newVolume); // This will apply the newVolume if not muted.
     // If we just unmuted, it will apply newVolume.
 }
 
 void SoundManager::decreaseVolume(float step) {
-    // std::cout << "Attempting to decrease volume. Current: " << volume << ", Muted: " << muted << ", Step: " << step << std::endl;
+    
     float newVolume = std::max(0.f, volume - step);
     setVolume(newVolume); // Set the new target volume
 
-    // If volume is decreased to 0, it's just 0. It doesn't automatically toggle the 'muted' state.
-    // The 'muted' state is for preserving a previous volume level.
-    // If user decreases to 0, then increases, it increases from 0.
-    // If user mutes (at e.g. 50), then unmuted, it goes back to 50.
+    
 }
 
 void SoundManager::toggleMute() {
@@ -110,15 +103,10 @@ bool SoundManager::isMuted() const {
     return muted;
 }
 
-// Returns the current target volume level (0-100).
-// This is what a volume slider in UI would typically represent.
 float SoundManager::getVolume() const {
     return volume;
 }
-// If you need a function for "effective/audible volume":
-// float SoundManager::getAudibleVolume() const {
-//     return muted ? 0.f : volume;
-// }
+
 
 
 void SoundManager::removeStoppedSounds() {
