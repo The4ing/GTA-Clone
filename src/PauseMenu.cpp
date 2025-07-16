@@ -5,9 +5,7 @@
 #include <iostream> 
 #include <cmath>
 
-// It's good practice to put Constants.h inclusion within an ifdef
-// or ensure it's included correctly by the build system.
-// For now, we'll assume it defines SCREEN_WIDTH and SCREEN_HEIGHT if used.
+
 
 PauseMenu::PauseMenu() : m_isOpen(false), selectedIndex(0), selectedOption(MenuOption::Resume), showingMap(false), showingStats(false),
    destinationBlinkInterval(0.5f), newGameConfirmIndex(0), statsDataLoaded(false), showingNewGameConfirm(false),mapResourcesInitialized(false),

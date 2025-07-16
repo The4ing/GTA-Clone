@@ -1,5 +1,5 @@
 #include "Store.h"
-#include "AmmoRifle.h"
+
 #include <iostream>
 
 Store::Store(const sf::Vector2f& pos) : position(pos), isOpen(false), PlayerClose(false)

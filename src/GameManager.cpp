@@ -356,6 +356,7 @@ void GameManager::processEvents() {
             menu->update(event);
         }
         else if (currentState == GameState::Paused) {
+            backgroundMusic.setVolume(SoundManager::getInstance().isMuted() ? 0.f : SoundManager::getInstance().getVolume());
             pauseMenu.handleEvent(event);
             PauseMenu::MenuAction action = pauseMenu.getAndClearAction();
 
