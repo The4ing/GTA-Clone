@@ -1,689 +1,194 @@
-﻿GTA - Project README
+# GTA – Project README
 
+## Authors
+- **Or-Ram Atar** | 325004851  
+- **Romi Sinizkey** | *(add ID here)*
 
-יוצרים:
-אור-רם אטר | 325004851 
-רומי סיניצקי |  
+---
 
+## Project Overview
+This project is a 2D game inspired by the **Grand Theft Auto (GTA)** concept. The player can move freely in an open world, drive vehicles, use multiple weapon types, fight NPCs (and earn money), complete missions, and interact with a dynamic police/wanted system.
 
-הסבר כללי של התרגיל:
-פרויקט זה הוא מימוש של משחק דו-ממדי בסגנון Grand Theft Auto) GTA.) השחקן יכול לנוע בעולם פתוח, לנהוג במכוניות, להשתמש בכלי נשק שונים, להילחם בדמויות אחרות (ולקבל על כך כסף), לבצע משימות ולהתמודד עם המשטרה. המשחק כולל מגוון רחב של אובייקטים, החל מדמויות ושחקנים ועד לכלי רכב, כלי נשק, ומערכת משימות מורכבת.
+The game includes a wide variety of in-game entities: player characters, pedestrians, police units, vehicles, weapons, pickups, missions, and an optimized collision system.
 
+---
 
-תיכון (design):
-המשחק מבוסס על ארכיטקטורה מונחית עצמים, כאשר כל רכיב במשחק מיוצג על ידי מחלקה משלו. להלן תיאור של האובייקטים המרכזיים:
+## Design & Architecture
+The game is built using an **object-oriented architecture**, where each major game component is represented by a dedicated class. The design emphasizes modularity and separation of responsibilities: game loop management, entity logic, AI, resources, collisions, missions, and UI are handled by dedicated modules/managers.
 
+### Core Entities (High-Level)
+- **GameManager**  
+  The central orchestrator of the game. Responsible for the main game loop, event processing, updating all game entities, and rendering. Holds references to managers (e.g., `CarManager`, `PoliceManager`) and the player.
 
-GameManager - המחלקה המרכזית שמנהלת את כל המשחק. היא אחראית על לולאת המשחק הראשית, עיבוד אירועים, עדכון כל האובייקטים ורינדורם על המסך. היא מחזיקה את כל המנהלים האחרים (CarManager, PoliceManager, וכו') ואת השחקן.
+- **GameObject (abstract)**  
+  Base class for all game objects. Defines a common interface such as `update`, `draw`, and collision handling.
 
+- **MovingObject (abstract)**  
+  Inherits from `GameObject`. Base class for objects that can move (characters and vehicles).
 
--GameObject - מחלקת בסיס אבסטרקטית לכל האובייקטים במשחק. היא מגדירה את הפונקציות הבסיסיות שכל אובייקט צריך לממש, כגון `update`, `draw`, וטיפול בהתנגשויות.
+- **Character**  
+  Inherits from `MovingObject`. Represents characters such as the player, pedestrians, and police. Manages health, damage, and movement.
 
+- **Player**  
+  Inherits from `Character`. Handles user input, inventory, and interactions with the world.
 
-MovingObject - יורשת מ-`GameObject` ומהווה מחלקת בסיס לאובייקטים שיכולים לזוז, כמו דמויות וכלי רכב.
+- **Vehicle**  
+  Inherits from `MovingObject`. Manages vehicle movement, player driving controls, AI driving behavior, and damage/destruction.
 
+### Managers
+- **PoliceManager**  
+  Controls all police entities (cops, police cars, helicopters, tanks). Responsible for spawning, updating, and responding to the player’s actions (wanted level escalation).
 
-Character - יורשת מ-`MovingObject` ומייצגת דמויות במשחק, כולל השחקן, הולכי רגל ושוטרים. היא מנהלת חיים, נזק ותנועה.
+- **CarManager**  
+  Controls civilian traffic: spawning, road movement logic, and interaction with the environment.
 
+- **PedestrianManager**  
+  Spawns and updates pedestrians and their random movement behavior.
 
-Player -  יורשת מ-`Character` ומייצגת את השחקן. היא מנהלת את הקלט מהמשתמש, את המלאי של השחקן, ואת האינטראקציות שלו עם העולם.
+### Missions
+- **Mission (abstract base class)**  
+  Base for missions. Multiple mission types inherit from it (e.g., `KillMission`, `CarMission`, `PackageMission`, `SurviveMission`) and define their own completion logic.
 
+### Pickups / Presents
+- **Present (abstract)**  
+  Base class for pickups/rewards with an effect on the player (health, money, weapons, ammo).
 
-Vehicle - יורשת מ-`MovingObject` ומייצגת כלי רכב. היא מנהלת את התנועה של כלי הרכב, את הנהיגה, ואת הנזק.
+- **WeaponPresent (abstract)**  
+  Base class for weapon pickups (e.g., `Pistol`, `Rifle`, `Minigun`, `Bazooka`, `Knife`, `Grenade`).
 
+### Spatial Optimization
+- **QuadTree**  
+  Used to optimize collision checks by spatial partitioning—querying only nearby entities instead of brute-force checking all pairs.
 
-PoliceManager - מנהל את כל הישויות המשטרתיות במשחק, כולל שוטרים, ניידות, מסוקים וטנקים. הוא אחראי על יצירתם, עדכונם, והתגובה שלהם לפעולות השחקן.
+---
 
+## Main Data Structures
+### QuadTree
+A spatial partitioning structure used to optimize collision detection. The world is split into regions, and collision checks are performed only among nearby objects. This significantly improves performance compared to checking every pair of entities.
 
-CarManager - מנהל את כל המכוניות האזרחיות במשחק, כולל יצירתן, תנועתן על הכבישים, והאינטראקציה שלהן עם הסביבה.
+### Object Pools (e.g., `BulletPool`, `VehiclePool`)
+Object pools reduce frequent dynamic allocations/deallocations. Instead of creating a new object each time, the system reuses inactive objects from the pool and returns them when no longer needed—improving runtime performance.
 
+---
 
-PedestrianManager - מנהל את כל הולכי הרגל במשחק, כולל יצירתם ותנועתם האקראית.
+## Notable Algorithms
+### A* Pathfinding
+Used for route planning:
+- Police officers and police vehicles use A* to chase the player.
+- Civilian cars use path planning logic on road segments.
 
+### SAT (Separating Axis Theorem)
+Used for polygon-polygon collision detection. SAT tests whether a separating axis exists between two convex shapes; if none exists, they collide.
 
-Mission - מחלקת בסיס למשימות. קיימות מספר משימות יורשות, כגון `KillMission`, `CarMission`, וכו', שכל אחת מהן מגדירה יעד אחר.
+---
 
+## Known Bugs
+No known bugs.
 
-WeaponPresent - יורשת מ-`Present` (מתנה) ומייצגת כלי נשק שניתן לאסוף. קיימות מחלקות יורשות לכל סוג נשק.
+---
 
+## Other Notes
+No additional notes.
 
-QuadTree - מבנה נתונים המשמש לאופטימיזציה של התנגשויות. הוא מאפשר בדיקה יעילה של התנגשויות בין אובייקטים קרובים מבלי צורך לבדוק כל זוג אובייקטים במשחק.
+---
 
+## Files We Implemented / Modified (Selected)
+> The project contains many classes. Below is a structured overview of the key modules.
 
-
-
-
-
-רשימה של הקבצים שיצרנו:
-include/AmmoRifle.h, src/AmmoRifle.cpp
-תיאור:  קבצים אלה מגדירים את המחלקה `AmmoRifle`, שיורשת מ-`Present` ומייצגת חבילת תחמושת לרובה שהשחקן יכול לאסוף.
- `AmmoRifle`
-אחריות - מייצגת חבילת תחמושת לרובה.
-- פונקציות עיקריות:
-    - `applyEffect(Player& player)`: מוסיפה תחמושת לרובה של השחקן (כרגע מוחזק בהערה).
-- קשרים יורשת מ-`Present` ומשפיעה על `Player`.
-
-
-include/MovingObject.h
-- תיאור קובץ זה מגדיר את מחלקת הבסיס האבסטרקטית `MovingObject`, שממנה יורשים כל האובייקטים שיכולים לזוז.
-- מחלקה `MovingObject`
-- אחריות הגדרת הממשק הבסיסי של כל האובייקטים שיכולים לזוז.
-- פונקציות עיקריות:
-    - `move(...)`: פונקציה וירטואלית להזזת האובייקט.
-    - `getSpeed() const`: פונקציה וירטואלית לקבלת מהירות האובייקט.
-- קשרים יורשת מ-`GameObject` ומהווה מחלקת בסיס ל-`Character` ו-`Vehicle`.
-
-
-include/PackageMission.h, src/PackageMission.cpp
-- תיאור קבצים אלה מגדירים את המחלקה `PackageMission`, שיורשת מ-`Mission` ומייצגת משימה שבה השחקן צריך למסור חבילה.
-- מחלקה `PackageMission`
-- אחריות ניהול משימת מסירת חבילה, שבה השחקן צריך להגיע ליעד מסוים ולמסור חבילה.
-- פונקציות עיקריות
-    - `update(float dt, Player& player)`: מעדכנת את התקדמות המשימה.
-    - `isCompleted() const`: מחזירה האם המשימה הושלמה.
-- קשרים יורשת מ-`Mission` ומשפיעה על `Player`.
-
-
-include/Vehicle.h, src/Vehicle.cpp
-- תיאור קבצים אלה מגדירים את המחלקה `Vehicle`, שמייצגת כלי רכב במשחק.
-- מחלקה `Vehicle`
-- אחריות ניהול תנועת כלי הרכב, הן עבור AI והן עבור שליטת שחקן, וכן את הריסתו.
-- פונקציות עיקריות
-    - `update(float dt, ...)`: מעדכנת את מצב הרכב.
-    - `accelerate(float dt)`, `brake(float dt)`, `steerLeft(float dt)`, `steerRight(float dt)`: פונקציות לשליטת השחקן.
-    - `startTurn(...)`: מתחילה פנייה עבור AI.
-- קשרים יורשת מ-`MovingObject` ומתקשרת עם `Player`.
-
-
-
-
-
-
-include/VehiclePool.h, src/VehiclePool.cpp
-- תיאור קבצים אלה מגדירים את המחלקה `VehiclePool`, שמנהלת מאגר של כלי רכב.
-- מחלקה `VehiclePool`
-- אחריות ניהול יעיל של אובייקטים מסוג `Vehicle` כדי למנוע יצירה ומחיקה תכופות שלהם.
-- פונקציות עיקריות
-    - `getVehicle()`: מחזירה רכב לא פעיל מהמאגר.
-    - `returnVehicle(Vehicle* vehicle)`: מחזירה רכב למאגר.
-    - `getAllVehicles()`: מחזירה את כל כלי הרכב במאגר.
-- קשרים מנהלת אובייקטים מסוג `Vehicle`.
-
-
-include/WeaponPresent.h, src/WeaponPresent.cpp
-- תיאור קבצים אלה מגדירים את מחלקת הבסיס האבסטרקטית `WeaponPresent`, שממנה יורשות כל מתנות הנשק במשחק.
-- מחלקה `WeaponPresent`
-- אחריות ניהול הלוגיקה הבסיסית של מתנות נשק.
-- פונקציות עיקריות
-    - `applyEffect(Player& player)`: מוסיפה את הנשק למלאי של השחקן.
-- קשרים יורשת מ-`Present` ומהווה מחלקת בסיס ל-`Pistol`, `Rifle`, `Minigun`, `Bazooka`, `Knife`, ו-`Grenade`.
-
-
-מבני נתונים עיקריים ותפקידיהם:
-- QuadTree: מבנה נתונים זה משמש לאופטימיזציה של בדיקת התנגשויות. הוא מחלק את עולם המשחק לרבעים, כך שבכל פעם שצריך לבדוק התנגשות, בודקים רק את האובייקטים שנמצאים באותו רביע. זה מונע את הצורך לבדוק כל זוג אובייקטים במשחק, מה שמשפר משמעותית את הביצועים.
-
-
-- Object Pools: נעשה שימוש במאגרים של אובייקטים (כמו `BulletPool` ו-`VehiclePool`) כדי למנוע יצירה ומחיקה תכופות של אובייקטים. במקום ליצור אובייקט חדש בכל פעם, אנחנו לוקחים אובייקט לא פעיל מהמאגר, מפעילים אותו, וכשהוא לא בשימוש, אנחנו מחזירים אותו למאגר. זה חוסך זמן עיבוד יקר.
-
-
-אלגוריתמים הראויים לציון:
-- A* Pathfinding: אלגוריתם זה משמש למציאת מסלולים. הוא משמש את השוטרים והניידות כדי לרדוף אחרי השחקן, ואת המכוניות כדי לנוע על הכבישים. האלגוריתם מוצא את המסלול הקצר ביותר בין שתי נקודות, תוך התחשבות במכשולים.
-
-
-- SAT) Separating Axis Theorem): אלגוריתם זה משמש לבדיקת התנגשויות בין פוליגונים. הוא בודק האם קיים ציר שמפריד בין שני הפוליגונים. אם לא קיים ציר כזה, אז הפוליגונים מתנגשים.
-
-
-באגים ידועים:
-[אין באגים ידועים]
-
-
-הערות אחרות:
-[אין הערות אחרות]
-
-
-
-
-include/PauseMenu.h, src/PauseMenu.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `PauseMenu`, שמנהלת את תפריט ההשהיה של המשחק.
-- מחלקה: `PauseMenu`
-- אחריות: הצגת תפריט ההשהיה וטיפול בקלט מהמשתמש לבחירת אפשרויות, כגון המשך המשחק, התחלת משחק חדש, הצגת מפה או סטטיסטיקות, ושינוי עוצמת הקול.
-- פונקציות עיקריות:
-    - `open()`: פותחת את תפריט ההשהיה.
-    - `close()`: סוגרת את תפריט ההשהיה.
-    - `handleEvent(const sf::Event& event)`: מטפלת בקלט מהמשתמש.
-- קשרים: משתמשת ב-`ResourceManager` ו-`SoundManager` לטעינת משאבים וניהול עוצמת הקול.
-
-
-include/PathPlanner.h
-- תיאור: קובץ זה מגדיר את המחלקה `PathPlanner`.
-- מחלקה: `PathPlanner`
-- אחריות: נראה שזהו placeholder לתכנון מסלול, אך כרגע הוא ריק.
-- פונקציות עיקריות: אין.
-- קשרים: אין.
-
-
-include/Pathfinder.h, src/Pathfinder.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Pathfinder`, שמממשת את אלגוריתם A* למציאת מסלולים.
-- מחלקה: `Pathfinder`
-- אחריות: מציאת מסלול בין שתי נקודות על המפה, תוך התחשבות במכשולים.
-- פונקציות עיקריות:
-    - `findPath(const sf::Vector2f& startPos, const sf::Vector2f& goalPos)`: מוצאת מסלול בין שתי נקודות.
-- קשרים: משתמשת ב-`PathfindingGrid` כדי לקבוע אילו אזורים פנויים למעבר.
-
-
-include/PathfindingGrid.h, src/PathfindingGrid.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `PathfindingGrid`, שמייצגת את עולם המשחק כרשת לצורך מציאת מסלולים.
-- מחלקה: `PathfindingGrid`
-- אחריות: המרת קואורדינטות עולם לקואורדינטות רשת, ובדיקה אילו תאים ברשת פנויים למעבר.
-- פונקציות עיקריות:
-    - `preprocess(const std::vector<std::vector<sf::Vector2f>>& staticObstacles)`: מעבדת את המפה ומסמנת את האזורים החסומים.
-    - `isCellWalkable(int x, int y) const`: בודקת האם תא מסוים ברשת פנוי למעבר.
-- קשרים: משמשת את `Pathfinder` למציאת מסלולים.
-
-
-include/PatrolZone.h
-- תיאור: קובץ זה מגדיר את המבנה `PatrolZone`, שמייצג אזור סיור למשטרה.
-- מבנה: `PatrolZone`
-- אחריות: הגדרת אזור סיור, כולל מיקום, רדיוס, והשוטרים המשויכים אליו.
-- קשרים: משמש את `PoliceManager` לארגון השוטרים.
-
-
-include/Pedestrian.h, src/Pedestrian.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Pedestrian`, שמייצגת הולך רגל במשחק.
-- מחלקה: `Pedestrian`
-- אחריות: ניהול התנועה האקראית של הולכי הרגל, וכן את חייהם ונזק שהם סופגים.
-- פונקציות עיקריות:
-    - `update(float dt, ...)`: מעדכנת את התנועה והאנימציה של הולך הרגל.
-    - `takeDamage(float amount)`: מורידה חיים להולך הרגל.
-- קשרים: יורשת מ-`MovingObject`.
-
-
-include/Police.h, src/Police.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Police`, שמייצגת שוטר במשחק.
-- מחלקה: `Police`
-- אחריות: ניהול הבינה המלאכותית של השוטר, כולל סיור, מרדף אחרי השחקן, ותקיפה.
-- פונקציות עיקריות:
-    - `update(float dt, Player& player, ...)`: מעדכנת את מצב השוטר.
-    - `canSeePlayer(...)`: בודקת האם השוטר רואה את השחקן.
-- קשרים: יורשת מ-`Character` ומשתמשת ב-`Pathfinder` למציאת מסלולים.
-
-
-include/PoliceCar.h, src/PoliceCar.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `PoliceCar`, שמייצגת ניידת משטרה במשחק.
-- מחלקה: `PoliceCar`
-- אחריות: ניהול הבינה המלאכותית של ניידת המשטרה, כולל מרדף אחרי השחקן, וניסיון לדרוס הולכי רגל ואת השחקן.
-- פונקציות עיקריות:
-    - `update(float dt, Player& player, ...)`: מעדכנת את מצב הניידת.
-    - `canSeePlayer(...)`: בודקת האם הניידת רואה את השחקן.
-- קשרים: יורשת מ-`Vehicle` ומשתמשת ב-`Pathfinder` למציאת מסלולים.
-
-
-include/Present.h, src/Present.cpp
-- תיאור: קבצים אלה מגדירים את מחלקת הבסיס האבסטרקטית `Present`, שממנה יורשות כל המתנות וההפתעות במשחק.
-- מחלקה: `Present`
-- אחריות: ניהול הלוגיקה הבסיסית של מתנות, כולל איסוף והופעה מחדש.
-- פונקציות עיקריות:
-    - `applyEffect(Player& player)`: פונקציה וירטואלית להפעלת האפקט של המתנה על השחקן.
-- קשרים: יורשת מ-`GameObject` ומהווה מחלקת בסיס ל-`HealthPresent`, `WeaponPresent`, `Money`, וכו'.
-
-
-include/QuadTree.h
-- תיאור: קובץ זה מגדיר את מבנה הנתונים `QuadTree`.
-- מחלקה: `QuadTree`
-- אחריות: חלוקה מרחבית של עולם המשחק לצורך אופטימיזציה של בדיקת התנגשויות.
-- פונקציות עיקריות:
-    - `insert(...)`: מכניס אובייקט לעץ.
-    - `query(...)`: מחזיר את כל האובייקטים באזור מסוים.
-- קשרים: משמש את `CarManager` ו-`CollisionUtils`.
-
-
-include/ResourceInitializer.h, src/ResourceInitializer.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `ResourceInitializer`, שאחראית על טעינת כל המשאבים של המשחק.
-- מחלקה: `ResourceInitializer`
-- אחריות: טעינת כל המשאבים, כגון טקסטורות, גופנים, וקולות.
-- פונקציות עיקריות:
-    - `loadInitialResources()`: טוענת את המשאבים הראשוניים הדרושים למסך הפתיחה.
-    - `loadGameResources()`: טוענת את כל שאר המשאבים של המשחק.
-- קשרים: משתמשת ב-`ResourceManager` לטעינת המשאבים.
-
-
-include/ResourceManager.h, src/ResourceManager.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `ResourceManager`, שהיא מחלקה singleton שמנהלת את כל המשאבים של המשחק.
-- מחלקה: `ResourceManager`
-- אחריות: טעינה ואחזור של משאבים, כגון טקסטורות, גופנים, וקולות.
-- פונקציות עיקריות:
-    - `getInstance()`: מחזירה את המופע היחיד של המחלקה.
-    - `loadTexture(...)`, `getTexture(...)`: טוענת ומחזירה טקסטורה.
-    - `loadFont(...)`, `getFont(...)`: טוענת ומחזירה גופן.
-    - `loadSoundBuffer(...)`, `getSoundBuffer(...)`: טוענת ומחזירה קובץ קול.
-- קשרים: משמשת את `ResourceInitializer` וכל שאר המחלקות שצריכות לגשת למשאבים.
-
-
-include/Store.h, src/Store.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Store`, שמייצגת חנות במשחק.
-- מחלקה: `Store`
-- אחריות: ניהול חנות שבה השחקן יכול לקנות פריטים.
-- פונקציות עיקריות:
-    - `open(Player& player)`: פותחת את החנות.
-    - `drawUI(sf::RenderTarget& target)`: מציירת את ממשק המשתמש של החנות.
-    - `handleInput(Player& player, ...)`: מטפלת בקלט מהמשתמש לקניית פריטים.
-- קשרים: משפיעה על `Player` ומשתמשת ב-`ResourceManager`.
-
-
-include/SurviveMission.h, src/SurviveMission.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `SurviveMission`, שיורשת מ-`Mission` ומייצגת משימה שבה השחקן צריך לשרוד.
-- מחלקה: `SurviveMission`
-- אחריות: ניהול משימת הישרדות, שבה השחקן צריך לשרוד למשך זמן מסוים.
-- פונקציות עיקריות:
-    - `update(float dt, Player& player)`: מעדכנת את התקדמות המשימה.
-    - `isCompleted() const`: מחזירה האם המשימה הושלמה.
-- קשרים: יורשת מ-`Mission` ומשפיעה על `Player`.
-
-
-include/Rifle.h, src/Rifle.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Rifle`, שיורשת מ-`WeaponPresent` ומייצגת רובה שהשחקן יכול לאסוף.
-- מחלקה: `Rifle`
-- אחריות: מייצגת נשק מסוג רובה.
-- פונקציות עיקריות:
-    - `getType() const`: מחזירה את סוג הנשק.
-- קשרים: יורשת מ-`WeaponPresent`.
-
-
-include/Settings.h, src/Settings.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Settings`, שמנהלת את תפריט ההגדרות של המשחק.
-- מחלקה: `Settings`
-- אחריות: הצגת תפריט הגדרות וטיפול בקלט מהמשתמש לשינוי הגדרות, כגון עוצמת הקול והבהירות.
-- פונקציות עיקריות:
-    - `handleEvent(const sf::Event& event)`: מטפלת בקלט מהמשתמש.
-    - `draw()`: מציירת את תפריט ההגדרות.
-- קשרים: משתמשת ב-`ResourceManager` ו-`SoundManager` לטעינת משאבים וניהול עוצמת הקול.
-
-
-include/RoadSegment.h
-- תיאור: קובץ זה מגדיר את המבנה `RoadSegment`, שמייצג מקטע של כביש.
-- מבנה: `RoadSegment`
-- אחריות: הגדרת מקטע של כביש, כולל גבולות, כיוון, ומספר נתיבים.
-- פונקציות עיקריות:
-    - `getLaneCenter(...)`: מחזירה את מרכז הנתיב.
-    - `getLaneEdge(...)`: מחזירה את קצה הנתיב.
-- קשרים: משמש את `CarManager` לניהול תנועת המכוניות.
-
-
-include/SoundManager.h, src/SoundManager.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `SoundManager`, שהיא מחלקה singleton שמנהלת את כל הקולות במשחק.
-- מחלקה: `SoundManager`
-- אחריות: ניגון, השהייה, וחידוש של קולות, וכן שינוי עוצמת הקול.
-- פונקציות עיקריות:
-    - `getInstance()`: מחזירה את המופע היחיד של המחלקה.
-    - `playSound(...)`: מנגנת קובץ קול.
-    - `setVolume(...)`: מגדירה את עוצמת הקול.
-- קשרים: משמשת את כל שאר המחלקות שצריכות לנגן קולות.
-
-
-include/PoliceHelicopter.h, src/PoliceHelicopter.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `PoliceHelicopter`, שמייצגת מסוק משטרה במשחק.
-- מחלקה: `PoliceHelicopter`
-- אחריות: ניהול הבינה המלאכותית של מסוק המשטרה, כולל מרדף אחרי השחקן וירי.
-- פונקציות עיקריות:
-    - `update(float dt, Player& player, ...)`: מעדכנת את מצב המסוק.
-    - `canSeePlayer(...)`: בודקת האם המסוק רואה את השחקן.
-- קשרים: יורשת מ-`MovingObject` ומתקשרת עם `GameManager`.
-
-
-include/PoliceTank.h, src/PoliceTank.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `PoliceTank`, שמייצגת טנק משטרה במשחק.
-- מחלקה: `PoliceTank`
-- אחריות: ניהול הבינה המלאכותית של הטנק, כולל מרדף אחרי השחקן, ירי, ודריסת כלי רכב והולכי רגל.
-- פונקציות עיקריות:
-    - `update(float dt, Player& player, ...)`: מעדכנת את מצב הטנק.
-    - `aimAndFire(Player& player, float dt)`: מכוונת ויורה על השחקן.
-- קשרים: יורשת מ-`Vehicle` ומשתמשת ב-`Pathfinder` למציאת מסלולים.
-
-
-include/PoliceManager.h, src/PoliceManager.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `PoliceManager`, שמנהלת את כל יחידות המשטרה במשחק.
-- מחלקה: `PoliceManager`
-- אחריות: יצירה, עדכון, ומחיקה של יחידות משטרה (שוטרים, ניידות, מסוקים, וטנקים) בהתבסס על רמת המבוקשות של השחקן.
-- פונקציות עיקריות:
-    - `update(float dt, Player& player, ...)`: מעדכנת את כל יחידות המשטרה.
-    - `spawnPolice(...)`: יוצרת שוטר חדש.
-    - `spawnPoliceCar(...)`: יוצרת ניידת משטרה חדשה.
-    - `spawnPoliceHelicopter(...)`: יוצרת מסוק משטרה חדש.
-    - `spawnPoliceTank(...)`: יוצרת טנק משטרה חדש.
-- קשרים: מנהלת אובייקטים מסוג `Police`, `PoliceCar`, `PoliceHelicopter`, ו-`PoliceTank`.
-
-
-include/PedestrianManager.h, src/PedestrianManager.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `PedestrianManager`, שמנהלת את כל הולכי הרגל במשחק.
-- מחלקה: `PedestrianManager`
-- אחריות: יצירה, עדכון, ומחיקה של הולכי רגל.
-- פונקציות עיקריות:
-    - `spawnPedestrian(const sf::Vector2f& pos)`: יוצרת הולך רגל חדש.
-    - `update(float dt, ...)`: מעדכנת את כל הולכי הרגל במנהל.
-- קשרים: מנהלת אובייקטים מסוג `Pedestrian`.
-
-
-include/Pistol.h, src/Pistol.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Pistol`, שיורשת מ-`WeaponPresent` ומייצגת אקדח שהשחקן יכול לאסוף.
-- מחלקה: `Pistol`
-- אחריות: מייצגת נשק מסוג אקדח.
-- פונקציות עיקריות:
-    - `getType() const`: מחזירה את סוג הנשק.
-- קשרים: יורשת מ-`WeaponPresent`.
-
-
-include/Player.h, src/Player.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Player`, שמייצגת את השחקן במשחק.
-- מחלקה: `Player`
-- אחריות: ניהול השחקן, כולל תנועה, חיים, שריון, כסף, מלאי, וכלי נשק.
-- פונקציות עיקריות:
-    - `update(float dt, ...)`: מעדכנת את מצב השחקן.
-    - `takeDamage(int amount)`: מורידה חיים מהשחקן.
-    - `enterVehicle(Vehicle* vehicle)`: מכניסה את השחקן לרכב.
-    - `exitVehicle()`: מוציאה את השחקן מהרכב.
-- קשרים: יורשת מ-`Character` ומתקשרת עם `GameManager`, `Inventory`, `PlayerShooter`, ו-`Vehicle`.
-
-
-include/PlayerShooter.h, src/PlayerShooter.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `PlayerShooter`, שאחראית על מכניקת הירי של השחקן.
-- מחלקה: `PlayerShooter`
-- אחריות: יצירת קליעים ועדכונם.
-- פונקציות עיקריות:
-    - `shoot(const std::string& weaponName)`: יורה קליע מהנשק הנוכחי של השחקן.
-    - `update(...)`: מעדכנת את כל הקליעים.
-- קשרים: משויכת ל-`Player` ומשתמשת ב-`BulletPool`.
-
-
-include/Help.h, src/Help.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Help`, שמציגה תפריט עזרה.
-- מחלקה: `Help`
-- אחריות: הצגת תפריט עזרה עם אפשרויות להצגת עזרה על המקשים או על המשחק.
-- פונקציות עיקריות:
-    - `run()`: מריצה את לולאת התצוגה של תפריט העזרה.
-- קשרים: משתמשת ב-`ControllersHelp` ו-`GameHelp` להצגת מסכי העזרה.
-
-
-include/Inventory.h, src/Inventory.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Inventory`, שמנהלת את המלאי של השחקן.
-- מחלקה: `Inventory`
-- אחריות: ניהול הפריטים שהשחקן אסף.
-- פונקציות עיקריות:
-    - `addItem(...)`: מוסיפה פריט למלאי.
-    - `useItem(...)`: משתמשת בפריט מהמלאי.
-    - `getCount(...)`: מחזירה את כמות הפריטים מסוג מסוים.
-- קשרים: משויכת ל-`Player`.
-
-
-include/InventoryUI.h, src/InventoryUI.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `InventoryUI`, שאחראית על הצגת המלאי של השחקן וטיפול בקלט מהמשתמש.
-- מחלקה: `InventoryUI`
-- אחריות: הצגת המלאי של השחקן וטיפול בקלט לבחירת ושימוש בפריטים.
-- פונקציות עיקריות:
-    - `draw(sf::RenderWindow& window, const Inventory& inventory)`: מציירת את המלאי על המסך.
-    - `handleInput(Player& player, Inventory& inventory, sf::RenderWindow& window)`: מטפלת בקלט מהמשתמש לבחירת ושימוש בפריטים.
-- קשרים: מקבלת מידע מ-`Inventory` ומשפיעה על `Player`.
-
-
-include/KillMission.h, src/KillMission.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `KillMission`, שיורשת מ-`Mission` ומייצגת משימה שבה השחקן צריך להרוג מספר מסוים של דמויות.
-- מחלקה: `KillMission`
-- אחריות: ניהול משימת הריגה, שבה השחקן צריך להרוג מספר מסוים של הולכי רגל או שוטרים.
-- פונקציות עיקריות:
-    - `update(float dt, Player& player)`: מעדכנת את התקדמות המשימה.
-    - `isCompleted() const`: מחזירה האם המשימה הושלמה.
-- קשרים: יורשת מ-`Mission` ומשפיעה על `Player`.
-
-
-include/Knife.h, src/Knife.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Knife`, שיורשת מ-`WeaponPresent` ומייצגת סכין שהשחקן יכול לאסוף.
-- מחלקה: `Knife`
-- אחריות: מייצגת נשק מסוג סכין.
-- פונקציות עיקריות:    - `getType() const`: מחזירה את סוג הנשק.
-
-- קשרים: יורשת מ-`WeaponPresent`.
-
-
-include/Mission.h, src/Mission.cpp
-
-
-- תיאור: קבצים אלה מגדירים את מחלקת הבסיס האבסטרקטית `Mission`, שממנה יורשות כל המשימות במשחק.
-- מחלקה: `Mission`
-- אחריות: הגדרת הממשק הבסיסי של כל המשימות במשחק.
-- פונקציות עיקריות:
-    - `start()`: פונקציה וירטואלית להתחלת המשימה.
-    - `update(...)`: פונקציה וירטואלית לעדכון המשימה.
-    - `isCompleted() const`: פונקציה וירטואלית לבדיקה האם המשימה הושלמה.
-- קשרים: מהווה מחלקת בסיס ל-`CarMission`, `KillMission`, `PackageMission`, ו-`SurviveMission`.
-
-
-include/Money.h, src/Money.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Money`, שיורשת מ-`Present` ומייצגת כסף שהשחקן יכול לאסוף.
-- מחלקה: `Money`
-- אחריות: מייצגת כסף שהשחקן יכול לאסוף.
-- פונקציות עיקריות:
-    - `applyEffect(Player& player)`: מוסיפה כסף לשחקן.
-    - `isExpired() const`: בודקת האם הכסף הזמני נעלם.
-- קשרים: יורשת מ-`Present` ומשפיעה על `Player`.
-
-
-include/Menu.h, src/Menu.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Menu`, שמנהלת את התפריט הראשי של המשחק.
-- מחלקה: `Menu`
-- אחריות: הצגת התפריט הראשי וטיפול בקלט מהמשתמש לבחירת אפשרויות.
-- פונקציות עיקריות:
-    - `update(sf::Event& event)`: מעדכנת את התפריט.
-    - `draw()`: מציירת את התפריט.
-- קשרים: משתמשת ב-`ResourceManager` ו-`SoundManager` לטעינת משאבים וניגון מוזיקה.
-
-
-include/Minigun.h, src/Minigun.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Minigun`, שיורשת מ-`WeaponPresent` ומייצגת מיניגאן שהשחקן יכול לאסוף.
-- מחלקה: `Minigun`
-- אחריות: מייצגת נשק מסוג מיניגאן.
-- פונקציות עיקריות:
-    - `getType() const`: מחזירה את סוג הנשק.
-- קשרים: יורשת מ-`WeaponPresent`.
-
-
-include/AnimationManager.h, src/AnimationManager.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `AnimationManager`, שאחראית על ניהול אנימציות של דמויות מתוך spritesheet.
-- מחלקה: `AnimationManager`
-- אחריות: ניהול אנימציות, כולל הוספה, הגדרה, ועדכון של אנימציות.
-- פונקציות עיקריות:
-    - `addAnimation(const std::string& name, AnimationRange range)`: מוסיפה אנימציה חדשה למנהל.
-    - `setAnimation(const std::string& name, bool shouldLoop, bool isPingPong, bool forceReset)`: מגדירה את האנימציה הנוכחית.
-    - `update(float dt)`: מעדכנת את האנימציה הנוכחית.
-    - `isAnimationFinished() const`: מחזירה האם האנימציה הסתיימה.
-- קשרים: משפיעה על `sf::Sprite` ומנהלת את האנימציות של דמויות.
-
-
-include/Bazooka.h, src/Bazooka.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Bazooka`, שיורשת מ-`WeaponPresent` ומייצגת בזוקה שהשחקן יכול לאסוף.
-- מחלקה: `Bazooka`
-- אחריות: מייצגת נשק מסוג בזוקה.
-- פונקציות עיקריות:
-    - `getType() const`: מחזירה את סוג הנשק.
-- קשרים: יורשת מ-`WeaponPresent`.
-
-
-include/HUD.h, src/HUD.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `HUD`, שאחראית על הצגת המידע על המסך (Heads-Up Display).
-- מחלקה: `HUD`
-- אחריות: הצגת מידע על השחקן, כגון חיים, שריון, כסף, נשק, תחמושת, ורמת המבוקשות.
-- פונקציות עיקריות:
-    - `update(const PlayerData& playerData, ...)`: מעדכנת את המידע שמוצג על המסך.
-    - `draw(sf::RenderWindow& window)`: מציירת את ה-HUD על המסך.
-- קשרים: מקבלת מידע מ-`Player` ומציגה אותו.
-
-
-include/HealthPresent.h, src/HealthPresent.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `HealthPresent`, שיורשת מ-`Present` ומייצגת חבילת חיים שהשחקן יכול לאסוף.
-- מחלקה: `HealthPresent`
-- אחריות: מייצגת חבילת חיים.
-- פונקציות עיקריות:
-    - `applyEffect(Player& player)`: מוסיפה חיים לשחקן.
-- קשרים: יורשת מ-`Present` ומשפיעה על `Player`.
-
-
-include/BloodPuddle.h, src/BloodPuddle.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `BloodPuddle`, שמייצגת שלולית דם שנוצרת במשחק, כנראה כאשר דמות מתה.
-- מחלקה: `BloodPuddle`
-- אחריות: הצגת אנימציה של שלולית דם.
-- פונקציות עיקריות:
-    - `update(float dt, ...)`: מעדכנת את האנימציה של שלולית הדם.
-- קשרים: יורשת מ-`GameObject`.
-
-
-include/GameFactory.h, src/GameFactory.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `GameFactory`, שאחראית על יצירת כל האובייקטים המרכזיים במשחק.
-- מחלקה: `GameFactory`
-- אחריות: יצירת השחקן, מנהלי המשחק (מכוניות, משטרה, הולכי רגל), מתנות, וחנויות.
-- פונקציות עיקריות:
-    - `createPlayer(...)`: יוצרת את השחקן.
-    - `createCarManager(...)`: יוצרת את מנהל המכוניות.
-    - `createPoliceManager(...)`: יוצרת את מנהל המשטרה.
-    - `createPedestrianManager(...)`: יוצרת את מנהל הולכי הרגל.
-    - `createPresents(...)`: יוצרת את המתנות.
-    - `createStores(...)`: יוצרת את החנויות.
-- קשרים: יוצרת את כל האובייקטים המרכזיים במשחק.
-
-
-include/GameHelp.h, src/GameHelp.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `GameHelp`, שמציגה מסך עזרה עם הסבר כללי על המשחק.
-- מחלקה: `GameHelp`
-- אחריות: הצגת מסך עזרה עם מידע על המשחק.
-- פונקציות עיקריות:
-    - `run()`: מריצה את לולאת התצוגה של מסך העזרה.
-- קשרים: משתמשת ב-`ResourceManager` לטעינת משאבים.
-
-
-include/GameManager.h, src/GameManager.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `GameManager`, שהיא המחלקה המרכזית של המשחק.
-- מחלקה: `GameManager`
-- אחריות: ניהול לולאת המשחק הראשית, עיבוד אירועים, עדכון כל האובייקטים, ורינדורם על המסך. היא מחזיקה את כל המנהלים האחרים (CarManager, PoliceManager, וכו') ואת השחקן.
-- פונקציות עיקריות:
-    - `run()`: מריצה את לולאת המשחק הראשית.
-    - `processEvents()`: מעבדת את כל האירועים במשחק.
-    - `update(float dt)`: מעדכנת את כל האובייקטים במשחק.
-    - `render()`: מרנדרת את כל האובייקטים על המסך.
-- קשרים: מחזיקה את כל המנהלים, השחקן, ומנהלת את כל האובייקטים במשחק.
-
-
-include/GameObject.h
-- תיאור: קובץ זה מגדיר את מחלקת הבסיס האבסטרקטית `GameObject`, שממנה יורשים כל האובייקטים במשחק.
-- מחלקה: `GameObject`
-- אחריות: הגדרת הממשק הבסיסי של כל האובייקטים במשחק.
-- פונקציות עיקריות:
-    - `update(...)`: פונקציה וירטואלית לעדכון האובייקט.
-    - `draw(...)`: פונקציה וירטואלית לציור האובייקט.
-    - `onCollision(...)`: פונקציה וירטואלית לטיפול בהתנגשויות.
-- קשרים: מהווה מחלקת בסיס לכל האובייקטים במשחק.
-
-
-include/Grenade.h, src/Grenade.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Grenade`, שיורשת מ-`WeaponPresent` ומייצגת רימון שהשחקן יכול לאסוף.
-- מחלקה: `Grenade`
-- אחריות: מייצגת נשק מסוג רימון.
-- פונקציות עיקריות:
-    - `getType() const`: מחזירה את סוג הנשק.
-- קשרים: יורשת מ-`WeaponPresent`.
-
-
-include/Explosion.h, src/Explosion.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Explosion`, שמייצגת פיצוץ במשחק.
-- מחלקה: `Explosion`
-- אחריות: הצגת אנימציה של פיצוץ.
-- פונקציות עיקריות:
-    - `update(float dt, ...)`: מעדכנת את האנימציה של הפיצוץ.
-    - `isFinished() const`: מחזירה האם האנימציה הסתיימה.
-- קשרים: יורשת מ-`GameObject`.
-
-
-include/Bullet.h, src/Bullet.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `Bullet`, שמייצגת קליע שנורה במשחק.
-- מחלקה: `Bullet`
-- אחריות: ניהול תנועת הקליע, בדיקת התנגשויות, וגרימת נזק.
-- פונקציות עיקריות:
-    - `init(...)`: מאתחלת את הקליע עם מיקום, כיוון, וסוג.
-    - `update(float dt, ...)`: מעדכנת את מיקום הקליע.
-    - `checkCollision(...)`: בודקת התנגשות עם אובייקטים אחרים.
-    - `applyExplosionDamage(...)`: מחשבת ומחילה נזק מפיצוץ.
-- קשרים: יורשת מ-`MovingObject` ומשפיעה על `Player`, `Pedestrian`, `Police`, ו-`Vehicle`.
-
-
-include/BulletPool.h, src/BulletPool.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `BulletPool`, שמנהלת מאגר של קליעים.
-- מחלקה: `BulletPool`
-- אחריות: ניהול יעיל של אובייקטים מסוג `Bullet` כדי למנוע יצירה ומחיקה תכופות שלהם.
-- פונקציות עיקריות:
-    - `getBullet()`: מחזירה קליע לא פעיל מהמאגר.
-    - `returnBullet(Bullet* bullet)`: מחזירה קליע למאגר.
-    - `getAllBullets()`: מחזירה את כל הקליעים במאגר.
-- קשרים: מנהלת אובייקטים מסוג `Bullet`.
-
-
-include/CarManager.h, src/CarManager.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `CarManager`, שאחראית על ניהול כל כלי הרכב האזרחיים במשחק.
-- מחלקה: `CarManager`
-- אחריות: יצירה, עדכון, ומחיקה של מכוניות, וניהול התנועה שלהן על הכבישים.
-- פונקציות עיקריות:
-    - `update(float dt, ...)`: מעדכנת את כל המכוניות במנהל.
-    - `spawnVehicleOffScreen(const sf::View& view)`: יוצרת מכונית חדשה מחוץ למסך.
-    - `setRoads(...)`: מגדירה את הכבישים שהמכוניות יכולות לנסוע עליהם.
-- קשרים: משתמשת ב-`VehiclePool` לניהול יעיל של מכוניות, ב-`QuadTree` לאופטימיזציה של התנגשויות, ומתקשרת עם `PoliceManager`.
-
-
-include/CarMission.h, src/CarMission.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `CarMission`, שיורשת מ-`Mission` ומייצגת משימה הקשורה לנהיגה.
-- מחלקה: `CarMission`
-- אחריות: ניהול משימת נהיגה, שבה השחקן צריך לנהוג במהירות מסוימת למשך זמן מסוים.
-- פונקציות עיקריות:
-    - `update(float dt, Player& player)`: מעדכנת את התקדמות המשימה.
-    - `isCompleted() const`: מחזירה האם המשימה הושלמה.
-- קשרים: יורשת מ-`Mission` ומשפיעה על `Player`.
-
-
-include/Character.h, src/Character.cpp
-- תיאור: קבצים אלה מגדירים את מחלקת הבסיס `Character`, שממנה יורשות כל הדמויות במשחק.
-- מחלקה: `Character`
-- אחריות: ניהול תכונות בסיסיות של דמות, כגון חיים, מהירות, ומיקום.
-- פונקציות עיקריות:
-    - `takeDamage(int amount)`: מורידה חיים מהדמות.
-    - `isDead() const`: מחזירה האם הדמות מתה.
-- קשרים: יורשת מ-`MovingObject` ומהווה מחלקת בסיס ל-`Player`, `Pedestrian`, ו-`Police`.
-
-
-include/CollisionUtils.h, src/CollisionUtils.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `CollisionUtils`, שמספקת פונקציות עזר לבדיקת התנגשויות.
-- מחלקה: `CollisionUtils`
-- אחריות: בדיקת התנגשויות בין אובייקטים שונים, כגון נקודה בפוליגון, מעגל בפוליגון, ופוליגון בפוליגון.
-- פונקציות עיקריות:
-    - `pointInPolygon(...)`: בודקת האם נקודה נמצאת בתוך פוליגון.
-    - `circleIntersectsPolygon(...)`: בודקת האם מעגל חותך פוליגון.
-    - `polygonIntersectsPolygon(...)`: בודקת האם שני פוליגונים חותכים זה את זה.
-- קשרים: משתמשת ב-`QuadTree` לאופטימיזציה.
-
-
-include/Constants.h
-- תיאור: קובץ זה מרכז את כל הקבועים הגלובליים של המשחק.
-- אחריות: הגדרת ערכים קבועים למשחק, כגון גודל המפה, מהירויות, נזקים, ועוד.
-- קשרים: כל שאר הקבצים במשחק משתמשים בקבועים המוגדרים כאן.
-
-
-include/ControllersHelp.h, src/ControllersHelp.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `ControllersHelp`, שמציגה מסך עזרה עם הסבר על המקשים.
-- מחלקה: `ControllersHelp`
-- אחריות: הצגת מסך עזרה עם רשימת המקשים והפעולות שלהם.
-- פונקציות עיקריות:
-    - `run()`: מריצה את לולאת התצוגה של מסך העזרה.
-- קשרים: משתמשת ב-`ResourceManager` לטעינת משאבים.
-
-
-include/DestructibleObject.h, src/DestructibleObject.cpp
-- תיאור: קבצים אלה מגדירים את המחלקה `DestructibleObject`, שמייצגת אובייקט שניתן להרוס.
-- מחלקה: `DestructibleObject`
-- אחריות: ניהול אובייקט שניתן להרוס, כולל חיים ונזק.
-- פונקציות עיקריות:
-    - `takeDamage(int amount)`: מורידה חיים מהאובייקט.
-    - `isDestroyed() const`: מחזירה האם האובייקט הרוס.
-- קשרים: יורשת מ-`GameObject`.
+### `include/AmmoRifle.h`, `src/AmmoRifle.cpp`
+**AmmoRifle** (inherits `Present`)  
+- Responsibility: Represents a rifle ammo pickup.  
+- Key method:
+  - `applyEffect(Player& player)`: Adds rifle ammo to the player (currently commented in code).  
+- Relationships: Inherits `Present`, affects `Player`.
+
+### `include/MovingObject.h`
+**MovingObject** (abstract, inherits `GameObject`)  
+- Responsibility: Defines the interface for objects that can move.  
+- Key methods:
+  - `move(...)`
+  - `getSpeed() const`  
+- Inherited by: `Character`, `Vehicle`.
+
+### `include/PackageMission.h`, `src/PackageMission.cpp`
+**PackageMission** (inherits `Mission`)  
+- Responsibility: Deliver-a-package mission to a target location.  
+- Key methods:
+  - `update(float dt, Player& player)`
+  - `isCompleted() const`
+
+### `include/Vehicle.h`, `src/Vehicle.cpp`
+**Vehicle** (inherits `MovingObject`)  
+- Responsibility: Vehicle motion for AI and player control, and vehicle destruction/damage.  
+- Key methods:
+  - `update(float dt, ...)`
+  - `accelerate(float dt)`, `brake(float dt)`, `steerLeft(float dt)`, `steerRight(float dt)`
+  - `startTurn(...)` (AI turning)
+
+### `include/VehiclePool.h`, `src/VehiclePool.cpp`
+**VehiclePool**  
+- Responsibility: Reuse `Vehicle` objects efficiently.  
+- Key methods:
+  - `getVehicle()`
+  - `returnVehicle(Vehicle* vehicle)`
+  - `getAllVehicles()`
+
+### `include/WeaponPresent.h`, `src/WeaponPresent.cpp`
+**WeaponPresent** (abstract, inherits `Present`)  
+- Responsibility: Base class for weapon pickups.  
+- Key method:
+  - `applyEffect(Player& player)`: Adds the weapon to the player’s inventory.  
+- Inherited by: `Pistol`, `Rifle`, `Minigun`, `Bazooka`, `Knife`, `Grenade`.
+
+---
+
+## Additional Modules (Overview)
+
+### UI / Menus
+- **Menu** (`include/Menu.h`, `src/Menu.cpp`) – Main menu UI and selection logic.
+- **PauseMenu** (`include/PauseMenu.h`, `src/PauseMenu.cpp`) – Pause menu (resume/new game/map/stats/volume).
+- **Settings** (`include/Settings.h`, `src/Settings.cpp`) – Settings UI (volume/brightness).
+- **HUD** (`include/HUD.h`, `src/HUD.cpp`) – Displays player status (health/armor/money/weapon/ammo/wanted level).
+- **Help** (`include/Help.h`, `src/Help.cpp`) – Help screens / instructions menu.
+- **InventoryUI** (`include/InventoryUI.h`, `src/InventoryUI.cpp`) – Inventory UI drawing and input handling.
+
+### Pathfinding
+- **Pathfinder** (`include/Pathfinder.h`, `src/Pathfinder.cpp`) – A* pathfinding between two points.
+- **PathfindingGrid** (`include/PathfindingGrid.h`, `src/PathfindingGrid.cpp`) – World-to-grid conversion and walkability checks.
+- **PathPlanner** (`include/PathPlanner.h`) – Placeholder (currently empty).
+
+### Collision / Spatial
+- **QuadTree** (`include/QuadTree.h`) – Spatial partitioning for efficient collision queries.
+- **CollisionUtils** (`include/CollisionUtils.h`, `src/CollisionUtils.cpp`) – Collision helper methods (point/polygon, circle/polygon, polygon/polygon).
+
+### Managers
+- **PoliceManager** (`include/PoliceManager.h`, `src/PoliceManager.cpp`) – Spawns/updates police units based on wanted level.
+- **CarManager** (`include/CarManager.h`, `src/CarManager.cpp`) – Manages civilian vehicles spawning and road logic.
+- **PedestrianManager** (`include/PedestrianManager.h`, `src/PedestrianManager.cpp`) – Spawns and updates pedestrians.
+
+### Object Pools
+- **BulletPool** (`include/BulletPool.h`, `src/BulletPool.cpp`) – Reuses bullets efficiently.
+- **VehiclePool** (`include/VehiclePool.h`, `src/VehiclePool.cpp`) – Reuses vehicles efficiently.
+
+### Resources / Audio
+- **ResourceManager** (`include/ResourceManager.h`, `src/ResourceManager.cpp`) – Singleton for textures/fonts/sounds.
+- **ResourceInitializer** (`include/ResourceInitializer.h`, `src/ResourceInitializer.cpp`) – Loads initial and game resources.
+- **SoundManager** (`include/SoundManager.h`, `src/SoundManager.cpp`) – Singleton for sound playback and volume.
+
+### Misc
+- **GameFactory** (`include/GameFactory.h`, `src/GameFactory.cpp`) – Creates player, managers, presents, stores.
+- **Store** (`include/Store.h`, `src/Store.cpp`) – In-game store for buying items.
+- **Constants** (`include/Constants.h`) – Global constants (map size, speeds, damages, etc.).
+- **PatrolZone** (`include/PatrolZone.h`) – Patrol zone data used by police logic.
+- **RoadSegment** (`include/RoadSegment.h`) – Road representation used by car AI.
+
+---
+
+## Build / Run
+> Fill this section according to your actual build system (CMake/Makefile/SFML setup).
+
+Example:
+```bash
+cmake -S . -B build
+cmake --build build
+./build/GTA
